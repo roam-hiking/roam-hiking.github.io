@@ -1,0 +1,101 @@
+[
+{
+"id": "s00",
+"lat": 47.268502,
+"lon": 9.396903,
+"km": 0.47,
+"caption": "(a) Gravel path along the lake",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 281
+},
+{
+"id": "s01",
+"lat": 47.267644,
+"lon": 9.395773,
+"km": 0.6,
+"caption": "(b) Hikers stop to watch",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 281
+},
+{
+"id": "s02",
+"lat": 47.267075,
+"lon": 9.398108,
+"km": 0.92,
+"caption": "(c) Past a large boulder",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 280
+},
+{
+"id": "s03",
+"lat": 47.267245,
+"lon": 9.399171,
+"km": 1.0,
+"caption": "(d) Cows grazing by the shore",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 280
+},
+{
+"id": "s04",
+"lat": 47.26719,
+"lon": 9.401385,
+"km": 1.17,
+"caption": "(e) Squeezing past cows on the shore",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 280
+},
+{
+"id": "s05",
+"lat": 47.267573,
+"lon": 9.403482,
+"km": 1.46,
+"caption": "(f) Forest path at the water's edge",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 280
+},
+{
+"id": "s06",
+"lat": 47.26865,
+"lon": 9.405235,
+"km": 1.77,
+"caption": "(g) Dirt road toward the alp hut",
+"by": "Fig. 3B",
+"approx": true,
+"w": 420,
+"h": 280
+},
+{
+"id": "s07",
+"lat": 47.270114,
+"lon": 9.407187,
+"km": 1.99,
+"caption": "(h) Gravel track through the meadow",
+"by": "Fig. 3B",
+"approx": true,
+"w": 424,
+"h": 280
+},
+{
+"id": "s08",
+"lat": 47.27077,
+"lon": 9.404344,
+"km": 2.29,
+"caption": "(i) Through the trees toward the finish",
+"by": "Fig. 3B",
+"approx": true,
+"w": 425,
+"h": 280
+}
+]

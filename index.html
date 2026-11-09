@@ -1,0 +1,1743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- DRAFT: remove the noindex line and the .draft-bar when the paper is published -->
+<meta name="robots" content="noindex, nofollow">
+<title>ROAM: Legged Robots on Kilometer-Scale Hikes</title>
+<meta name="description" content="ROAM combines vision-language model common sense with RL locomotion so legged robots can hike kilometers through alpine and urban terrain.">
+<meta property="og:title" content="ROAM: Robust Open-world Autonomous Mobility">
+<meta property="og:description" content="Common-sense reasoning from vision-language models guides legged robots on kilometer-scale hikes.">
+<meta property="og:image" content="static/img/hero.jpg">
+<meta name="theme-color" content="#0b0f0d">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='9' fill='%23e3342c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Night palette (hero, dark bands) */
+    --night: #0b0f0d;
+    --night-2: #121915;
+    --night-3: #1a231e;
+    --snow: #eef2ee;
+    --snow-dim: #9fb0a6;
+    /* Day palette (content) */
+    --paper: #f7f5ef;
+    --paper-2: #efece3;
+    --ink: #17201b;
+    --ink-dim: #56625b;
+    --rule: #dcd7ca;
+    /* Accents */
+    --red: #e3342c;        /* ANYmal red */
+    --red-soft: #ff6b5f;
+    --glacier: #7fd1c7;
+    --moss: #2f6b4f;
+    --amber: #f2b33d;
+    --radius: 16px;
+    --ease: cubic-bezier(.2,.7,.2,1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 17px/1.65 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  img, video { max-width: 100%; display: block; }
+  a { color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+  .narrow { max-width: 780px; }
+  .serif { font-family: Fraunces, Georgia, serif; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
+
+  .draft-bar {
+    position: relative; z-index: 60; background: var(--amber); color: #241a00; text-align: center;
+    font-size: 13px; font-weight: 600; padding: 5px 16px; letter-spacing: .02em;
+  }
+
+  /* ---------- Nav ---------- */
+  .nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    transform: translateY(-100%); transition: transform .45s var(--ease);
+    background: rgba(11,15,13,.72); backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    border-bottom: 1px solid rgba(255,255,255,.07); color: var(--snow);
+  }
+  .nav.show { transform: none; }
+  .nav .wrap { display: flex; align-items: center; gap: 24px; height: 58px; }
+  .brand { font-weight: 700; letter-spacing: .14em; font-size: 14px; text-decoration: none; display: flex; align-items: center; gap: 10px; }
+  .brand i { width: 9px; height: 9px; border-radius: 50%; background: var(--red); box-shadow: 0 0 12px var(--red); }
+  .nav ul { display: flex; gap: 22px; list-style: none; margin: 0 0 0 auto; padding: 0; font-size: 14px; }
+  .nav ul a { text-decoration: none; color: var(--snow-dim); transition: color .2s; }
+  .nav ul a:hover, .nav ul a.on { color: var(--snow); }
+  .progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: linear-gradient(90deg, var(--red), var(--amber)); }
+
+  /* ---------- Hero ---------- */
+  .hero { position: relative; height: 100svh; min-height: 620px; overflow: hidden; background: var(--night); color: #fff; }
+  .hero video, .hero .poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .hero .shade {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 80% at 20% 100%, rgba(11,15,13,.92) 0%, rgba(11,15,13,.55) 45%, rgba(11,15,13,0) 75%),
+      linear-gradient(180deg, rgba(11,15,13,.55) 0%, rgba(11,15,13,0) 25%, rgba(11,15,13,0) 60%, rgba(11,15,13,.9) 100%);
+  }
+  .hero .wrap { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 9vh; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 10px; font-size: 12.5px; font-weight: 600; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--glacier);
+  }
+  .tag::before { content: ""; width: 28px; height: 1px; background: currentColor; }
+  .hero h1 {
+    font-family: Fraunces, Georgia, serif; font-weight: 700; letter-spacing: -.02em;
+    font-size: clamp(40px, 7.4vw, 96px); line-height: .98; margin: 18px 0 22px; max-width: 13ch;
+  }
+  .hero h1 em { font-style: italic; font-weight: 500; color: var(--red-soft); }
+  .hero h1 .line { display: block; overflow: hidden; }
+  .hero h1 .line span { display: inline-block; transform: translateY(105%); animation: rise 1.1s var(--ease) forwards; }
+  .hero h1 .line:nth-child(2) span { animation-delay: .12s; }
+  .hero h1 .line:nth-child(3) span { animation-delay: .24s; }
+  @keyframes rise { to { transform: none; } }
+  .hero .sub { font-size: clamp(17px, 1.6vw, 20px); color: rgba(255,255,255,.86); max-width: 560px; margin: 0; opacity: 0; animation: fade 1s .6s forwards; }
+  @keyframes fade { to { opacity: 1; } }
+  .hero-stats { display: flex; flex-wrap: wrap; gap: 14px 44px; margin-top: 38px; opacity: 0; animation: fade 1s .9s forwards; }
+  .hero-stats div { border-left: 1px solid rgba(255,255,255,.25); padding-left: 14px; }
+  .hero-stats b { display: block; font-family: Fraunces, Georgia, serif; font-size: clamp(26px, 3vw, 36px); line-height: 1.1; }
+  .hero-stats span { font-size: 13px; color: rgba(255,255,255,.7); }
+  .scroll-cue {
+    position: absolute; right: 28px; bottom: 28px; z-index: 2; color: rgba(255,255,255,.7); font-size: 11px;
+    letter-spacing: .2em; text-transform: uppercase; writing-mode: vertical-rl; display: flex; align-items: center; gap: 12px;
+    text-decoration: none;
+  }
+  .scroll-cue::after { content: ""; width: 1px; height: 54px; background: linear-gradient(rgba(255,255,255,.8), transparent); animation: drip 2.2s infinite; }
+  @keyframes drip { 0% { transform: scaleY(0); transform-origin: top; } 50% { transform: scaleY(1); transform-origin: top; } 51% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+  .hero-place { position: absolute; top: 84px; right: 28px; z-index: 2; font-size: 12px; color: rgba(255,255,255,.7); text-align: right; line-height: 1.5; }
+  .hero-place b { color: #fff; font-weight: 600; display: block; }
+
+  /* ---------- Authors band ---------- */
+  .people { background: var(--night); color: var(--snow); padding: 54px 0 60px; text-align: center; }
+  .names { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; font-size: 18px; }
+  .names span { white-space: nowrap; }
+  .names sup { color: var(--snow-dim); font-size: 11px; margin-left: 1px; }
+  .affil { color: var(--snow-dim); font-size: 14.5px; margin-top: 10px; }
+  .venue { margin-top: 14px; font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 20px; color: var(--glacier); }
+  .buttons { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 26px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 9px; padding: 11px 20px; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.05);
+    color: var(--snow); text-decoration: none; font-weight: 600; font-size: 14.5px;
+    transition: background .25s, border-color .25s, transform .25s var(--ease);
+  }
+  .btn:hover { background: rgba(255,255,255,.12); border-color: rgba(255,255,255,.35); transform: translateY(-2px); }
+  .btn.primary { background: var(--red); border-color: var(--red); }
+  .btn.primary:hover { background: var(--red-soft); border-color: var(--red-soft); }
+  .btn.disabled { opacity: .4; pointer-events: none; }
+  .btn svg { width: 17px; height: 17px; }
+
+  /* ---------- Sections ---------- */
+  section { padding: 110px 0; position: relative; }
+  .dark { background: var(--night); color: var(--snow); }
+  .dark2 { background: var(--night-2); color: var(--snow); }
+  .tint { background: var(--paper-2); }
+  .kicker { font-size: 12.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--red); margin-bottom: 14px; display: flex; align-items: center; gap: 12px; }
+  .kicker .num { font-family: "JetBrains Mono", monospace; color: var(--ink-dim); letter-spacing: 0; }
+  .dark .kicker .num, .dark2 .kicker .num { color: var(--snow-dim); }
+  h2 { font-family: Fraunces, Georgia, serif; font-weight: 700; letter-spacing: -.015em; font-size: clamp(32px, 4.6vw, 56px); line-height: 1.04; margin: 0 0 22px; max-width: 18ch; }
+  h2 em { font-style: italic; font-weight: 500; color: var(--red); }
+  .dark h2 em, .dark2 h2 em { color: var(--red-soft); }
+  h3 { font-size: 21px; margin: 0 0 8px; letter-spacing: -.005em; }
+  p { margin: 0 0 16px; }
+  .lead { font-size: clamp(19px, 1.9vw, 23px); line-height: 1.55; }
+  .dim { color: var(--ink-dim); }
+  .dark .dim, .dark2 .dim { color: var(--snow-dim); }
+  .means {
+    margin-top: 26px; padding: 16px 20px; border-radius: 12px;
+    background: rgba(47,107,79,.08); border: 1px solid rgba(47,107,79,.22); font-size: 16px;
+  }
+  .means b { color: var(--moss); }
+  .dark .means, .dark2 .means { background: rgba(127,209,199,.07); border-color: rgba(127,209,199,.22); }
+  .dark .means b, .dark2 .means b { color: var(--glacier); }
+
+  /* reveal on scroll */
+  .rv { opacity: 0; transform: translateY(28px); transition: opacity .9s var(--ease), transform .9s var(--ease); }
+  .rv.in { opacity: 1; transform: none; }
+  .rv.d1 { transition-delay: .08s; } .rv.d2 { transition-delay: .16s; } .rv.d3 { transition-delay: .24s; }
+
+  /* ---------- Movie ---------- */
+  .movie { position: relative; aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); }
+  .movie iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .movie .yt-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .movie .ph {
+    position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #fff; width: 100%;
+    border: 0; padding: 0; font: 600 16px Inter, sans-serif; cursor: pointer;
+    background: radial-gradient(circle at center, rgba(11,15,13,.25), rgba(11,15,13,.65));
+    transition: background .3s;
+  }
+  .movie .ph:hover { background: radial-gradient(circle at center, rgba(11,15,13,.1), rgba(11,15,13,.55)); }
+  .movie .ph:hover .play { transform: scale(1.08); background: var(--red); border-color: var(--red); }
+  .movie .ph:disabled { cursor: default; }
+  .movie .ph .play { transition: transform .3s var(--ease), background .3s; }
+  .field .movie { box-shadow: 0 40px 80px -30px rgba(0,0,0,.7); }
+  .movie .ph .play {
+    width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; margin: 0 auto 16px;
+    border: 1px solid rgba(255,255,255,.5); backdrop-filter: blur(6px); background: rgba(255,255,255,.08);
+  }
+  .movie .ph .play svg { width: 28px; height: 28px; margin-left: 4px; }
+  .cap { font-size: 14.5px; margin-top: 14px; color: var(--ink-dim); }
+  .dark .cap, .dark2 .cap { color: var(--snow-dim); }
+
+  /* ---------- Problem split ---------- */
+  .split { display: grid; grid-template-columns: 1.05fr 1fr; gap: 64px; align-items: center; }
+  .stack { position: relative; aspect-ratio: 4/5; }
+  .stack img { position: absolute; border-radius: 14px; object-fit: cover; box-shadow: 0 30px 60px -25px rgba(0,0,0,.45); }
+  .stack img:nth-child(1) { left: 0; top: 0; width: 78%; height: 72%; }
+  .stack img:nth-child(2) { left: 30%; top: 34%; width: 70%; height: 66%; border: 6px solid var(--paper); }
+  .stack .chip-float {
+    position: absolute; left: 6%; bottom: 8%; z-index: 2; background: #fff; border-radius: 12px; padding: 10px 14px;
+    font: 500 13px/1.45 "JetBrains Mono", monospace; box-shadow: 0 16px 40px -18px rgba(0,0,0,.5);
+  }
+  .chip-float .k { color: var(--ink-dim); }
+  .chip-float .hi { color: var(--red); font-weight: 600; }
+
+  /* ---------- Pipeline diagram ---------- */
+  .pipe { margin-top: 48px; }
+  .pipe svg { width: 100%; height: auto; overflow: visible; }
+  .pipe .node rect { fill: var(--night-3); stroke: rgba(255,255,255,.12); transition: stroke .4s, fill .4s; }
+  .pipe .node.on rect { stroke: var(--red-soft); fill: #24151a; }
+  .pipe .node text { fill: var(--snow); font: 600 15px Inter, sans-serif; }
+  .pipe .node .s { fill: var(--snow-dim); font: 400 12px "JetBrains Mono", monospace; }
+  .pipe .node .hz { fill: var(--glacier); font: 500 11.5px "JetBrains Mono", monospace; }
+  .pipe .wire { fill: none; stroke: rgba(255,255,255,.18); stroke-width: 1.5; }
+  .pipe .flow { fill: none; stroke: var(--red-soft); stroke-width: 2; stroke-dasharray: 6 14; animation: flow 1.2s linear infinite; opacity: .9; }
+  .pipe .flow.fast { animation-duration: .45s; stroke: var(--glacier); }
+  @keyframes flow { to { stroke-dashoffset: -20; } }
+  .pipe .band { fill: rgba(255,255,255,.025); stroke: rgba(255,255,255,.06); stroke-dasharray: 3 5; }
+  .pipe .band-l { fill: var(--snow-dim); font: 600 11px Inter, sans-serif; letter-spacing: .16em; }
+  .pipe-mobile { display: none; }
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 44px; }
+  .step {
+    padding: 22px; border-radius: 14px; background: var(--night-3); border: 1px solid rgba(255,255,255,.07);
+    transition: border-color .4s, transform .4s var(--ease);
+  }
+  .step.on { border-color: rgba(255,107,95,.55); transform: translateY(-4px); }
+  .step .n { font: 500 13px "JetBrains Mono", monospace; color: var(--red-soft); margin-bottom: 10px; }
+  .step p { margin: 0; color: var(--snow-dim); font-size: 15.5px; }
+  .vlm-card {
+    margin-top: 40px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 0; border-radius: var(--radius); overflow: hidden;
+    border: 1px solid rgba(255,255,255,.08); background: var(--night-3);
+  }
+  .vlm-card img { width: 100%; height: 100%; object-fit: cover; }
+  .vlm-out { padding: 26px 28px; font: 13.5px/1.7 "JetBrains Mono", monospace; color: var(--snow-dim); }
+  .vlm-out .q { color: var(--snow); margin-bottom: 14px; font-family: Inter, sans-serif; font-size: 15px; }
+  .vlm-out table { width: 100%; border-collapse: collapse; }
+  .vlm-out th { text-align: left; font-weight: 500; color: var(--snow-dim); border-bottom: 1px solid rgba(255,255,255,.1); padding: 6px 4px; font-size: 12px; }
+  .vlm-out td { padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,.05); color: var(--snow); }
+  .vlm-out td .bar { display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 8px; }
+  .vlm-note { font-size: 12.5px; margin-top: 12px; color: var(--snow-dim); font-family: Inter, sans-serif; }
+
+  /* ---------- Figure cards ---------- */
+  figure { margin: 0; }
+  .fig { background: #fff; border-radius: var(--radius); padding: 14px; border: 1px solid var(--rule); box-shadow: 0 20px 50px -35px rgba(0,0,0,.4); cursor: zoom-in; transition: transform .4s var(--ease), box-shadow .4s; }
+  .fig:hover { transform: translateY(-3px); box-shadow: 0 30px 60px -30px rgba(0,0,0,.45); }
+  .fig img { border-radius: 8px; width: 100%; }
+  figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
+  .dark figcaption, .dark2 figcaption { color: var(--snow-dim); }
+  .expand { margin-top: 28px; }
+  .expand summary { cursor: pointer; font-weight: 600; font-size: 15px; color: var(--glacier); list-style: none; display: inline-flex; gap: 8px; align-items: center; }
+  .expand summary::-webkit-details-marker { display: none; }
+  .expand summary::before { content: "+"; font: 500 18px "JetBrains Mono", monospace; }
+  .expand[open] summary::before { content: "−"; }
+  .expand .fig { margin-top: 18px; }
+
+  /* ---------- Gallery ---------- */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 28px; }
+  .chip {
+    border: 1px solid var(--rule); background: transparent; color: var(--ink); border-radius: 999px;
+    padding: 7px 16px; font: 500 14px Inter, sans-serif; cursor: pointer; transition: all .25s;
+  }
+  .chip:hover { border-color: var(--ink); }
+  .chip[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .chip .c { font: 500 11px "JetBrains Mono", monospace; opacity: .6; margin-left: 4px; }
+  .gallery { display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 150px; gap: 10px; }
+  .tile { position: relative; border-radius: 12px; overflow: hidden; cursor: zoom-in; background: var(--paper-2); transition: opacity .4s, transform .4s var(--ease); }
+  .tile.big { grid-column: span 2; grid-row: span 2; }
+  .tile.wide { grid-column: span 2; }
+  .tile img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+  .tile:hover img { transform: scale(1.06); }
+  .tile .lbl {
+    position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 12px 10px; color: #fff; font-size: 13px; font-weight: 600;
+    background: linear-gradient(transparent, rgba(0,0,0,.72)); display: flex; justify-content: space-between; align-items: end;
+  }
+  .tile .lbl small { font: 500 10.5px "JetBrains Mono", monospace; opacity: .75; letter-spacing: .05em; text-transform: uppercase; }
+  .tile.dim { opacity: .14; transform: scale(.97); pointer-events: none; }
+
+  /* ---------- Expeditions ---------- */
+  .tabs { display: inline-flex; padding: 4px; border-radius: 999px; background: var(--night-3); border: 1px solid rgba(255,255,255,.08); margin: 6px 0 34px; }
+  .tabs button {
+    border: 0; background: transparent; color: var(--snow-dim); font: 600 14.5px Inter, sans-serif; padding: 9px 22px; border-radius: 999px; cursor: pointer; transition: all .3s;
+  }
+  .tabs button[aria-selected="true"] { background: var(--snow); color: var(--night); }
+  .hike { display: none; }
+  .hike.on { display: block; animation: fade .6s; }
+  .hike-grid { display: grid; grid-template-columns: 300px 1fr; gap: 36px; align-items: start; }
+  .hike-meta .date { font: 500 13px "JetBrains Mono", monospace; color: var(--glacier); }
+  .hike-meta h3 { font-family: Fraunces, Georgia, serif; font-size: 34px; margin: 6px 0 14px; }
+  .hike-meta dl { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 14px; margin: 22px 0; }
+  .hike-meta dt { font-size: 12px; color: var(--snow-dim); text-transform: uppercase; letter-spacing: .1em; }
+  .hike-meta dd { margin: 2px 0 0; font-family: Fraunces, Georgia, serif; font-size: 28px; }
+  .hike-meta dd small { font-size: 15px; color: var(--snow-dim); font-family: Inter, sans-serif; margin-left: 3px; }
+  .hike-fig { border-radius: var(--radius); overflow: hidden; cursor: zoom-in; border: 1px solid rgba(255,255,255,.08); }
+  .hike-fig img { width: 100%; transition: transform 1.2s var(--ease); }
+  .hike-fig:hover img { transform: scale(1.015); }
+  .hike-media { display: grid; gap: 12px; justify-items: start; min-width: 0; }
+  .hike-media > * { width: 100%; }
+  .hike-media .seg { width: auto; }
+  .flyover { position: relative; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,.08); aspect-ratio: 16/9; background: #000; }
+  .flyover video { width: 100%; height: 100%; object-fit: cover; }
+  .fly-cap { position: absolute; left: 12px; bottom: 12px; font: 600 12.5px Inter, sans-serif; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); padding: 5px 11px; border-radius: 999px; }
+  .explorer { display: grid; gap: 10px; }
+  .rx-map { height: 380px; border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,.08); background: #1a231e; z-index: 0; }
+  .rx-map .leaflet-control-attribution { background: rgba(11,15,13,.7); color: var(--snow-dim); font-size: 10.5px; }
+  .rx-map .leaflet-control-attribution a { color: var(--snow); }
+  .rx-map .leaflet-bar a { background: var(--night-3); color: var(--snow); border-color: rgba(255,255,255,.1); }
+  .rx-pin { width: 18px; height: 18px; border-radius: 50%; background: var(--red); border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(227,52,44,.35), 0 4px 12px rgba(0,0,0,.5); }
+  .rx-end { font: 700 11px Inter, sans-serif; color: var(--night); background: var(--snow); border-radius: 999px; padding: 3px 9px; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,.4); transform: translate(-50%, -150%); display: inline-block; }
+  .rx-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 14px; }
+  .rx-play { display: inline-flex; align-items: center; gap: 8px; border: 0; background: var(--red); color: #fff; border-radius: 999px; padding: 8px 16px; font: 600 13.5px Inter, sans-serif; cursor: pointer; }
+  .rx-play svg { width: 14px; height: 14px; }
+  .rx-play[aria-pressed="true"] { background: var(--snow); color: var(--night); }
+  .rx-read { font-size: 13px; color: var(--snow-dim); }
+  .rx-read b { color: var(--snow); font-weight: 500; }
+  .rx-prof { width: 100%; height: 130px; display: block; cursor: crosshair; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .rx-prof .grid line { stroke: rgba(255,255,255,.07); }
+  .rx-prof .ax text { fill: var(--snow-dim); font: 10.5px "JetBrains Mono", monospace; }
+  .rx-prof .line { fill: none; stroke: var(--glacier); stroke-width: 2; }
+  .rx-prof .done { fill: none; stroke: var(--red-soft); stroke-width: 2.5; }
+  .rx-prof .cross { stroke: rgba(255,255,255,.5); stroke-width: 1; }
+  .rx-prof .dot { fill: var(--red); stroke: #fff; stroke-width: 2; }
+  .rx-src { font-size: 11.5px; color: var(--snow-dim); }
+  .explorer [hidden] { display: none !important; }
+  .rx-stage { position: relative; }
+  .explorer:fullscreen { background: var(--night); padding: 18px; overflow: auto; }
+  .explorer:fullscreen .rx-map { height: calc(100vh - 290px); }
+  .rx-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+  .rx-tools .seg button { padding: 6px 13px; font-size: 12.5px; }
+  .rx-legend { display: inline-flex; align-items: center; gap: 8px; font: 11px "JetBrains Mono", monospace; color: var(--snow-dim); }
+  .rx-legend i { width: 110px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3a4cc0, #8daffd, #dddcdb, #f39879, #b30326); }
+  .rx-icon { margin-left: auto; display: inline-flex; align-items: center; gap: 7px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: var(--snow); border-radius: 999px; padding: 6px 12px; font: 600 12.5px Inter, sans-serif; cursor: pointer; }
+  .rx-icon + .rx-icon { margin-left: 0; }
+  .rx-vids { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+  .rx-vids .rx-icon { margin-left: 0; }
+  .rx-icon svg { width: 16px; height: 16px; }
+  .rx-icon[aria-pressed="true"] { background: var(--snow); color: var(--night); }
+  .rx-pip { position: absolute; left: 12px; bottom: 12px; width: min(46%, 360px); z-index: 500; border-radius: 12px; overflow: hidden; background: #000; box-shadow: 0 16px 40px rgba(0,0,0,.6); border: 2px solid rgba(255,255,255,.85); }
+  .rx-pip video, .rx-pip .rx-yt, .rx-pip iframe { width: 100%; display: block; aspect-ratio: 16/9; height: auto; border: 0; }
+  .rx-pip-note { position: absolute; right: 8px; top: 8px; font: 600 11px Inter, sans-serif; background: rgba(0,0,0,.6); padding: 3px 8px; border-radius: 999px; }
+  .rx-photo { width: 38px; height: 38px; border-radius: 50%; border: 2.5px solid #fff; background-size: cover; background-position: center; box-shadow: 0 4px 14px rgba(0,0,0,.55); cursor: pointer; transition: transform .2s; }
+  .rx-photo:hover { transform: scale(1.15); }
+  .rx-map .leaflet-popup-content-wrapper { background: var(--night-2); color: var(--snow); border-radius: 12px; padding: 0; overflow: hidden; }
+  .rx-map .leaflet-popup-content { margin: 0; width: 260px !important; }
+  .rx-map .leaflet-popup-tip { background: var(--night-2); }
+  .rx-map .leaflet-popup-close-button { color: #fff !important; text-shadow: 0 0 4px #000; }
+  .pop img { width: 100%; height: 170px; object-fit: cover; display: block; cursor: zoom-in; }
+  .pop div { padding: 10px 12px 12px; font: 13px/1.45 Inter, sans-serif; }
+  .pop small { display: block; color: var(--snow-dim); font: 11px "JetBrains Mono", monospace; margin-top: 4px; }
+  .rx-map .leaflet-control-layers { background: var(--night-2); color: var(--snow); border: 1px solid rgba(255,255,255,.12); border-radius: 10px; }
+  .rx-map .leaflet-control-layers-expanded { padding: 8px 12px; font: 12.5px Inter, sans-serif; }
+  .rx-map .leaflet-control-layers-toggle { filter: invert(1); }
+  .rx-sel { display: grid; grid-template-columns: repeat(5, auto); gap: 4px 18px; padding: 12px 14px; border-radius: 12px; background: var(--night-2); border: 1px solid rgba(255,107,95,.35); font-size: 13px; align-items: baseline; }
+  .rx-sel b { display: block; font: 500 17px Fraunces, Georgia, serif; color: var(--snow); }
+  .rx-sel span { color: var(--snow-dim); font-size: 11px; text-transform: uppercase; letter-spacing: .08em; }
+  .rx-sel .x { grid-column: 1 / -1; font-size: 11.5px; text-transform: none; letter-spacing: 0; }
+  .rx-prof .brush { fill: rgba(255,107,95,.16); stroke: rgba(255,107,95,.6); }
+  .rx-prof .cover { fill: rgba(127,209,199,.10); }
+  .rx-prof .ptick { fill: #fff; }
+  .field { margin-top: 56px; display: grid; grid-template-columns: 1fr 300px; gap: 36px; align-items: center; }
+  .field video { width: 100%; border-radius: var(--radius); background: #000; box-shadow: 0 40px 80px -30px rgba(0,0,0,.7); }
+  .field .date-pill { display: inline-block; font: 500 12.5px "JetBrains Mono", monospace; color: var(--night); background: var(--glacier); padding: 4px 11px; border-radius: 999px; margin-bottom: 12px; }
+
+  /* ---------- Signs ---------- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 46px; }
+  .duo h3 { margin-top: 0; }
+  .duo .fig { margin-top: 20px; }
+
+  /* ---------- Interactive labs ---------- */
+  .lab {
+    margin-top: 48px; background: var(--night); color: var(--snow); border-radius: 22px; padding: 28px;
+    box-shadow: 0 50px 90px -50px rgba(0,0,0,.55);
+  }
+  .lab + .lab { margin-top: 36px; }
+  .lab-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-bottom: 22px; }
+  .lab-head h3 { font-family: Fraunces, Georgia, serif; font-size: 30px; margin: 4px 0 4px; }
+  .lab-head p { margin: 0; color: var(--snow-dim); font-size: 15.5px; }
+  .lab-tag { font: 500 12px "JetBrains Mono", monospace; color: var(--glacier); letter-spacing: .04em; }
+  .seg, .layers, .methods { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--night-3); border: 1px solid rgba(255,255,255,.08); }
+  .seg button, .layers button, .methods button {
+    border: 0; background: transparent; color: var(--snow-dim); font: 600 13.5px Inter, sans-serif; padding: 8px 16px; border-radius: 999px; cursor: pointer; transition: all .25s;
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .seg button[aria-pressed="true"], .layers button[aria-pressed="true"] { background: var(--snow); color: var(--night); }
+  .methods button i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+  .methods button[aria-pressed="true"] { background: rgba(255,255,255,.12); color: #fff; box-shadow: inset 0 0 0 1.5px var(--c); }
+  .methods button:disabled { opacity: .35; cursor: not-allowed; }
+  .lab-body { display: grid; grid-template-columns: 290px 1fr; gap: 24px; align-items: start; }
+  .lab-body.two-col { grid-template-columns: 1fr 340px; }
+  .lab-body > *, .lab-head > * { min-width: 0; }
+  .traps { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; counter-reset: t; }
+  .traps button {
+    width: 100%; text-align: left; border: 1px solid rgba(255,255,255,.08); background: var(--night-2); color: var(--snow);
+    border-radius: 14px; padding: 14px 16px; cursor: pointer; transition: all .3s var(--ease); font: inherit;
+    display: grid; grid-template-columns: 30px 1fr; gap: 2px 10px;
+  }
+  .traps button .n { grid-row: span 2; font: 500 13px "JetBrains Mono", monospace; color: var(--snow-dim); padding-top: 2px; }
+  .traps button b { font-size: 15.5px; }
+  .traps button span:last-child { font-size: 13px; color: var(--snow-dim); line-height: 1.45; }
+  .traps button:hover { border-color: rgba(255,255,255,.22); }
+  .traps button[aria-selected="true"] { border-color: var(--red-soft); background: #1f1416; }
+  .traps button[aria-selected="true"] .n { color: var(--red-soft); }
+  .stage .methods { margin-bottom: 14px; }
+  .screens { display: grid; gap: 10px; }
+  .screens.n2 { grid-template-columns: 1fr 1fr; }
+  .screens.n3 { grid-template-columns: 1fr 1fr 1fr; }
+  .screen { position: relative; border-radius: 14px; overflow: hidden; background: #000; aspect-ratio: 16/9; }
+  .screen video { width: 100%; height: 100%; object-fit: cover; }
+  .screen .who {
+    position: absolute; top: 10px; left: 10px; font: 700 12px Inter, sans-serif; letter-spacing: .06em; text-transform: uppercase;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(6px); padding: 5px 10px; border-radius: 999px; display: flex; align-items: center; gap: 7px;
+  }
+  .screen .who i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .screen .res {
+    position: absolute; left: 10px; right: 10px; bottom: 10px; font: 600 13px Inter, sans-serif; padding: 8px 12px; border-radius: 10px;
+    background: rgba(0,0,0,.62); backdrop-filter: blur(6px); display: flex; gap: 8px; align-items: center;
+  }
+  .screen .res .ic { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; flex: none; }
+  .ok .ic { background: var(--glacier); color: var(--night); } .bad .ic { background: var(--red-soft); color: #fff; }
+  .screens.n1 .res { display: none; }
+  .verdict { margin-top: 14px; display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 12px; background: var(--night-2); border: 1px solid rgba(255,255,255,.07); }
+  .verdict .ic { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; flex: none; }
+  .verdict b { display: block; font-size: 16px; }
+  .verdict span { color: var(--snow-dim); font-size: 14.5px; }
+  .screens:not(.n1) ~ .verdict { display: none; }
+  .extra:empty { display: none; }
+  .extra { margin-top: 14px; }
+  .quote { border-left: 2px solid var(--glacier); padding: 4px 0 4px 14px; font-size: 14.5px; color: var(--snow-dim); margin: 0 0 10px; }
+  .quote em { color: var(--snow); font-style: normal; }
+  .quote small { display: block; font: 500 11.5px "JetBrains Mono", monospace; color: var(--glacier); margin-bottom: 4px; }
+  .trials { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px 18px; align-items: center; font-size: 14px; padding: 14px 16px; border-radius: 12px; background: var(--night-2); border: 1px solid rgba(255,255,255,.07); }
+  .trials .h { font-size: 11.5px; color: var(--snow-dim); text-transform: uppercase; letter-spacing: .08em; }
+  .dots { display: flex; gap: 3px; } .dots i { width: 11px; height: 11px; border-radius: 3px; background: rgba(255,255,255,.12); }
+  .dots i.y { background: var(--glacier); } .dots i.x { background: var(--red-soft); }
+  .dots-wrap { display: flex; align-items: center; gap: 10px; } .dots-wrap span { font: 500 12.5px "JetBrains Mono", monospace; color: var(--snow-dim); }
+  .trials-note { grid-column: 1 / -1; font-size: 12.5px; color: var(--snow-dim); }
+  .lab-fig { margin-top: 22px; }
+
+  .conds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+  .conds button {
+    border: 1px solid rgba(255,255,255,.08); background: var(--night-2); color: var(--snow); border-radius: 14px; padding: 12px; cursor: pointer;
+    text-align: left; font: inherit; display: flex; gap: 12px; align-items: center; transition: all .3s var(--ease);
+  }
+  .conds button img { width: 64px; height: 44px; object-fit: cover; border-radius: 8px; flex: none; }
+  .conds button b { display: block; font-size: 14.5px; }
+  .conds button span { font-size: 12.5px; color: var(--snow-dim); }
+  .conds button[aria-selected="true"] { border-color: var(--red-soft); background: #1f1416; }
+  .layers { margin-bottom: 12px; }
+  .layers.off { visibility: hidden; }
+  .mosaic { position: relative; aspect-ratio: 3/2; border-radius: 14px; overflow: hidden; background: #000; }
+  .mosaic video { max-width: none; position: absolute; top: 0; left: 0; width: 200%; height: 200%; object-fit: fill; transition: transform .5s var(--ease), width .5s var(--ease), height .5s var(--ease); }
+  .mosaic[data-layer="risk"] video { transform: translateX(-50%); }
+  .mosaic[data-layer="step"] video { transform: translateY(-50%); }
+  .mosaic[data-layer="pref"] video { transform: translate(-50%, -50%); }
+  .mosaic[data-layer="all"] video, .mosaic.plain video { width: 100%; height: 100%; transform: none; }
+  .mosaic.plain video { object-fit: cover; }
+  .q-lbl { position: absolute; top: 10px; left: 10px; font: 600 12px Inter, sans-serif; background: rgba(0,0,0,.6); padding: 4px 10px; border-radius: 999px; }
+  .q-lbl:empty { display: none; }
+  .scale { display: flex; align-items: center; gap: 10px; margin-top: 10px; font: 500 12px "JetBrains Mono", monospace; color: var(--snow-dim); }
+  .scale i { flex: 0 0 140px; height: 8px; border-radius: 4px; background: linear-gradient(90deg, #3a4cc0, #8daffd, #dddcdb, #f39879, #b30326); }
+  .scale.off { visibility: hidden; }
+  .vlm-panel { background: var(--night-2); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 18px; }
+  .vp-title { font-weight: 700; margin-bottom: 10px; }
+  .vp-legend { display: grid; grid-template-columns: 1fr repeat(3, 56px); gap: 6px; text-align: center; font: 500 9.5px "JetBrains Mono", monospace; color: var(--snow-dim); margin-bottom: 4px; }
+  .vp-legend::before { content: "label"; text-align: left; }
+  .vp-row { display: grid; grid-template-columns: 1fr repeat(3, 56px); gap: 6px; align-items: center; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.05); font: 12.5px "JetBrains Mono", monospace; }
+  .vp-row .l { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vp-row.key .l { color: #fff; font-weight: 600; }
+  .vp-row.key { background: linear-gradient(90deg, rgba(255,107,95,.12), transparent); margin: 0 -8px; padding: 6px 8px; border-radius: 6px; }
+  .vp-row .v { position: relative; height: 18px; border-radius: 4px; background: rgba(255,255,255,.05); overflow: hidden; }
+  .vp-row .v i { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+  .vp-row .v b { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 600; font-size: 11px; color: #fff; text-shadow: 0 0 3px rgba(0,0,0,.9), 0 0 1px #000; }
+  .vp-take { margin-top: 14px; font-size: 14px; color: var(--snow-dim); }
+  .vp-take b { color: var(--snow); }
+
+  .nav-tabs { grid-template-columns: repeat(3, 1fr); }
+  .nav-stage .duo-v { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .nav-stage .screen .res { display: flex; }
+  .play-both { margin-top: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: var(--snow); border-radius: 999px; padding: 7px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; }
+  .outside { position: relative; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #000; }
+  .outside video { width: 100%; height: 100%; object-fit: cover; }
+  .nav-legend.off, .nav-rows:empty { display: none; }
+
+  .ex-body { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); gap: 20px; align-items: start; }
+  .ex-map { border-radius: 14px; overflow: hidden; position: relative; }
+  .ex-map img { width: 100%; }
+  .ex-view { display: grid; gap: 12px; }
+  .ex-photo { width: 100%; aspect-ratio: 1 / 1; max-height: 460px; object-fit: cover; border-radius: 14px; transition: opacity .35s; }
+  .ex-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .ex-steps button {
+    border: 1px solid rgba(255,255,255,.1); background: var(--night-2); color: var(--snow-dim); border-radius: 10px; padding: 8px 10px;
+    font: 600 13px Inter, sans-serif; cursor: pointer; text-align: left; position: relative; overflow: hidden;
+  }
+  .ex-steps button b { font-family: "JetBrains Mono", monospace; color: var(--snow); margin-right: 6px; }
+  .ex-steps button[aria-selected="true"] { border-color: var(--red-soft); color: var(--snow); }
+  .ex-steps button .bar { position: absolute; left: 0; bottom: 0; height: 2px; width: 0; background: var(--red-soft); }
+  .ex-steps button[aria-selected="true"] .bar.run { animation: fillbar 4s linear forwards; }
+  @keyframes fillbar { to { width: 100%; } }
+  .ex-text { color: var(--snow-dim); font-size: 15px; min-height: 48px; }
+  .ex-text b { color: var(--snow); }
+
+  /* ---------- Fig 6C chart ---------- */
+  .chart-card { background: #fff; border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px 22px 16px; }
+  .chart-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .chart-top h3 { margin: 0; font-size: 17px; }
+  .chart-top .seg { background: var(--paper-2); border-color: var(--rule); }
+  .chart-top .seg button { color: var(--ink-dim); }
+  .chart-top .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+  .bars { display: grid; gap: 4px; }
+  .bar-row { display: grid; grid-template-columns: 200px 1fr 54px; gap: 12px; align-items: center; font-size: 13.5px; padding: 3px 4px; border-radius: 6px; position: relative; }
+  .bar-row:hover { background: var(--paper); }
+  .bar-row .nm { color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bar-row .nm small { display: block; font-size: 11px; color: var(--ink-dim); }
+  .bar-row .track { height: 14px; position: relative; }
+  .bar-row .fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 0 4px 4px 0; background: #b9b5aa; transition: width .7s var(--ease); }
+  .bar-row.roam .fill { background: var(--red); }
+  .bar-row.roam .nm { font-weight: 700; }
+  .bar-row .val { font: 500 12.5px "JetBrains Mono", monospace; color: var(--ink-dim); text-align: right; }
+  .bar-row.roam .val { color: var(--ink); font-weight: 600; }
+  .axis { display: grid; grid-template-columns: 200px 1fr 54px; gap: 12px; margin-top: 6px; font: 11px "JetBrains Mono", monospace; color: var(--ink-dim); }
+  .axis div { display: flex; justify-content: space-between; border-top: 1px solid var(--rule); padding-top: 4px; }
+  .chart-note { font-size: 12.5px; color: var(--ink-dim); margin-top: 12px; }
+  .chart-card table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+  .chart-card th, .chart-card td { text-align: left; padding: 5px 6px; border-bottom: 1px solid var(--rule); }
+  .chart-card td.n, .chart-card th.n { text-align: right; font-family: "JetBrains Mono", monospace; }
+
+  /* ---------- Abstraction matrix ---------- */
+  .matrix { margin-top: 40px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--rule); background: #fff; }
+  .mrow { display: grid; grid-template-columns: 1.3fr 1.6fr 1fr 1fr; align-items: center; border-top: 1px solid var(--rule); transition: background .3s; }
+  .mrow:first-child { border-top: 0; background: var(--paper-2); font-size: 12px; text-transform: uppercase; letter-spacing: .1em; color: var(--ink-dim); font-weight: 600; }
+  .mrow > div { padding: 16px 20px; }
+  .mrow.roam { background: linear-gradient(90deg, rgba(227,52,44,.08), transparent 70%); }
+  .mrow.roam .what { color: var(--red); }
+  .mrow .what { font-weight: 700; }
+  .mrow .ex { font: 13px "JetBrains Mono", monospace; color: var(--ink-dim); }
+  .need { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; }
+  .need i { width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--rule); }
+  .need.y i { background: var(--amber); border-color: var(--amber); }
+  .need.n { color: var(--ink-dim); }
+  .need.n i { background: transparent; border-color: var(--moss); }
+
+  /* ---------- Limits ---------- */
+  .limits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 36px; }
+  .limit { padding: 24px; border-radius: 14px; border: 1px solid rgba(255,255,255,.08); background: var(--night-3); }
+  .limit .ic { font: 500 12px "JetBrains Mono", monospace; color: var(--amber); margin-bottom: 10px; }
+  .limit p { color: var(--snow-dim); margin: 0; font-size: 15.5px; }
+
+  /* ---------- BibTeX ---------- */
+  .bib { position: relative; }
+  .bib pre {
+    background: var(--night); color: #d8e2dc; border-radius: var(--radius); padding: 26px; overflow-x: auto;
+    font: 13.5px/1.65 "JetBrains Mono", monospace; margin: 0;
+  }
+  .bib pre .k { color: var(--red-soft); } .bib pre .f { color: var(--glacier); }
+  .bib button {
+    position: absolute; top: 14px; right: 14px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.06);
+    color: #fff; border-radius: 999px; padding: 6px 14px; font: 600 12.5px Inter, sans-serif; cursor: pointer;
+  }
+
+  footer { background: var(--night); color: var(--snow-dim); padding: 50px 0 60px; font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 14px; }
+
+  /* ---------- Lightbox ---------- */
+  .lb { position: fixed; inset: 0; z-index: 100; background: rgba(6,9,8,.94); display: none; align-items: center; justify-content: center; padding: 56px 70px; }
+  .lb.open { display: flex; animation: fade .3s; }
+  .lb img { max-width: 100%; max-height: 100%; border-radius: 10px; background: #fff; box-shadow: 0 30px 80px rgba(0,0,0,.6); }
+  .lb .lbcap { position: absolute; bottom: 18px; left: 0; right: 0; text-align: center; color: var(--snow-dim); font-size: 14px; }
+  .lb button { position: absolute; border: 0; background: rgba(255,255,255,.08); color: #fff; width: 46px; height: 46px; border-radius: 50%; cursor: pointer; font-size: 22px; }
+  .lb button:hover { background: rgba(255,255,255,.18); }
+  .lb .x { top: 16px; right: 16px; } .lb .prev { left: 14px; } .lb .next { right: 14px; }
+
+  @media (max-width: 900px) {
+    section { padding: 80px 0; }
+    .nav ul { display: none; }
+    .split, .duo, .hike-grid, .field, .vlm-card { grid-template-columns: 1fr; }
+    .split { gap: 40px; }
+    .steps, .limits { grid-template-columns: 1fr; }
+    .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 130px; }
+    .tile.big { grid-column: span 2; grid-row: span 2; } .tile.wide { grid-column: span 2; }
+    .pipe-desktop { display: none; } .pipe-mobile { display: block; }
+    .mrow { grid-template-columns: 1fr 1fr; }
+    .mrow > div:nth-child(2) { display: none; }
+    .mrow:first-child > div:nth-child(2) { display: none; }
+    .mrow { grid-template-columns: 1.2fr 1fr 1fr; }
+    .hero-place { display: none; }
+    .tag::before { display: none; }
+    .tag { font-size: 11px; letter-spacing: .12em; }
+    .lab { padding: 18px; border-radius: 18px; margin-left: -8px; margin-right: -8px; }
+    .lab-body, .lab-body.two-col { grid-template-columns: minmax(0, 1fr); }
+    .traps { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .screens.n2, .screens.n3, .conds { min-width: 0; }
+    .vlm-card { grid-template-columns: minmax(0, 1fr); }
+    .trials { grid-template-columns: auto minmax(0, 1fr) minmax(0, 1fr); gap: 8px 10px; padding: 12px; font-size: 12.5px; }
+    .dots { gap: 2px; } .dots i { width: 7px; height: 7px; border-radius: 2px; }
+    .dots-wrap { flex-wrap: wrap; gap: 2px 6px; } .dots-wrap span { font-size: 11px; }
+    .vlm-out { padding: 18px; font-size: 12px; }
+    .traps button { grid-template-columns: 1fr; padding: 10px 12px; }
+    .traps button .n { grid-row: auto; }
+    .traps button span:last-child { display: none; }
+    .screens.n2, .screens.n3 { grid-template-columns: 1fr; }
+    .conds { grid-template-columns: 1fr 1fr; }
+    .conds button img { width: 44px; height: 34px; }
+    .bar-row, .axis { grid-template-columns: 120px 1fr 44px; gap: 8px; font-size: 12px; }
+    .nav-tabs { grid-template-columns: minmax(0, 1fr); }
+    .nav-stage .duo-v { grid-template-columns: minmax(0, 1fr); }
+    .ex-body { grid-template-columns: minmax(0, 1fr); }
+    .ex-map { max-height: 220px; } .ex-map img { object-fit: cover; height: 220px; }
+    .ex-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .rx-sel { grid-template-columns: repeat(3, auto); }
+    .rx-icon span { display: none; }
+    .rx-pip { width: 58%; }
+    .rx-map { height: 320px; }
+    .scroll-cue { display: none; }
+    .lb { padding: 50px 10px; } .lb .prev, .lb .next { bottom: 50px; top: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .rv { opacity: 1; transform: none; }
+    .hero h1 .line span { transform: none; }
+    .hero .sub, .hero-stats { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div class="draft-bar">Embargoed draft. Do not share until the paper is published.</div>
+
+<nav class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="#top"><i></i>ROAM</a>
+    <ul>
+      <li><a href="#film">Film</a></li>
+      <li><a href="#why">Why</a></li>
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#places">Places</a></li>
+      <li><a href="#hikes">Alpine hikes</a></li>
+      <li><a href="#signs">Signs</a></li>
+      <li><a href="#explore">Navigation</a></li>
+      <li><a href="#cite">Cite</a></li>
+    </ul>
+  </div>
+  <div class="progress" id="progress"></div>
+</nav>
+
+<header class="hero" id="top">
+  <img class="poster" src="static/video/hero-poster.jpg" alt="">
+  <video autoplay muted loop playsinline preload="auto" poster="static/video/hero-poster.jpg" aria-hidden="true">
+    <source src="static/video/hero-loop.mp4" type="video/mp4">
+  </video>
+  <div class="shade"></div>
+  <div class="hero-place"><b>Seealpsee, Appenzell Alps</b>25 June 2024 · fully autonomous</div>
+  <div class="wrap">
+    <div class="tag">Robust Open-world Autonomous Mobility</div>
+    <h1>
+      <span class="line"><span>Hiking robots</span></span>
+      <span class="line"><span>with <em>common</em></span></span>
+      <span class="line"><span><em>sense</em></span></span>
+    </h1>
+    <p class="sub">A vision-language model tells the robot what the world means. Policies trained in simulation handle the walking. Together they cover kilometers of Swiss trail.</p>
+    <div class="hero-stats">
+      <div><b data-count="10.1" data-dec="1">10.1</b><span>km down from the Matterhorn</span></div>
+      <div><b data-count="1220">1220</b><span>m of descent</span></div>
+      <div><b data-count="15">15</b><span>kinds of setting</span></div>
+    </div>
+  </div>
+  <a class="scroll-cue" href="#people">Scroll</a>
+</header>
+
+<div class="people" id="people">
+  <div class="wrap">
+    <div class="names rv">
+      <span>Takahiro Miki<sup>1*</sup></span>
+      <span>Robin Schmid<sup>1</sup></span>
+      <span>Manthan Patel<sup>1</sup></span>
+      <span>Turcan Tuna<sup>1</sup></span>
+      <span>Julia Richter<sup>1</sup></span>
+      <span>Julian Nubert<sup>1</sup></span>
+      <span>Joonho Lee<sup>1</sup></span>
+      <span>Matthias Müller<sup>2</sup></span>
+      <span>Marco Hutter<sup>1</sup></span>
+    </div>
+    <div class="affil rv d1"><sup>1</sup>ETH Zurich &nbsp;·&nbsp; <sup>2</sup>Apple &nbsp;·&nbsp; <sup>*</sup>Corresponding author</div>
+    <div class="venue rv d1">Science Robotics, to appear</div>
+    <div class="buttons rv d2">
+      <!-- Links are filled from SITE in the script below -->
+      <a class="btn disabled" data-link="paper" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper (soon)</a>
+      <a class="btn primary" href="#film"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Watch</a>
+      <a class="btn disabled" data-link="supplementary" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v14m-5-5 5 5 5-5M4 21h16"/></svg>Supplementary (soon)</a>
+      <a class="btn" href="#cite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>BibTeX</a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ Film ============ -->
+<section class="dark2" id="film" style="padding-top:20px">
+  <div class="wrap">
+    <!-- YouTube: set data-youtube to the video ID once uploaded -->
+    <div class="movie yt rv" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36"></div>
+    <p class="cap rv">Movie 1. The ROAM pipeline, deployments indoors and outdoors, the Hönggerberg experiments, and the Zermatt hike.</p>
+  </div>
+</section>
+
+<!-- ============ Why ============ -->
+<section id="why">
+  <div class="wrap split">
+    <div>
+      <div class="kicker rv"><span class="num">01</span> The problem</div>
+      <h2 class="rv">Balance is solved. <em>Judgment</em> isn't.</h2>
+      <p class="lead rv d1">Legged robots can now walk over almost any ground. They still can't tell that a flat field has a "keep off" sign, or that a smooth path runs past a cliff.</p>
+      <p class="dim rv d2">A geometry map only sees shapes. Vision-language models (VLMs) know what things <em>mean</em> from internet-scale training, but they are slow and poor at precise spatial reasoning. ROAM gives each part the job it's good at.</p>
+      <details class="rv d2" style="margin-top:22px">
+        <summary style="cursor:pointer;font-weight:600;color:var(--moss)">Read the abstract</summary>
+        <p class="dim" style="margin-top:14px;font-size:15.5px">Autonomous navigation in diverse real-world environments remains one of the greatest challenges in robotics. It demands both robust low-level motion control to handle diverse terrain and high-level reasoning to interpret environmental cues. We present ROAM (Robust Open-world Autonomous Mobility), a system that enables legged robots to perform kilometer-scale navigation in complex alpine and urban settings. ROAM combines the world knowledge of a Vision-Language Model (VLM), pre-trained on internet-scale data, with robust locomotion and local planning policies learned in simulation via reinforcement learning (RL). The VLM provides common-sense reasoning and semantic interpretation of the scene, assessing risks, interpreting signs, and producing semantic labels with associated navigation costs. An open-vocabulary segmentation module converts these labels into a dense, real-time risk map, which conditions two pre-trained RL policies responsible for agile locomotion and local navigation: effectively coupling high-level VLM reasoning with low-level physical control. Real-world experiments showed the system's ability to autonomously navigate a wide range of complex real-world environments. The robot completes kilometer-long hikes with minimal intervention, interprets signs to avoid danger, and evaluates its environment to identify safe areas on which to step. This work represents a step toward the reliable deployment of systems in unstructured environments. However, it also underscores the challenges that remain in VLM reliability and spatial reasoning, indicating that foundational models are a crucial component but not yet a complete solution for navigation in the wild.</p>
+      </details>
+    </div>
+    <div class="stack rv d1">
+      <img src="static/img/env/o.jpg" alt="ANYmal stopping in front of a danger sign on a gravel path" loading="lazy">
+      <img src="static/img/env/b.jpg" alt="ANYmal on a rocky trail below the Matterhorn" loading="lazy">
+      <div class="chip-float"><span class="k">VLM:</span> “the gravel path ahead<br>is <span class="hi">not safe</span> for navigation<br>due to road work”</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ How ============ -->
+<section class="dark" id="how">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">02</span> How ROAM works</div>
+    <h2 class="rv">Slow <em>thinking</em>, fast walking</h2>
+    <p class="lead dim rv d1" style="max-width:720px">The VLM never outputs coordinates or speeds. It only names what it sees and says how risky each thing is. Everything that has to be fast and precise happens downstream.</p>
+
+    <div class="pipe rv d2">
+      <svg class="pipe-desktop" viewBox="0 0 1080 300" role="img" aria-label="Pipeline: camera images and a robot description go to the VLM, which outputs labels with risk values; open-vocabulary segmentation turns them into a risk image that is fused with the elevation map; RL navigation and locomotion policies drive the robot.">
+        <rect class="band" x="0" y="0" width="420" height="300" rx="16"/>
+        <text class="band-l" x="20" y="28">SLOW · COMMON SENSE</text>
+        <rect class="band" x="440" y="0" width="640" height="300" rx="16"/>
+        <text class="band-l" x="460" y="28">FAST · REAL TIME</text>
+
+        <g class="node" data-step="0"><rect x="20" y="70" width="150" height="70" rx="12"/><text x="36" y="100">Cameras</text><text class="s" x="36" y="122">front + rear RGB</text></g>
+        <g class="node" data-step="0"><rect x="20" y="170" width="150" height="70" rx="12"/><text x="36" y="200">Robot profile</text><text class="s" x="36" y="222">what it can do</text></g>
+        <g class="node" data-step="0"><rect x="236" y="110" width="164" height="90" rx="12"/><text x="252" y="142">VLM</text><text class="s" x="252" y="164">labels + risk,</text><text class="s" x="252" y="182">steppable, preferred</text></g>
+
+        <g class="node" data-step="1"><rect x="470" y="70" width="170" height="70" rx="12"/><text x="486" y="100">Segmentation</text><text class="hz" x="486" y="122">open-vocabulary</text></g>
+        <g class="node" data-step="1"><rect x="470" y="170" width="170" height="70" rx="12"/><text x="486" y="200">Elevation map</text><text class="hz" x="486" y="222">LiDAR geometry</text></g>
+        <g class="node" data-step="1"><rect x="690" y="110" width="150" height="90" rx="12"/><text x="706" y="142">Risk map</text><text class="s" x="706" y="164">semantics +</text><text class="s" x="706" y="182">height, fused</text></g>
+
+        <g class="node" data-step="2"><rect x="890" y="60" width="170" height="80" rx="12"/><text x="906" y="92">Navigation</text><text class="hz" x="906" y="116">RL policy</text></g>
+        <g class="node" data-step="2"><rect x="890" y="170" width="170" height="80" rx="12"/><text x="906" y="202">Locomotion</text><text class="hz" x="906" y="226">RL policy → motors</text></g>
+
+        <path class="wire" d="M170 105 C205 105 205 140 236 140"/><path class="flow" d="M170 105 C205 105 205 140 236 140"/>
+        <path class="wire" d="M170 205 C205 205 205 170 236 170"/><path class="flow" d="M170 205 C205 205 205 170 236 170"/>
+        <path class="wire" d="M400 155 C440 155 430 105 470 105"/><path class="flow" d="M400 155 C440 155 430 105 470 105"/>
+        <path class="wire" d="M640 105 C665 105 665 140 690 140"/><path class="flow fast" d="M640 105 C665 105 665 140 690 140"/>
+        <path class="wire" d="M640 205 C665 205 665 170 690 170"/><path class="flow fast" d="M640 205 C665 205 665 170 690 170"/>
+        <path class="wire" d="M840 140 C865 140 865 100 890 100"/><path class="flow fast" d="M840 140 C865 140 865 100 890 100"/>
+        <path class="wire" d="M840 170 C865 170 865 210 890 210"/><path class="flow fast" d="M840 170 C865 170 865 210 890 210"/>
+        <path class="wire" d="M975 140 L975 170"/><path class="flow fast" d="M975 140 L975 170"/>
+      </svg>
+      <svg class="pipe-mobile" viewBox="0 0 320 420" role="img" aria-label="Pipeline: VLM, then segmentation and risk map, then RL policies.">
+        <g class="node" data-step="0"><rect x="20" y="10" width="280" height="80" rx="12"/><text x="36" y="42">Cameras → VLM</text><text class="s" x="36" y="66">labels + risk, steppable, preferred</text></g>
+        <g class="node" data-step="1"><rect x="20" y="170" width="280" height="80" rx="12"/><text x="36" y="202">Segmentation + elevation</text><text class="hz" x="36" y="226">dense risk map, real time</text></g>
+        <g class="node" data-step="2"><rect x="20" y="330" width="280" height="80" rx="12"/><text x="36" y="362">RL navigation + locomotion</text><text class="hz" x="36" y="386">policies → motors</text></g>
+        <path class="wire" d="M160 90 L160 170"/><path class="flow" d="M160 90 L160 170"/>
+        <path class="wire" d="M160 250 L160 330"/><path class="flow fast" d="M160 250 L160 330"/>
+      </svg>
+    </div>
+
+    <div class="steps">
+      <div class="step rv" data-step="0"><div class="n">01 / read</div><h3>The VLM reads the scene</h3><p>Given the camera images and a short description of the robot, it lists what it sees. Each label gets a risk score, whether it can be stepped on, and whether it's a preferred path.</p></div>
+      <div class="step rv d1" data-step="1"><div class="n">02 / paint</div><h3>Labels become a risk map</h3><p>Open-vocabulary segmentation paints those labels onto every new camera frame, much faster than the VLM runs, and fuses them with the elevation map.</p></div>
+      <div class="step rv d2" data-step="2"><div class="n">03 / walk</div><h3>RL policies walk</h3><p>Two policies trained in simulation read that map: one picks the local path, the other places the feet. They keep reacting in real time while the VLM thinks.</p></div>
+    </div>
+
+    <div class="vlm-card rv">
+      <img src="static/img/cans.jpg" alt="Robot camera view of an alley with scattered cans and a 'Warning: explosive cans' sign" loading="lazy">
+      <div class="vlm-out">
+        <div class="q">What the VLM said about this scene: each thing in view, with values the planner can use.</div>
+        <table>
+          <tr><th>label</th><th>risk</th><th>steppable</th><th>preferred</th></tr>
+          <tr><td>warning_sign</td><td><span class="bar" style="width:40px;background:#b30326"></span>1.0</td><td>0.0</td><td>0.0</td></tr>
+          <tr><td>scattered_cans</td><td><span class="bar" style="width:28px;background:#ee8468"></span>0.7</td><td>0.0</td><td>0.0</td></tr>
+          <tr><td>dirt_ground</td><td><span class="bar" style="width:12px;background:#a7c5fd"></span>0.3</td><td>1.0</td><td>0.0</td></tr>
+        </table>
+        <div class="vlm-note">From Fig. 5A. Thanks to the sign, the cans get a high risk and are not steppable, so the robot steps between them.</div>
+      </div>
+    </div>
+
+    <details class="expand rv">
+      <summary>Show the full pipeline figure (Fig. 1)</summary>
+      <figure class="fig" data-lb><img src="static/img/fig1-overview.jpg" alt="Diagram of the ROAM pipeline from camera images through the VLM, segmentation and elevation map to the RL policies" loading="lazy"></figure>
+      <figcaption>Fig. 1. The ROAM pipeline. High-level reasoning from the VLM reaches the motors through a dense semantic map and two RL policies.</figcaption>
+    </details>
+  </div>
+</section>
+
+<!-- ============ Places ============ -->
+<section class="tint" id="places">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">03</span> One system, many places</div>
+    <h2 class="rv">From glaciers to <em>stairwells</em></h2>
+    <p class="lead dim rv d1" style="max-width:700px">We used the same system everywhere. No data was collected for any specific place.</p>
+    <div class="filters rv d1" role="group" aria-label="Filter environments">
+      <button class="chip" data-f="all" aria-pressed="true">All <span class="c">15</span></button>
+      <button class="chip" data-f="nature" aria-pressed="false">Nature <span class="c">7</span></button>
+      <button class="chip" data-f="urban" aria-pressed="false">Urban <span class="c">2</span></button>
+      <button class="chip" data-f="indoor" aria-pressed="false">Indoor <span class="c">3</span></button>
+      <button class="chip" data-f="challenge" aria-pressed="false">Challenges <span class="c">3</span></button>
+    </div>
+    <div class="gallery rv d2" id="gallery"></div>
+    <p class="cap">Fig. 2. Mountain trails (A–E), forest (F), grass (G), campus (H), roads (I), indoor spaces (J–L), smoke (M), train tracks (N) and signs (O).</p>
+  </div>
+</section>
+
+<!-- ============ Hikes ============ -->
+<section class="dark" id="hikes">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">04</span> Alpine expeditions</div>
+    <h2 class="rv">Kilometers, <em>not meters</em></h2>
+    <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes without help.</p>
+    <div class="tabs rv d1" role="tablist">
+      <button role="tab" aria-selected="true" data-hike="zermatt">Zermatt</button>
+      <button role="tab" aria-selected="false" data-hike="seealpsee">Seealpsee</button>
+    </div>
+
+    <div class="hike on" id="hike-zermatt" role="tabpanel">
+      <div class="hike-grid">
+        <div class="hike-meta">
+          <div class="date">14–15 August 2024 · Valais</div>
+          <h3>Zermatt</h3>
+          <p class="dim">From glacier views down to the village. The route covered gravel, rock, grass, lakesides and train tracks, with slopes of about 30% at the steepest.</p>
+          <dl>
+            <div><dt>Distance</dt><dd>10.1<small>km</small></dd></div>
+            <div><dt>Descent</dt><dd>1220<small>m</small></dd></div>
+            <div><dt>Ascent</dt><dd>30<small>m</small></dd></div>
+            <div><dt>Steepest</dt><dd>~30<small>%</small></dd></div>
+          </dl>
+        </div>
+        <div class="hike-media">
+          <div class="seg hike-view" role="group" aria-label="Zermatt view">
+            <button data-hv="map" aria-pressed="true">Route explorer</button>
+            <button data-hv="fly" aria-pressed="false">Flyover</button>
+            <button data-hv="fig" aria-pressed="false">Route photos</button>
+          </div>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/zermatt-route.json" data-photos="static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/zermatt-behind.mp4", "poster": "static/video/zermatt-behind-poster.jpg", "timemap": "static/data/zermatt-behind-timemap.json", "yt": "zermattBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/zermatt-onboard.mp4", "poster": "static/video/zermatt-onboard-poster.jpg", "timemap": "static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
+            <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Zermatt route on swisstopo aerial imagery"></div>
+              <div class="rx-pip" hidden><video muted playsinline preload="none"></video><span class="rx-pip-note"></span></div></div>
+            <div class="rx-tools">
+              <div class="seg rx-color" role="group" aria-label="Color the route by">
+                <button data-color="progress" aria-pressed="true">Progress</button>
+                <button data-color="grade" aria-pressed="false">Steepness</button>
+              </div>
+              <div class="rx-legend" hidden><span>flat</span><i></i><span>40%+</span></div>
+              <span class="rx-vids" role="group" aria-label="Video synced to the map"></span>
+              <button class="rx-icon rx-full" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            </div>
+            <div class="rx-bar">
+              <button class="rx-play" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Replay the hike</span></button>
+              <span class="rx-read mono"></span>
+            </div>
+            <svg class="rx-prof" role="img" aria-label="Elevation profile along the route; hover or drag to move the robot on the map"></svg>
+            <div class="rx-sel" hidden></div>
+            <span class="rx-src">Drag across the profile to measure a section. Robot's GNSS track · elevation: swisstopo swissALTI3D · maps © swisstopo</span>
+          </div>
+          <div class="flyover" data-hv-panel="fly" hidden>
+            <video muted loop playsinline preload="none" poster="static/video/zermatt-flyover-poster.jpg" aria-label="Google Earth flyover of the 10.1 km Zermatt route">
+              <source src="static/video/zermatt-flyover.mp4" type="video/mp4">
+            </video>
+            <span class="fly-cap">The full route, rendered in Google Earth</span>
+          </div>
+          <figure class="hike-fig" data-hv-panel="fig" hidden data-lb data-cap="Fig. 3A. Zermatt route with photos at each waypoint. Map imagery: Google Earth.">
+            <img src="static/img/fig3-zermatt.jpg" alt="Satellite map of the 10.1 km Zermatt route with photos of the robot at each waypoint" loading="lazy">
+          </figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hike" id="hike-seealpsee" role="tabpanel">
+      <div class="hike-grid">
+        <div class="hike-meta">
+          <div class="date">25 June 2024 · Appenzell</div>
+          <h3>Seealpsee</h3>
+          <p class="dim">A loop around a mountain lake, sharing the trail with cows, hikers and boulders.</p>
+          <dl>
+            <div><dt>Distance</dt><dd>2.38<small>km</small></dd></div>
+            <div><dt>Ascent</dt><dd>20<small>m</small></dd></div>
+            <div><dt>Descent</dt><dd>20<small>m</small></dd></div>
+            <div><dt>Company</dt><dd>🐄</dd></div>
+          </dl>
+        </div>
+        <div class="hike-media">
+          <div class="seg hike-view" role="group" aria-label="Seealpsee view">
+            <button data-hv="map" aria-pressed="true">Route explorer</button>
+            <button data-hv="fig" aria-pressed="false">Route photos</button>
+          </div>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/seealpsee-route.json" data-photos="static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/seealpsee-behind.mp4", "poster": "static/video/seealpsee-behind-poster.jpg", "timemap": "static/data/seealpsee-behind-timemap.json", "yt": "seealpseeBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/seealpsee-onboard.mp4", "poster": "static/video/seealpsee-onboard-poster.jpg", "timemap": "static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
+            <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Seealpsee route on swisstopo aerial imagery"></div>
+              <div class="rx-pip" hidden><video muted playsinline preload="none"></video><span class="rx-pip-note"></span></div></div>
+            <div class="rx-tools">
+              <div class="seg rx-color" role="group" aria-label="Color the route by">
+                <button data-color="progress" aria-pressed="true">Progress</button>
+                <button data-color="grade" aria-pressed="false">Steepness</button>
+              </div>
+              <div class="rx-legend" hidden><span>flat</span><i></i><span>40%+</span></div>
+              <span class="rx-vids" role="group" aria-label="Video synced to the map"></span>
+              <button class="rx-icon rx-full" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            </div>
+            <div class="rx-bar">
+              <button class="rx-play" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Replay the hike</span></button>
+              <span class="rx-read mono"></span>
+            </div>
+            <svg class="rx-prof" role="img" aria-label="Elevation profile along the route; hover or drag to move the robot on the map"></svg>
+            <div class="rx-sel" hidden></div>
+            <span class="rx-src">Drag across the profile to measure a section. Robot's GNSS track · elevation: swisstopo swissALTI3D · maps © swisstopo</span>
+          </div>
+          <figure class="hike-fig" data-hv-panel="fig" hidden data-lb data-cap="Fig. 3B. Seealpsee route with photos at each waypoint. Map imagery: Google Earth.">
+            <img src="static/img/fig3-seealpsee.jpg" alt="Satellite map of the 2.38 km Seealpsee loop with photos of the robot at each waypoint" loading="lazy">
+          </figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="field rv" id="seealpsee">
+      <!-- YouTube: set data-youtube to the video ID once uploaded -->
+      <div class="movie yt" data-yt-key="seealpsee" data-youtube="" data-title="A day at Seealpsee" data-poster="static/video/seealpsee-poster.jpg" data-label="A day at Seealpsee · 5:21"></div>
+      <div>
+        <span class="date-pill">25 June 2024</span>
+        <h3>A day at Seealpsee</h3>
+        <p class="dim">Behind the scenes: the setup, the 2.4 km lakeside route, cows on the trail, and the team explaining what the robot is doing. 5 min, with sound.</p>
+      </div>
+    </div>
+
+    <div class="means rv">
+      <b>What this means:</b> most of each route was fully autonomous. The few interventions came from construction zones that changed the trail, a partly hidden path, and a gate the robot physically couldn't pass. We report all of them in the paper.
+    </div>
+  </div>
+</section>
+
+<!-- ============ Signs ============ -->
+<section id="signs">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">05</span> World knowledge in action</div>
+    <h2 class="rv">It <em>reads the signs</em></h2>
+    <p class="lead dim rv d1" style="max-width:720px">Geometry can't tell an open path from a closed one. Text and symbols can, and ROAM reads them.</p>
+    <!-- ---------- Lab 1: Hönggerberg course (Fig. 4) ---------- -->
+    <div class="lab rv" id="course">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Experiment 1 · Fig. 4</div>
+          <h3>A 1.2 km course full of traps</h3>
+          <p>ETH Hönggerberg, Zurich. Pick a trap, then pick who walks it.</p>
+        </div>
+        <div class="seg" role="group" aria-label="View mode">
+          <button data-view="one" aria-pressed="true">One at a time</button>
+          <button data-view="all" aria-pressed="false">Side by side</button>
+        </div>
+      </div>
+      <div class="lab-body">
+        <ol class="traps" role="tablist" aria-label="Traps"></ol>
+        <div class="stage">
+          <div class="methods" role="group" aria-label="Method"></div>
+          <div class="screens"></div>
+          <div class="verdict"></div>
+          <div class="extra"></div>
+        </div>
+      </div>
+      <details class="expand lab-fig">
+        <summary>Show the paper figure (Fig. 4)</summary>
+        <figure class="fig" data-lb data-cap="Fig. 4. ROAM compared with baselines on the Hönggerberg course."><img src="static/img/fig4-construction-sign.jpg" alt="Comparison of ROAM and baselines on a course with an offset global path, a mannequin and construction signs" loading="lazy"></figure>
+      </details>
+    </div>
+
+    <!-- ---------- Lab 2: signs change locomotion (Fig. 5A) ---------- -->
+    <div class="lab rv" id="pallets">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Experiment 2 · Fig. 5A</div>
+          <h3>Same terrain, different sign</h3>
+          <p>Arche test site, July 2024. The robot's own camera, with the maps ROAM builds from the VLM's labels.</p>
+        </div>
+      </div>
+      <div class="conds" role="tablist" aria-label="Condition"></div>
+      <div class="lab-body two-col">
+        <div>
+          <div class="layers" role="group" aria-label="Map layer">
+            <button data-layer="cam" aria-pressed="true">Camera</button>
+            <button data-layer="risk" aria-pressed="false">Risk</button>
+            <button data-layer="step" aria-pressed="false">Steppable</button>
+            <button data-layer="pref" aria-pressed="false">Preferred</button>
+            <button data-layer="all" aria-pressed="false">All four</button>
+          </div>
+          <div class="mosaic" data-layer="cam"><video muted loop playsinline preload="none"></video><div class="q-lbl"></div></div>
+          <div class="scale"><span>go</span><i></i><span>avoid</span></div>
+          <p class="cap cond-note"></p>
+        </div>
+        <div class="vlm-panel">
+          <div class="vp-title">What the VLM said</div>
+          <div class="vp-legend"><span>risk</span><span>steppable</span><span>preferred</span></div>
+          <div class="vp-rows"></div>
+          <div class="vp-take"></div>
+        </div>
+      </div>
+      <details class="expand lab-fig">
+        <summary>Show the paper figure (Fig. 5)</summary>
+        <figure class="fig" data-lb data-cap="Fig. 5. World knowledge applied to locomotion, local navigation and exploration."><img src="static/img/fig5-arche.jpg" alt="Signs on pallets and cans change VLM risk labels and the robot's foot trajectories" loading="lazy"></figure>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Navigation + exploration (Fig. 5B, 5C) ============ -->
+<section class="tint" id="explore">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">06</span> Local navigation</div>
+    <h2 class="rv">Finding its <em>own way</em></h2>
+    <p class="lead dim rv d1" style="max-width:720px">Given only a goal, where does the robot choose to walk? Geometry says "anything flat". ROAM prefers what a person would: paths, cleared ground, the side away from the tracks.</p>
+
+    <div class="lab rv" id="routes">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Experiment 3 · Fig. 5B</div>
+          <h3>Same goal, different route</h3>
+          <p>Arche test site (July 2024) and a snowy city passage (November 2024).</p>
+        </div>
+      </div>
+      <div class="conds nav-tabs" role="tablist" aria-label="Route"></div>
+      <div class="lab-body two-col">
+        <div>
+          <div class="layers nav-layers" role="group" aria-label="View"></div>
+          <div class="nav-stage"></div>
+          <div class="scale nav-scale"><span>go</span><i></i><span>avoid</span></div>
+          <p class="cap nav-note"></p>
+        </div>
+        <div class="vlm-panel">
+          <div class="vp-title">What the VLM said</div>
+          <div class="vp-legend nav-legend"><span>risk</span><span>steppable</span><span>preferred</span></div>
+          <div class="vp-rows nav-rows"></div>
+          <div class="vp-take nav-take"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lab rv" id="explorer">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Experiment 4 · Fig. 5C</div>
+          <h3>The path is blocked. Now what?</h3>
+          <p>A cart and barrier tape block the trail. Step through what the robot did.</p>
+        </div>
+        <div class="seg" role="group" aria-label="Playback"><button class="ex-play" aria-pressed="true">Auto-play</button></div>
+      </div>
+      <div class="ex-body">
+        <div class="ex-map">
+          <img src="static/img/explore/map.jpg" alt="Aerial view of the detour: obstacle at a, alternative route at b, grass shortcut at c, back to the global path at d" loading="lazy">
+        </div>
+        <div class="ex-view">
+          <img class="ex-photo" src="static/img/explore/a.jpg" alt="" loading="lazy">
+          <div class="ex-steps" role="tablist" aria-label="Steps"></div>
+          <div class="ex-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Labels vs directions ============ -->
+<section class="tint" id="labels">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">07</span> Design choice</div>
+    <h2 class="rv">Ask for <em>labels</em>, not directions</h2>
+    <p class="lead dim rv d1" style="max-width:740px">There are several ways to put a VLM in the loop. The more physical the output, the more the model has to get right about space and about the robot's body.</p>
+    <div class="matrix rv d2" role="table" aria-label="What each VLM output type requires">
+      <div class="mrow" role="row"><div>VLM outputs</div><div>Example</div><div>Spatial reasoning</div><div>Body awareness</div></div>
+      <div class="mrow roam" role="row"><div class="what">Labels + values (ROAM)</div><div class="ex">"gravel_path: low risk"</div><div><span class="need n"><i></i>not needed</span></div><div><span class="need n"><i></i>not needed</span></div></div>
+      <div class="mrow" role="row"><div class="what">Directions</div><div class="ex">"go left"</div><div><span class="need y"><i></i>needed</span></div><div><span class="need n"><i></i>not needed</span></div></div>
+      <div class="mrow" role="row"><div class="what">Coordinates</div><div class="ex">"(412, 288)"</div><div><span class="need y"><i></i>needed</span></div><div><span class="need n"><i></i>not needed</span></div></div>
+      <div class="mrow" role="row"><div class="what">Direct commands</div><div class="ex">"v = 0.6 m/s"</div><div><span class="need y"><i></i>needed</span></div><div><span class="need y"><i></i>needed</span></div></div>
+    </div>
+    <div class="chart-card rv" style="margin-top:36px" id="ratios">
+      <div class="chart-top">
+        <h3 id="chart-title">Share of each path on safe ground</h3>
+        <div class="seg" role="group" aria-label="Metric">
+          <button data-metric="safety" aria-pressed="true">Safety</button>
+          <button data-metric="preferred" aria-pressed="false">Preferred</button>
+        </div>
+      </div>
+      <div class="bars" role="list" aria-labelledby="chart-title"></div>
+      <div class="axis"><span></span><div><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div><span></span></div>
+      <p class="chart-note">Fraction of all trajectory pixels inside the hand-labeled safe (or preferred) regions, pooled over 27 to 30 scenes per method (Table 1).</p>
+      <details class="expand" style="margin-top:6px"><summary style="color:var(--moss)">Show as a table</summary>
+        <table><thead><tr><th>Method</th><th>Category</th><th class="n">Safety</th><th class="n">Preferred</th></tr></thead><tbody id="ratio-table"></tbody></table>
+      </details>
+    </div>
+    <div class="means rv"><b>What this means:</b> paths planned with A* on ROAM's risk map stayed on safe ground 99% of the time, and on preferred ground 85% of the time. Every method that asks the VLM to point at or draw a path was less safe than simply walking in a straight line to the goal.</div>
+    <details class="expand rv"><summary style="color:var(--moss)">Show the paper figure (Fig. 6)</summary>
+      <figure class="fig" data-lb data-cap="Fig. 6. (A) VLM navigation methods by output type. (B) Example paths. (C) Safety and preferred-path ratios."><img src="static/img/fig6-vlm-comparison-v2.jpg" alt="Comparison of VLM navigation methods by output type with example trajectories and safety and preferred-path ratios" loading="lazy"></figure>
+    </details>
+  </div>
+</section>
+
+<!-- ============ Limits ============ -->
+<section class="dark2" id="limits">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">08</span> Honest limits</div>
+    <h2 class="rv">Not a <em>complete</em> solution, yet</h2>
+    <p class="lead dim rv d1" style="max-width:720px">Foundation models are a key ingredient for navigation in the wild, but they don't solve it on their own.</p>
+    <div class="limits">
+      <div class="limit rv"><div class="ic">reliability</div><h3>Labels can be wrong</h3><p>In a construction zone, fences and paths were sometimes misclassified, which led to interventions.</p></div>
+      <div class="limit rv d1"><div class="ic">spatial reasoning</div><h3>Fine judgments are hard</h3><p>Given a 15 cm limit, models still called a 15.5 cm stair climbable. Coarse rules work, near-threshold ones don't.</p></div>
+      <div class="limit rv d2"><div class="ic">the physical world</div><h3>Some gates won't open</h3><p>A turnstile was simply impassable, and the robot had to be carried over it.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ Cite ============ -->
+<section id="cite">
+  <div class="wrap narrow">
+    <div class="kicker rv"><span class="num">09</span> Citation</div>
+    <h2 class="rv">Cite this work</h2>
+    <!-- TODO: update volume, issue, pages and DOI at publication -->
+    <div class="bib rv d1">
+      <button id="copy">Copy</button>
+<pre id="bib"><span class="k">@article</span>{miki2026roam,
+  <span class="f">title</span>   = {Common-sense reasoning from vision-language models guides legged robots on kilometer-scale hikes},
+  <span class="f">author</span>  = {Miki, Takahiro and Schmid, Robin and Patel, Manthan and Tuna, Turcan and Richter, Julia and Nubert, Julian and Lee, Joonho and M{\"u}ller, Matthias and Hutter, Marco},
+  <span class="f">journal</span> = {Science Robotics},
+  <span class="f">year</span>    = {2026}
+}</pre>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Robotic Systems Lab, ETH Zurich</span>
+    <span>Map imagery in Fig. 3: Google Earth</span>
+  </div>
+</footer>
+
+<div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Image viewer">
+  <button class="x" aria-label="Close">×</button>
+  <button class="prev" aria-label="Previous">‹</button>
+  <img alt="">
+  <button class="next" aria-label="Next">›</button>
+  <div class="lbcap"></div>
+</div>
+
+<script>
+  // ============================================================
+  //  SITE SETTINGS: the only place to edit at publication.
+  //  Empty values keep the "soon" placeholders.
+  // ============================================================
+  window.SITE = {
+    youtube: { movie1: "", seealpsee: "", zermattOnboard: "", zermattBehind: "", seealpseeBehind: "", seealpseeOnboard: "" },   // YouTube video IDs, e.g. "dQw4w9WgXcQ"
+    links: { paper: "", supplementary: "" },       // e.g. "https://www.science.org/doi/10.1126/scirobotics.aee1549"
+    published: false                                // true hides the embargo bar (also delete the noindex <meta> in <head>)
+  };
+  document.querySelectorAll("[data-yt-key]").forEach(el => el.dataset.youtube = SITE.youtube[el.dataset.ytKey] || "");
+  document.querySelectorAll("[data-link]").forEach(a => {
+    const url = SITE.links[a.dataset.link]; if (!url) return;
+    a.href = url; a.classList.remove("disabled"); a.removeAttribute("aria-disabled"); a.target = "_blank"; a.rel = "noopener";
+    a.lastChild.textContent = a.dataset.link === "paper" ? "Paper" : "Supplementary";
+  });
+  if (SITE.published) document.querySelector(".draft-bar")?.remove();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  // ---------- Gallery (tiles cropped from Fig. 2) ----------
+  const envs = [
+    ["b","Below the Matterhorn","nature","big"],["a","Lakeside trail with cows","nature",""],["c","Steep rocky slope","nature",""],
+    ["o","Danger sign","challenge","wide"],["d","Muddy mountain path","nature",""],["e","Alpine meadow","nature",""],
+    ["f","Forest","nature",""],["m","Smoke","challenge","big"],["g","Grass","nature",""],["h","University campus","urban",""],
+    ["l","Indoor stairs","indoor",""],["i","Village road","urban",""],["j","Indoor atrium","indoor",""],
+    ["n","Train tracks","challenge","wide"],["k","Building entrance","indoor",""]
+  ];
+  const g = document.getElementById("gallery");
+  g.innerHTML = envs.map(([id, label, cat, size]) =>
+    `<div class="tile ${size}" data-cat="${cat}" data-lb data-src="static/img/env/${id}.jpg" data-cap="Fig. 2${id.toUpperCase()}. ${label}">
+       <img src="static/img/env/${id}.jpg" alt="${label}" loading="lazy">
+       <div class="lbl"><span>${label}</span><small>${cat}</small></div></div>`).join("");
+  document.querySelectorAll(".chip[data-f]").forEach(chip => chip.addEventListener("click", () => {
+    document.querySelectorAll(".chip[data-f]").forEach(c => c.setAttribute("aria-pressed", c === chip));
+    const f = chip.dataset.f;
+    g.querySelectorAll(".tile").forEach(t => t.classList.toggle("dim", f !== "all" && t.dataset.cat !== f));
+  }));
+
+  // ---------- Lightbox with prev/next over all zoomable images ----------
+  const lb = document.getElementById("lb"), lbImg = lb.querySelector("img"), lbCap = lb.querySelector(".lbcap");
+  const items = () => [...document.querySelectorAll("[data-lb]")].filter(el => !el.classList.contains("dim"));
+  let cur = 0;
+  const srcOf = el => el.dataset.src || el.querySelector("img").src;
+  const capOf = el => el.dataset.cap || (el.nextElementSibling && el.nextElementSibling.tagName === "FIGCAPTION" ? el.nextElementSibling.textContent : el.querySelector("img").alt);
+  function show(i) { const list = items(); cur = (i + list.length) % list.length; const el = list[cur]; lbImg.src = srcOf(el); lbImg.alt = el.querySelector("img").alt; lbCap.textContent = capOf(el); }
+  document.addEventListener("click", e => {
+    const el = e.target.closest("[data-lb]");
+    if (el && !lb.contains(el)) { show(items().indexOf(el)); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
+  });
+  const close = () => { lb.classList.remove("open"); document.body.style.overflow = ""; };
+  lb.querySelector(".x").onclick = close;
+  lb.querySelector(".prev").onclick = e => { e.stopPropagation(); show(cur - 1); };
+  lb.querySelector(".next").onclick = e => { e.stopPropagation(); show(cur + 1); };
+  lb.addEventListener("click", e => { if (e.target === lb) close(); });
+  document.addEventListener("keydown", e => {
+    if (!lb.classList.contains("open")) return;
+    if (e.key === "Escape") close(); if (e.key === "ArrowLeft") show(cur - 1); if (e.key === "ArrowRight") show(cur + 1);
+  });
+
+  // ---------- Hike media: route explorer / flyover / photos ----------
+  function syncHikeMedia() {
+    document.querySelectorAll(".hike").forEach(h => {
+      const on = h.classList.contains("on");
+      const panel = [...h.querySelectorAll("[data-hv-panel]")].find(p => !p.hidden);
+      const v = h.querySelector(".flyover video");
+      if (v) (on && panel === v.parentElement && hikesVisible) ? v.play().catch(() => {}) : v.pause();
+      const ex = h.querySelector(".explorer");
+      if (on && panel === ex && hikesVisible) initExplorer(ex);
+      if (ex && ex._map) setTimeout(() => ex._map.invalidateSize(), 50);
+    });
+  }
+  document.querySelectorAll(".hike-media").forEach(m => m.querySelectorAll("[data-hv]").forEach(b => b.addEventListener("click", () => {
+    m.querySelectorAll("[data-hv]").forEach(x => x.setAttribute("aria-pressed", x === b));
+    m.querySelectorAll("[data-hv-panel]").forEach(p => p.hidden = p.dataset.hvPanel !== b.dataset.hv);
+    syncHikeMedia();
+  })));
+  let hikesVisible = false;
+  new IntersectionObserver(([e]) => { hikesVisible = e.isIntersecting; syncHikeMedia(); }, { threshold: .15 }).observe(document.getElementById("hikes"));
+
+  // Route explorer: robot's GNSS track on swisstopo imagery + linked elevation profile
+  async function initExplorer(el) {
+    if (el._init || typeof L === "undefined") return; el._init = true;
+    const data = await (await fetch(el.dataset.route)).json();
+    const P = data.points, ll = P.map(p => [p[0], p[1]]), total = P[P.length - 1][3], N = P.length;
+    // Gradient (%) per point over a ~60 m window, for steepness colouring and section stats
+    const grade = P.map((p, i) => { let a = i, b = i; while (a > 0 && p[3] - P[a][3] < 30) a--; while (b < N - 1 && P[b][3] - p[3] < 30) b++;
+      const dd = P[b][3] - P[a][3]; return dd > 0 ? (P[b][2] - P[a][2]) / dd * 100 : 0; });
+    const gradeColor = g => coolwarm(Math.min(Math.abs(g), 40) / 40);
+
+    const map = L.map(el.querySelector(".rx-map"), { zoomControl: true, scrollWheelZoom: false });
+    el._map = map;
+    const wmts = (layer, fmt) => `https://wmts.geo.admin.ch/1.0.0/${layer}/default/current/3857/{z}/{x}/{y}.${fmt}`;
+    const attr = '© <a href="https://www.swisstopo.admin.ch/">swisstopo</a>';
+    const aerial = L.tileLayer(wmts("ch.swisstopo.swissimage", "jpeg"), { maxZoom: 19, attribution: attr }).addTo(map);
+    const topo = L.tileLayer(wmts("ch.swisstopo.pixelkarte-farbe", "jpeg"), { maxZoom: 18, attribution: attr });
+    const trails = L.tileLayer(wmts("ch.swisstopo.swisstlm3d-wanderwege", "png"), { maxZoom: 18, attribution: attr, opacity: .9 });
+    L.control.layers({ "Aerial": aerial, "Topo map": topo }, { "Hiking trails": trails }, { position: "topright" }).addTo(map);
+
+    const casing = L.polyline(ll, { color: "#fff", weight: 7, opacity: .55 }).addTo(map);
+    const base = L.polyline(ll, { color: "#7fd1c7", weight: 3.5 }).addTo(map);
+    const done = L.polyline([], { color: "#e3342c", weight: 4.5 }).addTo(map);
+    const steep = L.layerGroup(ll.slice(1).map((q, i) => L.polyline([ll[i], q], { color: gradeColor(grade[i]), weight: 5, opacity: 1 })));
+    const selLine = L.polyline([], { color: "#fff", weight: 9, opacity: .35 }).addTo(map);
+    const tag = t => L.divIcon({ className: "", html: `<span class="rx-end">${t}</span>`, iconSize: [0, 0] });
+    L.marker(ll[0], { icon: tag("Start"), interactive: false }).addTo(map);
+    L.marker(ll[N - 1], { icon: tag("Finish"), interactive: false }).addTo(map);
+    const pin = L.marker(ll[0], { icon: L.divIcon({ className: "", html: '<div class="rx-pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] }), interactive: false, zIndexOffset: 1000 }).addTo(map);
+    map.fitBounds(L.latLngBounds(ll), { padding: [24, 24] });
+
+    // Clicking the route jumps the robot there
+    const nearest = latlng => { let bi = 0, bd = Infinity; ll.forEach((q, i) => { const d = (q[0] - latlng.lat) ** 2 + ((q[1] - latlng.lng) * .7) ** 2; if (d < bd) { bd = d; bi = i; } }); return bi; };
+    [casing, base].forEach(l => l.on("click", e => { stop(); setIdx(nearest(e.latlng), true); }));
+
+    // Colour by progress or steepness
+    let colorMode = "progress";
+    el.querySelectorAll("[data-color]").forEach(b => b.addEventListener("click", () => {
+      colorMode = b.dataset.color; el.querySelectorAll("[data-color]").forEach(x => x.setAttribute("aria-pressed", x === b));
+      el.querySelector(".rx-legend").hidden = colorMode !== "grade";
+      if (colorMode === "grade") { steep.addTo(map); base.setStyle({ opacity: 0 }); done.setStyle({ opacity: 0 }); }
+      else { map.removeLayer(steep); base.setStyle({ opacity: 1 }); done.setStyle({ opacity: 1 }); }
+      draw();
+    }));
+
+    // Photo pins
+    let photos = [];
+    if (el.dataset.photos) {
+      photos = await (await fetch(el.dataset.photos)).json();
+      photos.forEach(ph => {
+        ph.i = nearest({ lat: ph.lat, lng: ph.lon });
+        const m = L.marker([ph.lat, ph.lon], { icon: L.divIcon({ className: "", html: `<div class="rx-photo" style="background-image:url(static/img/pins/${ph.id}_t.jpg)"></div>`, iconSize: [38, 38], iconAnchor: [19, 19] }) }).addTo(map);
+        m.bindPopup(`<div class="pop"><img src="static/img/pins/${ph.id}.jpg" alt="${ph.caption}" data-full="static/img/pins/${ph.id}.jpg"><div>${ph.caption}<small>km ${ph.km.toFixed(1)}${ph.approx ? " (approx.)" : ""} · ${ph.by === "Fig. 3B" ? "from Fig. 3B" : "photo: " + ph.by}</small></div></div>`, { maxWidth: 260, autoPanPadding: [20, 20] });
+        m.on("click", () => { stop(); setIdx(ph.i, false); });
+      });
+      map.on("popupopen", e => { const img = e.popup.getElement().querySelector("img[data-full]"); if (img) img.onclick = () => { lbImg.src = img.dataset.full; lbImg.alt = img.alt; lbCap.textContent = img.alt; lb.classList.add("open"); }; });
+    }
+
+    // Elevation profile: hover/drag to scrub, drag horizontally to select a section
+    const svg = el.querySelector(".rx-prof"), H = 130, m = { l: 44, r: 10, t: 8, b: 20 };
+    const zs = P.map(p => p[2]), zmin = Math.min(...zs), zmax = Math.max(...zs);
+    const pad = Math.max(10, (zmax - zmin) * .08), y0 = Math.floor((zmin - pad) / 10) * 10, y1 = Math.ceil((zmax + pad) / 10) * 10;
+    let idx = 0, sel = null, covers = [];
+    const gid = "g" + Math.random().toString(36).slice(2, 7);
+    function draw() {
+      const w = svg.clientWidth || 600, X = d => m.l + d / total * (w - m.l - m.r), Y = z => m.t + (1 - (z - y0) / (y1 - y0)) * (H - m.t - m.b);
+      svg.setAttribute("viewBox", `0 0 ${w} ${H}`);
+      const span = y1 - y0, step = span > 600 ? 500 : span > 200 ? 100 : span > 60 ? 20 : 10;
+      let g = "", ax = "";
+      for (let z = Math.ceil(y0 / step) * step; z <= y1; z += step) { g += `<line x1="${m.l}" x2="${w - m.r}" y1="${Y(z)}" y2="${Y(z)}"/>`; ax += `<text x="${m.l - 6}" y="${Y(z) + 3.5}" text-anchor="end">${z}</text>`; }
+      const kmStep = total > 5000 ? 2000 : 500;
+      for (let d = 0; d <= total; d += kmStep) ax += `<text x="${X(d)}" y="${H - 5}" text-anchor="middle">${(d / 1000).toFixed(kmStep < 1000 ? 1 : 0)} km</text>`;
+      const pts = P.map((p, i) => `${X(p[3]).toFixed(1)},${Y(p[2]).toFixed(1)}`);
+      const path = "M" + pts.join("L"), area = path + `L${X(total)},${H - m.b}L${m.l},${H - m.b}Z`;
+      let line = `<path class="line" d="${path}"/>`;
+      if (colorMode === "grade") line = P.slice(1).map((p, i) => `<path d="M${pts[i]}L${pts[i + 1]}" stroke="${gradeColor(grade[i])}" stroke-width="2.5" fill="none"/>`).join("");
+      const dpath = colorMode === "grade" ? "" : `<path class="done" d="M${pts.slice(0, idx + 1).join("L")}"/>`;
+      const c = P[idx];
+      const coverRect = (pipOn && covers.length ? covers : []).map(c => `<rect class="cover" x="${X(P[c[0]][3])}" y="${m.t}" width="${Math.max(2, X(P[c[1]][3]) - X(P[c[0]][3]))}" height="${H - m.t - m.b}"/>`).join("");
+      const brush = sel ? `<rect class="brush" x="${X(P[Math.min(...sel)][3])}" y="${m.t}" width="${Math.abs(X(P[sel[1]][3]) - X(P[sel[0]][3]))}" height="${H - m.t - m.b}"/>` : "";
+      const ticks = photos.map(ph => `<rect class="ptick" x="${X(P[ph.i][3]) - 1}" y="${H - m.b - 6}" width="2" height="6"/>`).join("");
+      svg.innerHTML = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd1c7" stop-opacity=".35"/><stop offset="1" stop-color="#7fd1c7" stop-opacity="0"/></linearGradient></defs>
+        <g class="grid">${g}</g>${coverRect}<path d="${area}" fill="url(#${gid})"/>${line}${dpath}${brush}${ticks}
+        <g class="ax">${ax}</g><line class="cross" x1="${X(c[3])}" x2="${X(c[3])}" y1="${m.t}" y2="${H - m.b}"/><circle class="dot" cx="${X(c[3])}" cy="${Y(c[2])}" r="5"/>`;
+    }
+    const inner = () => map.getBounds().pad(-0.2);
+    function setIdx(i, follow, fromVideo) {
+      idx = Math.max(0, Math.min(N - 1, i));
+      pin.setLatLng(ll[idx]); done.setLatLngs(ll.slice(0, idx + 1));
+      if (follow && !inner().contains(ll[idx])) map.panTo(ll[idx], { animate: true, duration: .6 });
+      el.querySelector(".rx-read").innerHTML = `<b>${(P[idx][3] / 1000).toFixed(2)} km</b> · <b>${Math.round(P[idx][2])} m</b> · grade <b>${Math.round(grade[idx])}%</b>`;
+      if (!fromVideo) seekVideoTo(idx);
+      draw();
+    }
+    // Section stats (Tobler's hiking function for a walking-time estimate)
+    function showSel() {
+      const box = el.querySelector(".rx-sel");
+      if (!sel || Math.abs(sel[1] - sel[0]) < 3) { box.hidden = true; selLine.setLatLngs([]); return; }
+      const a = Math.min(...sel), b = Math.max(...sel); let up = 0, dn = 0, mx = 0, hrs = 0;
+      for (let i = a; i < b; i++) { const dz = P[i + 1][2] - P[i][2], dd = P[i + 1][3] - P[i][3];
+        dz > 0 ? up += dz : dn -= dz; mx = Math.max(mx, Math.abs(grade[i]));
+        if (dd > 0) hrs += dd / 1000 / (6 * Math.exp(-3.5 * Math.abs(dz / dd + .05))); }
+      selLine.setLatLngs(ll.slice(a, b + 1));
+      box.hidden = false;
+      box.innerHTML = `<div><span>Distance</span><b>${((P[b][3] - P[a][3]) / 1000).toFixed(2)} km</b></div><div><span>Ascent</span><b>${Math.round(up)} m</b></div>
+        <div><span>Descent</span><b>${Math.round(dn)} m</b></div><div><span>Steepest</span><b>${Math.round(mx)}%</b></div><div><span>Hiker time</span><b>${Math.floor(hrs)} h ${Math.round(hrs % 1 * 60)} min</b></div>
+        <div class="x">Walking time for a person, from Tobler's hiking function. Ascent and descent are read from the terrain model along the robot's GPS track.</div>`;
+    }
+    const toIdx = e => { const r = svg.getBoundingClientRect(), x = e.clientX - r.left;
+      const d = (x - m.l) / (r.width - m.l - m.r) * total; let k = 0; while (k < N - 1 && P[k][3] < d) k++; return k; };
+    let down = null;
+    svg.addEventListener("pointerdown", e => { down = { x: e.clientX, i: toIdx(e) }; svg.setPointerCapture(e.pointerId); stop(); });
+    svg.addEventListener("pointermove", e => {
+      if (down && Math.abs(e.clientX - down.x) > 8) { sel = [down.i, toIdx(e)]; showSel(); draw(); return; }
+      if (e.pointerType === "mouse" && !down) setIdx(toIdx(e), false);
+    });
+    svg.addEventListener("pointerup", e => {
+      if (down && Math.abs(e.clientX - down.x) <= 8) { sel = null; showSel(); setIdx(toIdx(e), true); }
+      down = null;
+    });
+
+    // Replay: walk the marker along the route in ~18 s, map follows
+    const btn = el.querySelector(".rx-play"); let raf = 0;
+    function stop() { cancelAnimationFrame(raf); raf = 0; btn.setAttribute("aria-pressed", false); btn.querySelector("span").textContent = "Replay the hike"; }
+    btn.addEventListener("click", () => {
+      if (raf) return stop();
+      if (vid && !vid.paused()) vid.pause();
+      btn.setAttribute("aria-pressed", true); btn.querySelector("span").textContent = "Pause";
+      let start = null; const from = idx >= N - 1 ? 0 : idx, dur = 18000 * (1 - from / N);
+      if (from === 0) map.setView(ll[0], Math.max(map.getZoom(), 15));
+      const tick = t => { start ??= t; const k = Math.min(1, (t - start) / dur); setIdx(Math.round(from + k * (N - 1 - from)), true);
+        if (k < 1) raf = requestAnimationFrame(tick); else { stop(); map.fitBounds(L.latLngBounds(ll), { padding: [24, 24] }); } };
+      raf = requestAnimationFrame(tick);
+    });
+
+    // Fullscreen
+    el.querySelector(".rx-full").addEventListener("click", () => {
+      document.fullscreenElement ? document.exitFullscreen() : el.requestFullscreen?.();
+    });
+    document.addEventListener("fullscreenchange", () => setTimeout(() => { map.invalidateSize(); draw(); }, 100));
+
+    // Videos synced both ways with the map (video time <-> position on the route).
+    // Each source plays its local file, or its YouTube upload once SITE.youtube[source.yt] is set.
+    let vid = null, tm = null, pipOn = false, active = null, approx = false;
+    const pip = el.querySelector(".rx-pip"), noteEl = pip && pip.querySelector(".rx-pip-note");
+    function seekVideoTo(i) {
+      if (!vid || !tm || !pipOn || !vid.paused()) return;
+      let best = null, bd = Infinity; tm.forEach(r => { const d = Math.abs(r.i - i); if (d < bd) { bd = d; best = r; } });
+      if (best && bd < 15) { vid.seek(best.t); noteEl.textContent = noteEl.dataset.base; }
+      else noteEl.textContent = "No footage at this point";
+    }
+    function onVideoTime(t) {
+      if (!tm) return;
+      let k = 0; while (k < tm.length - 1 && tm[k + 1].t <= t) k++;
+      const a = tm[k], b = tm[Math.min(k + 1, tm.length - 1)], f = b.t > a.t ? Math.min(1, (t - a.t) / (b.t - a.t)) : 0;
+      if (Math.abs(b.i - a.i) < 40) setIdx(Math.round(a.i + (b.i - a.i) * f), true, true);
+    }
+    function localPlayer(src, poster) {
+      pip.querySelector(".rx-yt")?.remove();
+      const v = pip.querySelector("video"); v.hidden = false; v.poster = poster; v.src = src; v.controls = true;
+      if (!v._bound) { v.addEventListener("timeupdate", () => vid && vid.kind === "local" && onVideoTime(v.currentTime)); v._bound = true; }
+      return { kind: "local", play: () => v.play().catch(() => {}), pause: () => v.pause(), paused: () => v.paused, seek: t => v.currentTime = t, destroy: () => { v.pause(); } };
+    }
+    function ytPlayer(id) {
+      pip.querySelector("video").hidden = true; pip.querySelector("video").pause();
+      pip.querySelector(".rx-yt")?.remove();
+      const host = document.createElement("div"); host.className = "rx-yt"; pip.prepend(host);
+      let yt = null, ready = false, timer = 0;
+      const make = () => { yt = new YT.Player(host, { videoId: id, playerVars: { rel: 0, playsinline: 1, mute: 1 }, events: { onReady: () => { ready = true; yt.playVideo(); } } });
+        timer = setInterval(() => { if (ready && yt.getPlayerState() === 1) onVideoTime(yt.getCurrentTime()); }, 250); };
+      if (window.YT && YT.Player) make(); else {
+        const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { prev && prev(); make(); };
+        if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) { const sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; document.head.append(sc); }
+      }
+      return { kind: "yt", play: () => ready && yt.playVideo(), pause: () => ready && yt.pauseVideo(), paused: () => !ready || yt.getPlayerState() !== 1,
+               seek: t => ready && yt.seekTo(t, true), destroy: () => { clearInterval(timer); ready && yt.destroy(); } };
+    }
+    const sources = el.dataset.videos ? JSON.parse(el.dataset.videos) : [];
+    const camIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="m16 10 6-3v10l-6-3z"/></svg>';
+    for (const src of sources) {
+      try {
+        const j = await (await fetch(src.timemap)).json();
+        src.tm = j.map.map(r => ({ t: r[0], i: nearest({ lat: r[1], lng: r[2] }) }));
+        src.approx = !!j.approx; src.covers = [];
+        src.tm.forEach((r, k) => { if (!k || Math.abs(r.i - src.tm[k - 1].i) > 40) src.covers.push([r.i, r.i]); else { const c = src.covers[src.covers.length - 1]; c[0] = Math.min(c[0], r.i); c[1] = Math.max(c[1], r.i); } });
+        const btn = document.createElement("button"); btn.className = "rx-icon"; btn.setAttribute("aria-pressed", "false"); btn.innerHTML = camIcon + `<span>${src.label}</span>`;
+        btn.title = `Play “${src.label}” synced with the map`;
+        el.querySelector(".rx-vids").append(btn); src.btn = btn;
+        btn.addEventListener("click", () => {
+          const turningOff = pipOn && active === src;
+          if (vid) { vid.destroy(); vid = null; }
+          sources.forEach(o => o.btn && o.btn.setAttribute("aria-pressed", "false"));
+          if (turningOff) { pipOn = false; pip.hidden = true; active = null; tm = null; covers = []; draw(); return; }
+          active = src; tm = src.tm; covers = src.covers; pipOn = true; pip.hidden = false; btn.setAttribute("aria-pressed", "true");
+          noteEl.dataset.base = noteEl.textContent = src.approx ? `${src.label} · position approximate` : `${src.label} · 10× · GPS-synced`;
+          const ytId = (window.SITE && SITE.youtube && SITE.youtube[src.yt]) || "";
+          vid = ytId ? ytPlayer(ytId) : localPlayer(src.src, src.poster);
+          stop(); vid.play(); draw();
+        });
+      } catch (e) { /* source without timemap: skip */ }
+    }
+    addEventListener("resize", draw);
+    setIdx(0);
+  }
+
+  // ---------- Hike tabs ----------
+  document.querySelectorAll("[data-hike]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-hike]").forEach(x => x.setAttribute("aria-selected", x === b));
+    document.querySelectorAll(".hike").forEach(h => h.classList.toggle("on", h.id === "hike-" + b.dataset.hike));
+    syncHikeMedia();
+  }));
+
+  // ---------- Movie 1 (YouTube, only once an ID is set) ----------
+  // Long videos live on YouTube. Show a poster; load the player only on click.
+  document.querySelectorAll(".yt").forEach(el => {
+    const id = el.dataset.youtube;
+    el.innerHTML = `<img class="yt-poster" src="${el.dataset.poster}" alt="" loading="lazy">
+      <button class="ph" ${id ? "" : "disabled"} aria-label="${id ? "Play " + el.dataset.title : el.dataset.title + " (coming soon on YouTube)"}">
+        <span><span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>${id ? el.dataset.label : el.dataset.title + " · on YouTube soon"}</span></button>`;
+    if (id) el.querySelector(".ph").addEventListener("click", () => {
+      el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="${el.dataset.title}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+    });
+  });
+
+  // ---------- Reveal on scroll ----------
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: .12, rootMargin: "0px 0px -40px 0px" });
+  document.querySelectorAll(".rv").forEach(el => io.observe(el));
+
+  // ---------- Pipeline: cycle highlight through the three stages ----------
+  let stage = 0, timer;
+  const light = s => document.querySelectorAll("#how [data-step]").forEach(el => el.classList.toggle("on", +el.dataset.step === s));
+  const pipeIO = new IntersectionObserver(([e]) => {
+    clearInterval(timer);
+    if (e.isIntersecting) { light(stage); timer = setInterval(() => { stage = (stage + 1) % 3; light(stage); }, 2200); }
+  }, { threshold: .3 });
+  pipeIO.observe(document.querySelector(".pipe"));
+  document.querySelectorAll(".step").forEach(s => s.addEventListener("mouseenter", () => { stage = +s.dataset.step; light(stage); }));
+
+  // ---------- Nav: show after hero, progress bar, active link ----------
+  const nav = document.getElementById("nav"), bar = document.getElementById("progress"), hero = document.querySelector(".hero");
+  const links = [...nav.querySelectorAll("ul a")], secs = links.map(a => document.querySelector(a.getAttribute("href")));
+  function onScroll() {
+    const y = scrollY, h = document.documentElement.scrollHeight - innerHeight;
+    nav.classList.toggle("show", y > hero.offsetHeight - 80);
+    bar.style.width = (h > 0 ? y / h * 100 : 0) + "%";
+    let on = -1; secs.forEach((s, i) => { if (s && s.getBoundingClientRect().top < innerHeight * .4) on = i; });
+    links.forEach((a, i) => a.classList.toggle("on", i === on));
+  }
+  addEventListener("scroll", onScroll, { passive: true }); onScroll();
+
+  // ---------- Hero video: pause when off screen ----------
+  const hv = hero.querySelector("video");
+  new IntersectionObserver(([e]) => { if (e.isIntersecting) hv.play().catch(() => {}); else hv.pause(); }).observe(hero);
+
+  // ---------- Count-up stats ----------
+  document.querySelectorAll("[data-count]").forEach(el => {
+    const end = +el.dataset.count, dec = +(el.dataset.dec || 0), t0 = performance.now() + 900, dur = 1400;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    el.textContent = (0).toFixed(dec);
+    const tick = now => { const p = Math.min(1, Math.max(0, (now - t0) / dur)), k = 1 - Math.pow(1 - p, 3); el.textContent = (end * k).toFixed(dec); if (p < 1) requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  });
+
+  // ---------- Lab 1: Hönggerberg course (Fig. 4) ----------
+  const V = "static/video/exp/";
+  const METHODS = { roam: ["ROAM", "#ff6b5f"], geometry: ["Geometry-only", "#5b8def"], vint: ["ViNT", "#4fc3d9"] };
+  const TRAPS = [
+    { id: "bushes", title: "Wrong path: bushes", desc: "The global path is offset into a flower bed.", runs: {
+      roam: [1, "Stays on the road", "The global path points into the bushes. ROAM's map marks them as risky, so it keeps to the paved road."],
+      geometry: [0, "Walks into the bushes", "It follows the global path into the flower bed and needs an intervention."] } },
+    { id: "grass", title: "Wrong path: grass", desc: "The global path cuts across a meadow.", runs: {
+      roam: [1, "Stays on the gravel", "Grass is walkable but not preferred, so ROAM follows the gravel path instead of the shortcut."],
+      geometry: [0, "Goes into the grass", "Grass is flat, so to a geometry map it looks as good as the path."] } },
+    { id: "mannequin", title: "Person on the path", desc: "A mannequin lies across the road.", runs: {
+      roam: [1, "Walks around it", "The VLM labels a person, which gets the highest risk, so the robot gives it room."],
+      geometry: [0, "Walks over it", "A body lying flat is low enough to step over, so geometry alone sees no obstacle."],
+      vint: [0, "Runs into it", "The learned navigation baseline circles around and makes contact with the mannequin."] } },
+    { id: "signs", title: "Construction zone", desc: "“DANGER: road work ahead”, then “END road work”.", runs: {
+      roam: [1, "Reads the signs and detours", "After the first sign, the path turns red in the risk map and the robot walks on the grass. At the end sign, it returns to the path."],
+      geometry: [0, "Ignores the signs", "It stays on the closed path and walks through the barrier tape."],
+      vint: [0, "Needs interventions", "It tangles in the barrier tape and wanders into tall grass, so an operator has to step in."] } }
+  ];
+  const course = document.getElementById("course");
+  const trapList = course.querySelector(".traps"), methodBar = course.querySelector(".methods"),
+        screens = course.querySelector(".screens"), verdict = course.querySelector(".verdict"), extra = course.querySelector(".extra");
+  let trap = 0, method = "roam", view = "one";
+  trapList.innerHTML = TRAPS.map((t, i) => `<li><button role="tab" aria-selected="${i === 0}" data-i="${i}"><span class="n">0${i + 1}</span><b>${t.title}</b><span>${t.desc}</span></button></li>`).join("");
+  methodBar.innerHTML = Object.entries(METHODS).map(([k, [n, c]]) => `<button data-m="${k}" style="--c:${c}" aria-pressed="${k === "roam"}"><i></i>${n}</button>`).join("");
+  const dots = (n, cls) => `<span class="dots">${Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? cls : ""}"></i>`).join("")}</span>`;
+  function renderCourse() {
+    const t = TRAPS[trap];
+    if (!t.runs[method]) method = "roam";
+    trapList.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === trap));
+    methodBar.querySelectorAll("button").forEach(b => {
+      b.disabled = !t.runs[b.dataset.m] || view === "all";
+      b.title = t.runs[b.dataset.m] ? "" : "Not run on this trap";
+      b.setAttribute("aria-pressed", view === "one" && b.dataset.m === method);
+    });
+    const shown = view === "one" ? [method] : Object.keys(t.runs);
+    screens.className = "screens n" + shown.length;
+    screens.innerHTML = shown.map(m => {
+      const [ok, head] = t.runs[m], [name, c] = METHODS[m];
+      return `<div class="screen" style="--c:${c}"><video src="${V}hg-${t.id}-${m}.mp4" poster="${V}poster/hg-${t.id}-${m}.jpg" muted loop playsinline autoplay preload="auto"></video>
+        <div class="who"><i></i>${name}</div><div class="res ${ok ? "ok" : "bad"}"><span class="ic">${ok ? "✓" : "✕"}</span>${head}</div></div>`;
+    }).join("");
+    const [ok, head, body] = t.runs[method];
+    verdict.innerHTML = `<span class="ic" style="background:${ok ? "var(--glacier)" : "var(--red-soft)"};color:${ok ? "var(--night)" : "#fff"}">${ok ? "✓" : "✕"}</span><div><b>${head}</b><span>${body}</span></div>`;
+    extra.innerHTML = t.id === "mannequin" ? `<div class="trials">
+        <span class="h">10 trials each</span><span class="h">Reached the goal</span><span class="h">Collided</span>
+        <b style="color:${METHODS.roam[1]}">ROAM</b><span class="dots-wrap">${dots(10, "y")}<span>10/10</span></span><span class="dots-wrap">${dots(0, "x")}<span>0/10</span></span>
+        <b style="color:${METHODS.geometry[1]}">Geometry-only</b><span class="dots-wrap">${dots(10, "y")}<span>10/10</span></span><span class="dots-wrap">${dots(10, "x")}<span>10/10</span></span>
+        <b style="color:${METHODS.vint[1]}">ViNT</b><span class="dots-wrap">${dots(6, "y")}<span>6/10</span></span><span class="dots-wrap"><span>–</span></span>
+        <span class="trials-note">From fig. S4. With the mannequin in random postures, ROAM still reached the goal 10/10 times, with 3 slight hits on thin parts of the mannequin.</span></div>`
+      : t.id === "signs" && method === "roam" && view === "one" ? `
+        <p class="quote"><small>VLM, before the sign</small>“Gravel path: the primary <em>navigable surface</em> … Grass: considered <em>mid-risk</em> due to unevenness.”</p>
+        <p class="quote"><small>VLM, after reading it</small>“Based on the warning sign, <em>the gravel path ahead is not safe</em> for navigation due to road work. The robot should consider the grassy areas as an alternative route.”</p>` : "";
+    screens.querySelectorAll("video").forEach(v => { v.play().catch(() => {}); });
+  }
+  trapList.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { trap = +b.dataset.i; renderCourse(); } });
+  methodBar.addEventListener("click", e => { const b = e.target.closest("button"); if (b && !b.disabled) { method = b.dataset.m; renderCourse(); } });
+  course.querySelectorAll("[data-view]").forEach(b => b.addEventListener("click", () => {
+    view = b.dataset.view; course.querySelectorAll("[data-view]").forEach(x => x.setAttribute("aria-pressed", x === b)); renderCourse();
+  }));
+
+  // ---------- Lab 2: same terrain, different sign (Fig. 5A) ----------
+  // Values copied from the VLM responses logged on the robot (and Fig. 5A for the cans).
+  const CONDS = [
+    { id: "cans", title: "Exploding cans", sub: "warning sign on the wall", video: "cans-roam", plain: true,
+      note: "Third-person view with the steppable map (top left) and elevation map (bottom left) burned in.",
+      key: ["scattered_cans", "warning_sign"],
+      labels: [["warning_sign", 1, 0, 0], ["scattered_cans", .7, 0, 0], ["dirt_ground", .3, 1, 0], ["person", 1, 0, 0], ["wall", 1, 0, 0]],
+      take: "The sign turns harmless-looking cans into <b>no-step zones</b>. The robot places its feet between them." },
+    { id: "pallet-no-sign", title: "No sign", sub: "pallets on grass", video: "pallet-no-sign",
+      note: "Onboard front camera. The four views are the same moment, kept in sync.",
+      key: ["wooden_path", "grass"],
+      labels: [["wooden_path", 0, 1, 1], ["grass", .5, 1, .5], ["gravel", .3, 1, .3], ["asphalt", .2, 1, .7], ["concrete_cylinder", 1, 0, 0], ["people", 1, 0, 0], ["building_structure", 1, 0, 0]],
+      take: "With no sign, the wooden path is the <b>safest, preferred</b> route and grass is mid-risk." },
+    { id: "pallet-sign-on-pallet", title: "Sign on the pallets", sub: "“do not step here”", video: "pallet-sign-on-pallet",
+      note: "Onboard front camera. The four views are the same moment, kept in sync.",
+      key: ["wooden_boardwalk", "pallets", "grass"],
+      labels: [["wooden_boardwalk", 1, 0, 0], ["pallets", 1, 0, 0], ["danger_sign", 1, 0, 0], ["grass", .1, 1, 1], ["upward_slope", .25, 1, .55], ["concrete_barrier", 1, 0, 0]],
+      take: "One sign flips the scene: the pallets become <b>not steppable</b> and grass becomes the preferred ground." },
+    { id: "pallet-signs-on-grass", title: "Signs on the grass", sub: "“danger: mines”", video: "pallet-signs-on-grass",
+      note: "Onboard front camera. The four views are the same moment, kept in sync.",
+      key: ["grass", "wooden_boardwalk", "mine_warning_sign"],
+      labels: [["grass", 1, 0, 0], ["mine_warning_sign", 1, 0, 0], ["wooden_boardwalk", 0, 1, 1], ["gravel_ground", .28, 1, .5], ["paved_area", .05, 1, .9], ["concrete_barrier", 1, 0, 0], ["human_obstacle", 1, 0, 0]],
+      take: "Now the grass is the danger: <b>risk 1.0, not steppable</b>. The boardwalk is the only way through." }
+  ];
+  const pal = document.getElementById("pallets");
+  const condBar = pal.querySelector(".conds"), mos = pal.querySelector(".mosaic"), mv2 = mos.querySelector("video"),
+        layerBar = pal.querySelector(".layers"), qLbl = pal.querySelector(".q-lbl"), rows = pal.querySelector(".vp-rows");
+  const LAYER_NAMES = { cam: "", risk: "risk", step: "steppable", pref: "preferred area", all: "" };
+  let cond = 2, layer = "risk";
+  condBar.innerHTML = CONDS.map((c, i) => `<button role="tab" data-i="${i}" aria-selected="false"><img src="${V}poster/${c.video}.jpg" alt=""><span><b>${c.title}</b><span>${c.sub}</span></span></button>`).join("");
+  // Diverging blue (go) to red (avoid), matching the risk overlays in the videos
+  // matplotlib "coolwarm", as in the paper's risk images (blue = low, red = high)
+  const COOLWARM = [[58, 76, 192], [141, 175, 253], [221, 220, 219], [243, 152, 121], [179, 3, 38]];
+  const coolwarm = x => { x = Math.max(0, Math.min(1, x)) * (COOLWARM.length - 1); const k = Math.min(Math.floor(x), COOLWARM.length - 2), t = x - k;
+    return `rgb(${COOLWARM[k].map((c, j) => Math.round(c + (COOLWARM[k + 1][j] - c) * t)).join(",")})`; };
+  const ramp = (v, invert) => coolwarm(invert ? 1 - v : v);
+  function renderPal(reload) {
+    const c = CONDS[cond];
+    condBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === cond));
+    mos.classList.toggle("plain", !!c.plain);
+    layerBar.classList.toggle("off", !!c.plain); pal.querySelector(".scale").classList.toggle("off", !!c.plain || layer === "cam");
+    mos.dataset.layer = c.plain ? "cam" : layer;
+    layerBar.querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", b.dataset.layer === layer));
+    qLbl.textContent = c.plain ? "" : LAYER_NAMES[layer];
+    if (reload) { mv2.poster = `${V}poster/${c.video}.jpg`; mv2.src = `${V}${c.video}.mp4`; mv2.play().catch(() => {}); }
+    pal.querySelector(".cond-note").textContent = c.note;
+    rows.innerHTML = c.labels.map(([l, r, s, p]) => `<div class="vp-row ${c.key.includes(l) ? "key" : ""}"><span class="l" title="${l}">${l}</span>
+      <span class="v"><i style="width:${Math.max(r, .04) * 100}%;background:${ramp(r)}"></i><b>${r}</b></span>
+      <span class="v"><i style="width:${Math.max(s, .04) * 100}%;background:${ramp(s, true)}"></i><b>${s}</b></span>
+      <span class="v"><i style="width:${Math.max(p, .04) * 100}%;background:${ramp(p, true)}"></i><b>${p}</b></span></div>`).join("");
+    pal.querySelector(".vp-take").innerHTML = c.take;
+  }
+  condBar.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { cond = +b.dataset.i; renderPal(true); } });
+  layerBar.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { layer = b.dataset.layer; renderPal(false); } });
+
+  // Load lab videos only when the labs come into view; pause them when they leave
+  let labsReady = false;
+  new IntersectionObserver(es => es.forEach(e => {
+    const vids = e.target.querySelectorAll("video");
+    if (e.isIntersecting) {
+      if (!labsReady) { labsReady = true; renderCourse(); renderPal(true); }
+      vids.forEach(v => v.play().catch(() => {}));
+    } else vids.forEach(v => v.pause());
+  }), { threshold: .15 }).observe(course);
+  new IntersectionObserver(es => es.forEach(e => {
+    if (!labsReady) { labsReady = true; renderCourse(); renderPal(true); }
+    e.target.querySelectorAll("video").forEach(v => e.isIntersecting ? v.play().catch(() => {}) : v.pause());
+  }), { threshold: .15 }).observe(pal);
+
+  // Shared: VLM label rows (label, risk, steppable, preferred)
+  const labelRows = (labels, key) => labels.map(([l, r, s, p]) => `<div class="vp-row ${key.includes(l) ? "key" : ""}"><span class="l" title="${l}">${l}</span>
+      <span class="v"><i style="width:${Math.max(r, .04) * 100}%;background:${ramp(r)}"></i><b>${r}</b></span>
+      <span class="v"><i style="width:${Math.max(s, .04) * 100}%;background:${ramp(s, true)}"></i><b>${s}</b></span>
+      <span class="v"><i style="width:${Math.max(p, .04) * 100}%;background:${ramp(p, true)}"></i><b>${p}</b></span></div>`).join("");
+
+  // ---------- Lab 3: local navigation (Fig. 5B) ----------
+  // Labels from the VLM responses logged on the robot during these runs.
+  const ROUTES = [
+    { id: "route", title: "Mixed route", sub: "paved road, gravel, grass", thumb: "nav-route-roam",
+      views: [["compare", "ROAM vs geometry"], ["roam", "ROAM"], ["geometry", "Geometry-only"]],
+      note: "Third-person view, sped up 8×. Same start and goal for both runs.",
+      key: ["gravel_path", "grassy_area"],
+      labels: [["gravel_path", 0, 1, 1], ["grassy_area", .5, 1, 0], ["slope", .3, 1, 0], ["wooden_fence", 1, 0, 0], ["tree", 1, 0, 0], ["person", 1, 0, 0]],
+      take: "Paths are <b>preferred</b>, grass is walkable but not preferred. So ROAM follows the road, while geometry-only cuts straight across the lawn and squeezes past buildings." },
+    { id: "rail", title: "Next to a railroad", sub: "gravel beside the tracks", thumb: "nav-rail-roam",
+      views: [["cam", "Camera"], ["risk", "Risk"], ["step", "Steppable"], ["pref", "Preferred"], ["all", "All four"]],
+      mosaic: "nav-rail-roam", note: "ROAM's onboard front camera, sped up 2×.", labels: [], key: [],
+      take: "The tracks light up red in the risk map, so ROAM walks the gravel beside them. In the same spot, the geometry-only planner <b>got stuck on the tracks</b> (Fig. 5B)." },
+    { id: "snow", title: "Snowy passage", sub: "cleared strip vs snow", thumb: "nav-snow-third",
+      views: [["outside", "Outside"], ["cam", "Camera"], ["risk", "Risk"], ["step", "Steppable"], ["pref", "Preferred"], ["all", "All four"]],
+      mosaic: "nav-snow-roam", outside: "nav-snow-third", note: "Outside view and ROAM's onboard camera, November 2024.",
+      key: ["cleared_path", "snow_covered_ground"],
+      labels: [["cleared_path", .2, 1, 1], ["snow_covered_ground", .3, 1, 0], ["wet_ground", .4, 1, 0], ["metal_barrier", 1, 0, 0], ["concrete_wall", 1, 0, 0], ["metal_railing", 1, 0, 0]],
+      take: "Snow is walkable, but the <b>cleared strip is preferred</b>. ROAM keeps to it, as a person would." }
+  ];
+  const navLab = document.getElementById("routes");
+  const navTabs = navLab.querySelector(".nav-tabs"), navLayers = navLab.querySelector(".nav-layers"), navStage = navLab.querySelector(".nav-stage");
+  let route = 0, navView = "compare";
+  navTabs.innerHTML = ROUTES.map((r, i) => `<button role="tab" data-i="${i}" aria-selected="false"><img src="${V}poster/${r.thumb}.jpg" alt=""><span><b>${r.title}</b><span>${r.sub}</span></span></button>`).join("");
+  function renderNav(reload) {
+    const r = ROUTES[route];
+    if (!r.views.some(v => v[0] === navView)) navView = r.views[0][0];
+    navTabs.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === route));
+    navLayers.innerHTML = r.views.map(([k, n]) => `<button data-v="${k}" aria-pressed="${k === navView}">${n}</button>`).join("");
+    const isMosaic = ["cam", "risk", "step", "pref", "all"].includes(navView);
+    navLab.querySelector(".nav-scale").classList.toggle("off", !isMosaic || navView === "cam");
+    if (r.id === "route") {
+      const shown = navView === "compare" ? ["roam", "geometry"] : [navView];
+      navStage.innerHTML = `<div class="duo-v" style="${shown.length === 1 ? "grid-template-columns:1fr" : ""}">${shown.map(m => {
+        const [name, c] = METHODS[m];
+        return `<div class="screen" style="--c:${c}"><video src="${V}nav-route-${m}.mp4" poster="${V}poster/nav-route-${m}.jpg" muted loop playsinline autoplay preload="auto"></video>
+          <div class="who"><i></i>${name}</div><div class="res ${m === "roam" ? "ok" : "bad"}"><span class="ic">${m === "roam" ? "✓" : "✕"}</span>${m === "roam" ? "Stays on the road" : "Cuts across the grass"}</div></div>`; }).join("")}</div>
+        ${shown.length > 1 ? '<button class="play-both">Restart both together</button>' : ""}`;
+      const pb = navStage.querySelector(".play-both");
+      if (pb) pb.onclick = () => navStage.querySelectorAll("video").forEach(v => { v.currentTime = 0; v.play().catch(() => {}); });
+    } else if (navView === "outside") {
+      navStage.innerHTML = `<div class="outside"><video src="${V}${r.outside}.mp4" poster="${V}poster/${r.outside}.jpg" muted loop playsinline autoplay preload="auto"></video></div>`;
+    } else {
+      let m = navStage.querySelector(".mosaic");
+      if (!m || reload || m.dataset.src !== r.mosaic) {
+        navStage.innerHTML = `<div class="mosaic" data-src="${r.mosaic}"><video src="${V}${r.mosaic}.mp4" poster="${V}poster/${r.mosaic}.jpg" muted loop playsinline autoplay preload="auto"></video><div class="q-lbl"></div></div>`;
+        m = navStage.querySelector(".mosaic");
+      }
+      m.dataset.layer = navView; m.querySelector(".q-lbl").textContent = LAYER_NAMES[navView];
+    }
+    navStage.querySelectorAll("video").forEach(v => v.play().catch(() => {}));
+    navLab.querySelector(".nav-note").textContent = r.note;
+    navLab.querySelector(".nav-legend").classList.toggle("off", !r.labels.length);
+    navLab.querySelector(".nav-rows").innerHTML = labelRows(r.labels, r.key);
+    navLab.querySelector(".nav-take").innerHTML = (r.labels.length ? "" : "<span style='font-size:12.5px'>No VLM responses were logged for this run.</span><br>") + r.take;
+  }
+  navTabs.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { route = +b.dataset.i; renderNav(true); } });
+  navLayers.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { navView = b.dataset.v; renderNav(false); } });
+  let navReady = false;
+  new IntersectionObserver(([e]) => {
+    if (e.isIntersecting && !navReady) { navReady = true; renderNav(true); }
+    navLab.querySelectorAll("video").forEach(v => e.isIntersecting ? v.play().catch(() => {}) : v.pause());
+  }, { threshold: .15 }).observe(navLab);
+
+  // ---------- Lab 4: exploration stepper (Fig. 5C) ----------
+  const STEPS = [
+    ["a", "Blocked", "A cart and barrier tape block the gravel path that the global plan follows."],
+    ["b", "Alternative route", "Instead of stopping, ROAM takes another path that runs alongside."],
+    ["c", "Shortcut", "It cuts through a short stretch of grass toward the original route."],
+    ["d", "Back on track", "It rejoins the global path beyond the obstacle and carries on."]
+  ];
+  const ex = document.getElementById("explorer"), exSteps = ex.querySelector(".ex-steps"), exPhoto = ex.querySelector(".ex-photo"), exText = ex.querySelector(".ex-text"), exPlay = ex.querySelector(".ex-play");
+  let step = 0, exTimer = null, exAuto = true, exVisible = false;
+  exSteps.innerHTML = STEPS.map(([k, t], i) => `<button role="tab" data-i="${i}" aria-selected="${i === 0}"><b>${k}</b>${t}<span class="bar"></span></button>`).join("");
+  function showStep(i) {
+    step = (i + STEPS.length) % STEPS.length;
+    exSteps.querySelectorAll("button").forEach(b => { const on = +b.dataset.i === step; b.setAttribute("aria-selected", on); const bar = b.querySelector(".bar"); bar.classList.remove("run"); if (on && exAuto && exVisible) { void bar.offsetWidth; bar.classList.add("run"); } });
+    exPhoto.style.opacity = 0;
+    setTimeout(() => { exPhoto.src = `static/img/explore/${STEPS[step][0]}.jpg`; exPhoto.alt = STEPS[step][2]; exPhoto.style.opacity = 1; }, 180);
+    exText.innerHTML = `<b>${STEPS[step][0]}. ${STEPS[step][1]}.</b> ${STEPS[step][2]}`;
+  }
+  const exRun = () => { clearInterval(exTimer); if (exAuto && exVisible) exTimer = setInterval(() => showStep(step + 1), 4000); };
+  exSteps.addEventListener("click", e => { const b = e.target.closest("button"); if (b) { exAuto = false; exPlay.setAttribute("aria-pressed", false); exRun(); showStep(+b.dataset.i); } });
+  exPlay.addEventListener("click", () => { exAuto = !exAuto; exPlay.setAttribute("aria-pressed", exAuto); exRun(); showStep(step); });
+  new IntersectionObserver(([e]) => { exVisible = e.isIntersecting; exRun(); showStep(step); }, { threshold: .3 }).observe(ex);
+  showStep(0);
+
+  // ---------- Fig. 6C / Table 1 chart ----------
+  const RATIOS = [
+    ["ROAM A*", "ROAM", .992, .852], ["Straight line", "Baseline", .902, .556],
+    ["Trajectory label with ROAM", "Label + ROAM risk", .884, .535], ["Line label with ROAM", "Label + ROAM risk", .844, .676],
+    ["Uniform label", "Label only", .740, .418], ["Pixel coordinates from prompt", "Pixel coordinates", .721, .406],
+    ["Line label", "Label only", .702, .416], ["Pixel coordinates from goal", "Pixel coordinates", .686, .379],
+    ["Trajectory label", "Label only", .633, .307]
+  ];
+  const bars = document.querySelector("#ratios .bars");
+  function renderBars(metric) {
+    const k = metric === "safety" ? 2 : 3;
+    const sorted = [...RATIOS].sort((a, b) => b[k] - a[k]);
+    if (!bars.children.length) bars.innerHTML = RATIOS.map(r => `<div class="bar-row ${r[1] === "ROAM" ? "roam" : ""}" role="listitem" data-n="${r[0]}"><span class="nm">${r[0]}<small>${r[1]}</small></span><span class="track"><span class="fill"></span></span><span class="val"></span></div>`).join("");
+    sorted.forEach((r, i) => {
+      const el = bars.querySelector(`[data-n="${r[0]}"]`);
+      el.style.order = i; el.querySelector(".fill").style.width = r[k] * 100 + "%"; el.querySelector(".val").textContent = r[k].toFixed(3);
+      el.title = `${r[0]} (${r[1]}): safety ${r[2].toFixed(3)}, preferred ${r[3].toFixed(3)}`;
+    });
+    bars.style.display = "flex"; bars.style.flexDirection = "column";
+    document.getElementById("chart-title").textContent = metric === "safety" ? "Share of each path on safe ground" : "Share of each path on preferred ground";
+  }
+  document.getElementById("ratio-table").innerHTML = RATIOS.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n">${r[2].toFixed(3)}</td><td class="n">${r[3].toFixed(3)}</td></tr>`).join("");
+  document.querySelectorAll("[data-metric]").forEach(b => b.addEventListener("click", () => {
+    document.querySelectorAll("[data-metric]").forEach(x => x.setAttribute("aria-pressed", x === b)); renderBars(b.dataset.metric);
+  }));
+  renderBars("safety");
+
+  // ---------- Copy BibTeX ----------
+  document.getElementById("copy").addEventListener("click", async e => {
+    try { await navigator.clipboard.writeText(document.getElementById("bib").textContent); e.target.textContent = "Copied"; }
+    catch { e.target.textContent = "Select and copy"; }
+    setTimeout(() => e.target.textContent = "Copy", 1800);
+  });
+</script>
+</body>
+</html>
