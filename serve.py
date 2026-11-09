@@ -10,6 +10,10 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 
 
 class RangeHandler(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header("Cache-Control", "no-cache")  # always revalidate, so edits show up on reload
+        super().end_headers()
+
     def send_head(self):
         rng = self.headers.get("Range")
         path = self.translate_path(self.path)
