@@ -186,6 +186,17 @@
 
   /* ---------- Interactive Fig. 1 ---------- */
   .fx { margin-top: 40px; }
+  .f1 { position: relative; background: #fff; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
+  .f1 img { display: block; width: 100%; height: auto; }
+  .f1 svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .f1-dim { fill: rgba(11,15,13,.55); fill-rule: evenodd; transition: opacity .3s; pointer-events: none; }
+  .f1-hot rect { fill: transparent; stroke: transparent; stroke-width: 6; rx: 14; cursor: pointer; transition: stroke .2s; }
+  .f1-hot rect:hover { stroke: rgba(255,107,95,.6); }
+  .f1-hot rect.on { stroke: var(--red-soft); }
+  .f1-flow circle { fill: #ff3b30; stroke: #fff; stroke-width: 3; pointer-events: none; }
+  .f1-hint { position: absolute; right: 12px; bottom: 12px; font: 600 12px Inter, sans-serif; color: #fff; background: rgba(11,15,13,.72); padding: 5px 11px; border-radius: 99px; pointer-events: none; transition: opacity .3s; }
+  .f1.picked .f1-hint { opacity: 0; }
+
   .fx-flow { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; counter-reset: fx; }
   .fx-flow li { position: relative; }
   .fx-flow li + li::before { content: ""; position: absolute; left: -8px; top: 50%; width: 8px; height: 2px; background: rgba(255,255,255,.18); }
@@ -842,6 +853,11 @@
     <p class="lead dim rv d1" style="max-width:720px">The VLM never outputs coordinates or speeds. It only names what it sees and says how risky each thing is. Everything that has to be fast and precise happens downstream.</p>
 
     <div class="fx rv d2" id="fx">
+      <div class="f1">
+        <img src="static/img/how/fig1.jpg" alt="Fig. 1: the ROAM pipeline. Camera images go to the VLM, its labels become segmentation maps, these are projected onto the elevation map, which the navigation and locomotion policies read" width="2400" height="2043">
+        <svg viewBox="0 0 1874 1595" aria-hidden="true"><path class="f1-dim"/><g class="f1-flow"></g><g class="f1-hot"></g></svg>
+        <div class="f1-hint">Click a block</div>
+      </div>
       <ol class="fx-flow" role="tablist" aria-label="Pipeline stages"></ol>
       <div class="fx-panel">
         <div class="fx-vis"></div>
@@ -852,7 +868,7 @@
           <div class="fx-nav"><button class="fx-prev" aria-label="Previous stage">&larr;</button><button class="fx-next">Next stage &rarr;</button></div>
         </div>
       </div>
-      <p class="cap">One real moment from the Zermatt hike, 15 August 2024, followed through the whole pipeline. The dot on each stage blinks at the rate that stage runs on the robot.</p>
+      <p class="cap">Fig. 1 of the paper, made clickable. Every block shows the same real moment from the Zermatt hike (15 August 2024). Dots run along the arrows at the rate each stage works on the robot: one VLM answer every ten seconds, motor commands fifty times a second.</p>
     </div>
 
     <details class="expand rv">
@@ -1805,12 +1821,40 @@
         txt: "Follows the velocity command and chooses footholds. It was trained on <b>random steppable scans</b> in simulation and, on the robot, reads the steppable layer, so it keeps its feet off ground the VLM called unsafe. It sends joint commands 50 times a second, while the VLM is still thinking about the next frame.",
         vis: () => `<div class="row2"><div><p class="lbl">training in simulation</p><img src="${H}loco-train.jpg" alt="Simulation: robot on rough blocks with steppable samples under its feet"></div><div><p class="lbl">on the robot</p><img src="${H}loco-deploy.jpg" alt="Deployment: steppable samples under the robot's feet on the real terrain"></div></div>` }
     ];
+    // Blocks of Fig. 1 per stage, in the figure's own coordinates (1874 x 1595)
+    const AREAS = [[[8, 96, 505, 340], [2, 556, 1122, 634]], [[536, 22, 1324, 524], [1110, 18, 750, 228]], [[1128, 278, 734, 462]],
+      [[1128, 796, 740, 398]], [[1094, 1244, 768, 346]], [[274, 1244, 742, 346]]];
+    // Arrows of Fig. 1: path, stage it belongs to, dots per second
+    const FLOWS = [["M410 552 L410 450", 0, 2], ["M1066 165 L1140 165", 1, .1], ["M1687 240 L1687 300", 1, .1], ["M1500 742 L1500 795", 2, 5],
+      ["M1290 1196 L1290 1212 L790 1212 L790 1242", 3, 20], ["M1650 1196 L1650 1242", 3, 20], ["M1092 1430 L1018 1430", 4, 10], ["M272 1430 L128 1430 L128 1200", 5, 50]];
     const fx = document.getElementById("fx"), flow = fx.querySelector(".fx-flow"), vis = fx.querySelector(".fx-vis");
+    const f1 = fx.querySelector(".f1"), hot = f1.querySelector(".f1-hot"), dim = f1.querySelector(".f1-dim"), flowG = f1.querySelector(".f1-flow");
+    hot.innerHTML = AREAS.map((rs, i) => rs.map(([x, y, w, h]) => `<rect data-i="${i}" x="${x}" y="${y}" width="${w}" height="${h}"><title>${STAGES[i].t}</title></rect>`).join("")).join("");
+    hot.addEventListener("click", e => { const r = e.target.closest("rect"); if (r) { f1.classList.add("picked"); show(+r.dataset.i); } });
+    const ns = "http://www.w3.org/2000/svg";
+    const flows = FLOWS.map(([d, st, hz]) => { const path = document.createElementNS(ns, "path"); path.setAttribute("d", d); const c = document.createElementNS(ns, "circle"); c.setAttribute("r", 9); flowG.append(c); return { path, len: 0, st, hz, c }; });
+    // Measure lengths with a hidden path inside the svg
+    flows.forEach(f => { flowG.append(f.path); f.path.setAttribute("fill", "none"); f.len = f.path.getTotalLength(); f.path.remove(); });
+    let t0 = performance.now();
+    const tick = now => {
+      // A dot takes ~0.7 s per arrow (VLM: one dot per 10 s), fast stages show several dots at once, capped for readability
+      flows.forEach(f => { const period = 1 / f.hz, vis = cur < 0 || f.st === cur || f.st === cur - 1 ? 1 : .25;
+        const ph = ((now - t0) / 1000 % Math.max(period, .7)) / .7; const on = ph <= 1;
+        f.c.style.opacity = on ? vis : 0;
+        if (on) { flowG.append(f.path); const pt = f.path.getPointAtLength(Math.min(1, ph) * f.len); f.path.remove(); f.c.setAttribute("cx", pt.x); f.c.setAttribute("cy", pt.y); } });
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);   // first frame runs after `cur` below is declared
+    function highlight(i) {
+      hot.querySelectorAll("rect").forEach(r => r.classList.toggle("on", +r.dataset.i === i));
+      const holes = AREAS[i].map(([x, y, w, h]) => `M${x} ${y}h${w}v${h}h${-w}Z`).join("");
+      dim.setAttribute("d", `M0 0H1874V1595H0Z${holes}`);
+    }
     flow.innerHTML = STAGES.map((st, i) => `<li><button role="tab" data-i="${i}" aria-selected="false" class="${st.slow ? "slow" : ""}"><span class="t">${st.t}</span><span class="hz"><i style="--p:${st.p}"></i>${st.hz}</span></button></li>`).join("");
     let cur = -1;
     const bindCmp = root => root.querySelectorAll(".cmp input").forEach(r => r.addEventListener("input", () => r.parentElement.style.setProperty("--x", r.value + "%")));
     function show(i) {
-      cur = (i + STAGES.length) % STAGES.length; const st = STAGES[cur];
+      cur = (i + STAGES.length) % STAGES.length; const st = STAGES[cur]; highlight(cur);
       flow.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === cur));
       fx.querySelector(".fx-k").textContent = st.k; fx.querySelector(".fx-txt h3").textContent = st.h; fx.querySelector(".fx-txt p").innerHTML = st.txt;
       fx.querySelector(".fx-next").innerHTML = cur === STAGES.length - 1 ? "Back to the start &#8635;" : "Next stage &rarr;";
