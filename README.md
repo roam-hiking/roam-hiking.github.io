@@ -47,7 +47,7 @@ Every file is under GitHub's 100 MB limit, and the site is about 210 MB.
 | Route explorer | Robot GNSS tracks (`zermatt/mission-2`, `seealpsee/mission-new`), elevations from swisstopo swissALTI3D, imagery © swisstopo |
 | Zermatt flyover | `Zermatt_videos/output.mp4` (Google Earth) |
 | Photo pins | 12 geotagged team photos from `Zermatt_videos/Pictures`, placed by their EXIF GPS |
-| Onboard camera (Zermatt) | Front camera plus risk inset from the three mission logs (`rosbags/zermatt/*.h5`), 10× speed. The inset is recolored to coolwarm from the logged per-frame-normalized risk strip, matching `semantic-videos/*/semantic_risk.mp4` (those don't match these logs frame-for-frame). GPS-synced; covers km 0–0.6 and 2.35–4.1. |
+| Onboard camera (Zermatt) | Front camera plus risk inset from the three mission logs (`rosbags/zermatt/*.h5`), 10× speed. The inset uses the same method as the processed `semantic_risk.mp4` renders, checked against the Seealpsee renders: raw `lmm_nav_sem` channel 0 (risk), coolwarm on an absolute 0–1 scale, blended 42% camera and 58% overlay. GPS-synced; covers km 0–0.6 and 2.35–4.1. |
 | Onboard camera (Seealpsee) | Your processed renders (`rosbags/seealpsee/seealpsee{1,2,4}/hdr_camera_front.mp4` and `semantic_risk.mp4`): camera frame k equals camera message k, and risk frame 3k matches it. Timed from the `.h5` logs, so it's GPS-synced for the whole loop. |
 | Behind-the-robot videos | `submission/initial-submission/{zermatt,seealpsee}-full.mp4`. Synced by landmark anchors (lake, huts, construction path, railway; Fig. 3B boulder, cows, dirt road), so positions are approximate. |
 | Seealpsee pins | Fig. 3B panels (a)–(i), placed by fitting the figure's route line onto the GPS track (≈30 m), so positions are approximate. |
