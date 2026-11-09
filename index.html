@@ -1317,6 +1317,7 @@
     map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-left");
     el._map = map;
     await new Promise(r => map.once("load", r));
+    el.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");   // credits collapsed behind the (i) button
     // Base imagery switch
     const baseBar = document.createElement("div"); baseBar.className = "rx-base";
     baseBar.innerHTML = [["sat", "Satellite"], ["swiss", "Swiss aerial"], ["topo", "Topo map"]].map(([k, n], i) => `<button data-base="${k}" aria-pressed="${!i}">${n}</button>`).join("") + '<button data-tilt aria-pressed="true">3D</button>';
