@@ -165,6 +165,13 @@
 
   /* ---------- Movie ---------- */
   .movie { position: relative; aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); }
+  .scrub { height: 420vh; }
+  .scrub-pin { position: sticky; top: 74px; }
+  @media (max-width: 760px) { .scrub-pin { top: 24vh; } }
+  .scrub-pin .movie { width: min(100%, calc((100vh - 200px) * 16 / 9)); margin: 0 auto; }
+  .scrub-bar { height: 3px; margin: 12px 0 0; border-radius: 3px; background: rgba(255,255,255,.14); overflow: hidden; }
+  .scrub-bar i { display: block; height: 100%; width: 0; background: var(--red-soft); }
+  .scrub-pin .cap { margin-top: 10px; } .scrub-hint { color: var(--snow); font-weight: 600; margin-right: 6px; }
   .movie iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .movie video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .movie .full { position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 99px; padding: 10px 16px 10px 12px; background: rgba(11,15,13,.78); color: #fff; font: 600 14px Inter, sans-serif; cursor: pointer; backdrop-filter: blur(6px); }
@@ -895,10 +902,10 @@
     </div>
     <div class="glance-sub rv">Signs change the answer</div>
     <div class="glance">
+      <div class="cmp" style="--x:50%"><img src="static/img/glance/nosign-risk.jpg" alt="Risk image, No sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/nosign-cam.jpg" alt="Robot front camera, No sign" loading="lazy"><span class="tagl">No sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, No sign"></div>
       <div class="cmp" style="--x:50%"><img src="static/img/glance/mine-risk.jpg" alt="Risk image, Mine sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/mine-cam.jpg" alt="Robot front camera, Mine sign" loading="lazy"><span class="tagl">Mine sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Mine sign"></div>
       <div class="cmp" style="--x:50%"><img src="static/img/glance/nostep-risk.jpg" alt="Risk image, “Do not step”: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/nostep-cam.jpg" alt="Robot front camera, “Do not step”" loading="lazy"><span class="tagl">“Do not step”</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, “Do not step”"></div>
       <div class="cmp" style="--x:50%"><img src="static/img/glance/danger-risk.jpg" alt="Risk image, Danger sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/danger-cam.jpg" alt="Robot front camera, Danger sign" loading="lazy"><span class="tagl">Danger sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Danger sign"></div>
-      <div class="cmp" style="--x:50%"><img src="static/img/glance/caution-risk.jpg" alt="Risk image, Caution sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/caution-cam.jpg" alt="Robot front camera, Caution sign" loading="lazy"><span class="tagl">Caution sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Caution sign"></div>
     </div>
   </div>
 </section>
@@ -906,8 +913,14 @@
 <section class="dark2" id="film" style="padding-top:20px">
   <div class="wrap">
     <!-- YouTube: set data-youtube to the video ID once uploaded -->
-    <div class="movie yt rv" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-method.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
-    <p class="cap rv">From Movie 1: one camera image becomes a risk map the robot walks on. The full movie also shows the deployments, the Hönggerberg experiments and the Zermatt hike.</p>
+    <!-- Scroll play: the highlight is pinned and scrubbed by the scroll position. -->
+    <div class="scrub">
+      <div class="scrub-pin">
+        <div class="movie yt" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-method.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
+        <div class="scrub-bar"><i></i></div>
+        <p class="cap"><b class="scrub-hint">Scroll to play ↓</b> From Movie 1: one camera image becomes a risk map the robot walks on.</p>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -1684,9 +1697,23 @@
     const id = el.dataset.youtube;
     const play = () => el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="${el.dataset.title}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
     if (el.dataset.loop) {  // a muted highlight plays by itself; the full movie is one click away
-      el.innerHTML = `<video autoplay muted loop playsinline preload="metadata" poster="${el.dataset.loopPoster}" src="${el.dataset.loop}" aria-label="Highlight from ${el.dataset.title}"></video>
+      el.innerHTML = `<video ${el.closest(".scrub") ? 'preload="auto"' : 'autoplay loop preload="metadata"'} muted playsinline poster="${el.dataset.loopPoster}" src="${el.dataset.loop}" aria-label="Highlight from ${el.dataset.title}"></video>
         <button class="full" ${id ? "" : "disabled"}><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${id ? el.dataset.label : "Full movie on YouTube soon"}</button>`;
       if (id) el.querySelector(".full").addEventListener("click", play);
+      const track = el.closest(".scrub");
+      if (track) {  // scroll play: the scroll position through the tall track sets the video time
+        const v = el.querySelector("video"), pin = track.querySelector(".scrub-pin"), bar = track.querySelector(".scrub-bar i");
+        let target = 0, raf = 0;
+        const tick = () => { raf = 0; if (!v.isConnected) return;
+          if (v.readyState && !v.seeking && Math.abs(v.currentTime - target) > .03) v.currentTime = target;
+          if (!v.readyState || v.seeking || Math.abs(v.currentTime - target) > .03) raf = requestAnimationFrame(tick); };
+        const onScroll = () => { const r = track.getBoundingClientRect(), span = r.height - pin.offsetHeight;
+          const p = Math.min(1, Math.max(0, (parseFloat(getComputedStyle(pin).top) - r.top) / span));
+          bar.style.width = p * 100 + "%"; target = p * Math.max(0, (v.duration || 0) - .1);
+          if (!raf) raf = requestAnimationFrame(tick); };
+        addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll);
+        v.addEventListener("loadedmetadata", onScroll); onScroll();
+      }
       return;
     }
     el.innerHTML = `<img class="yt-poster" src="${el.dataset.poster}" alt="" loading="lazy">
