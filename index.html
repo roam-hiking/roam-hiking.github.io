@@ -1014,7 +1014,7 @@
     <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes without help.</p>
     <div class="hls rv d1">
       <article class="hl" data-hl="zermatt">
-        <video muted loop playsinline preload="none" poster="static/video/zermatt-highlight-poster.jpg" src="static/video/zermatt-highlight.mp4" aria-label="Timelapse of the robot walking down along the railway above Zermatt until the trail enters the forest"></video>
+        <video muted loop playsinline preload="none" poster="static/video/zermatt-highlight-poster.jpg" src="static/video/zermatt-rails.mp4" aria-label="Timelapse of the robot walking down along the railway above Zermatt until the trail enters the forest"></video>
         <div class="hl-body">
           <div class="date">14–15 August 2024 · Valais</div>
           <h3>Zermatt</h3>
@@ -1665,7 +1665,11 @@
   }
 
   // ---------- Hike highlight cards: play while on screen; the button scrolls to that hike's map ----------
-  document.querySelectorAll(".hl video").forEach(v => new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 }).observe(v));
+  document.querySelectorAll(".hl video").forEach(v => {
+      new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 }).observe(v);
+      v.addEventListener("click", () => { if (v.paused) v.play().catch(() => {}); });  // if the phone blocks autoplay, a tap starts it
+      v.addEventListener("error", () => { if (!v._retried) { v._retried = true; v.load(); } });
+    });
   document.querySelectorAll("[data-hike-go]").forEach(b => b.addEventListener("click", () => {
     document.getElementById("hike-" + b.dataset.hikeGo).scrollIntoView({ behavior: "smooth", block: "start" });
   }));
