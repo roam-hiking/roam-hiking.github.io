@@ -240,7 +240,40 @@
   .why-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; margin-top: 8px; }
   .why-intro .lead b { color: var(--red); font-weight: 600; }
   .why-intro .dim b { color: var(--ink); }
-  .ladder { margin-top: 44px; background: #fff; border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px; }
+  .core { margin-top: 44px; background: var(--ink); color: #eef2ee; border-radius: var(--radius); padding: 24px; }
+  .core-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
+  .core-head b { font: 600 clamp(20px, 2.2vw, 25px)/1.2 Fraunces, Georgia, serif; }
+  .core-head span { font-size: 13.5px; color: #9aa69f; }
+  .core-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 16px; }
+  .core-chips .grp { font: 500 11px "JetBrains Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: #8b978f; margin-right: 2px; }
+  .core-chips .grp:not(:first-child) { margin-left: 14px; }
+  .core-chips button { border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.04); color: #dfe6e1; border-radius: 99px; padding: 8px 14px; font: 500 14px Inter, sans-serif; cursor: pointer; transition: background .2s, border-color .2s; }
+  .core-chips button:hover { border-color: rgba(255,255,255,.4); }
+  .core-chips button[aria-selected="true"] { background: #fff; color: var(--ink); border-color: #fff; }
+  .core-panel { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+  .core-vis .cw-legend { color: #9aa69f; }
+  .core-txt { display: grid; gap: 12px; }
+  .core-row { border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 14px 16px; background: rgba(255,255,255,.03); }
+  .core-row .k { display: flex; align-items: center; gap: 8px; font: 600 11.5px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: #9aa69f; }
+  .core-row .k i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 600 11px Inter, sans-serif; background: rgba(255,255,255,.1); color: #fff; font-style: normal; }
+  .core-row p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.5; color: #dfe6e1; }
+  .core-row.vlm { border-color: rgba(255,107,95,.45); }
+  .core-row.vlm .k { color: var(--red-soft); } .core-row.vlm .k i { background: var(--red); }
+  .core-row.act p { font: 500 19px/1.35 Fraunces, Georgia, serif; color: #fff; }
+  .core-row.act a { display: inline-block; margin-top: 8px; font: 600 13.5px Inter, sans-serif; color: var(--glacier); text-decoration: none; }
+  .core-labels { display: grid; gap: 6px; margin-top: 10px; }
+  .core-labels .l { display: grid; grid-template-columns: minmax(0, 1fr) auto 64px; align-items: center; gap: 10px; font: 500 13.5px "JetBrains Mono", monospace; }
+  .core-labels .l span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .core-labels .l em { font-style: normal; font-size: 11px; color: #8b978f; }
+  .core-labels .l b { text-align: center; padding: 4px 0; border-radius: 6px; font-weight: 600; }
+  .core-labels .why { font: 400 13.5px/1.5 Inter, sans-serif; color: #b9c4bd; margin: 6px 0 0; }
+  .tradeoff { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; margin-top: 44px; }
+  .to-card { border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px 22px; background: #fff; }
+  .to-card .k { font: 600 11.5px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
+  .to-card b { display: block; font: 600 22px/1.25 Fraunces, Georgia, serif; margin: 8px 0 6px; }
+  .to-card p { margin: 0; font-size: 15px; line-height: 1.55; color: var(--ink-dim); }
+  .to-plus { align-self: center; font: 300 40px/1 Inter, sans-serif; color: var(--red); }
+  .ladder { margin-top: 36px; background: #fff; border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px; }
   .ld-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
   .ld-head b { font-size: 19px; }
   .ld-head span { font-size: 13.5px; color: var(--ink-dim); }
@@ -677,7 +710,8 @@
   @media (max-width: 900px) {
     section { padding: 80px 0; }
     .nav ul { display: none; }
-    .split, .duo, .hike-grid, .field, .vlm-card, .why-intro, .ld-panel { grid-template-columns: 1fr; }
+    .split, .duo, .hike-grid, .field, .vlm-card, .why-intro, .ld-panel, .core-panel, .tradeoff { grid-template-columns: 1fr; }
+    .core { padding: 16px; margin-left: -6px; margin-right: -6px; } .core-chips .grp { flex-basis: 100%; margin-left: 0 !important; } .to-plus { justify-self: center; line-height: .6; }
     .why-intro { gap: 4px; } .ladder { padding: 14px; }
     .ld-opts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .hike-meta { grid-template-columns: minmax(0, 1fr); } .hike-meta dl { grid-column: 1; grid-row: auto; grid-template-columns: repeat(2, auto); justify-content: start; margin-top: 14px; }
@@ -808,12 +842,12 @@
 <!-- ============ Why ============ -->
 <section id="why">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">01</span> The question</div>
-    <h2 class="rv">Are foundation models ready to <em>guide</em> robots?</h2>
+    <div class="kicker rv"><span class="num">01</span> The missing piece</div>
+    <h2 class="rv">It can already walk. The hard part is deciding <em>where</em>.</h2>
     <div class="why-intro">
-      <p class="lead rv d1">Give a person the remote and a legged robot gets through almost anything. What the robot lacks is not the ability to move but common sense about <b>where</b> to move: a gravel path is fine, a lake is not, and a sign can close a trail.</p>
+      <p class="lead rv d1">Hand a person the remote, even someone who has never driven a robot, and it gets through almost any terrain. So the bottleneck is not the robot's ability to move. It is <b>common sense</b>: a gravel path is fine, a lake is not, and a sign can close a trail.</p>
       <div class="rv d2">
-        <p class="dim">Vision-language models (VLMs) have that common sense, learned from internet-scale data. But they are slow, and they are poor at precise spatial reasoning, while walking needs fast and precise decisions. So the real question is <b>what the VLM should say</b> to the robot.</p>
+        <p class="dim">Classic navigation looks at the <b>shape</b> of the ground. Shape cannot tell a trail from a meadow, or see what a warning sign says. Vision-language models (VLMs) can, because they learned it from internet-scale data. This paper asks how far that common sense can take a legged robot in the wild.</p>
         <details class="rv d2" style="margin-top:22px">
         <summary style="cursor:pointer;font-weight:600;color:var(--moss)">Read the abstract</summary>
         <p class="dim" style="margin-top:14px;font-size:15.5px">Autonomous navigation in diverse real-world environments remains one of the greatest challenges in robotics. It demands both robust low-level motion control to handle diverse terrain and high-level reasoning to interpret environmental cues. We present ROAM (Robust Open-world Autonomous Mobility), a system that enables legged robots to perform kilometer-scale navigation in complex alpine and urban settings. ROAM combines the world knowledge of a Vision-Language Model (VLM), pre-trained on internet-scale data, with robust locomotion and local planning policies learned in simulation via reinforcement learning (RL). The VLM provides common-sense reasoning and semantic interpretation of the scene, assessing risks, interpreting signs, and producing semantic labels with associated navigation costs. An open-vocabulary segmentation module converts these labels into a dense, real-time risk map, which conditions two pre-trained RL policies responsible for agile locomotion and local navigation: effectively coupling high-level VLM reasoning with low-level physical control. Real-world experiments showed the system's ability to autonomously navigate a wide range of complex real-world environments. The robot completes kilometer-long hikes with minimal intervention, interprets signs to avoid danger, and evaluates its environment to identify safe areas on which to step. This work represents a step toward the reliable deployment of systems in unstructured environments. However, it also underscores the challenges that remain in VLM reliability and spatial reasoning, indicating that foundational models are a crucial component but not yet a complete solution for navigation in the wild.</p>
@@ -821,25 +855,28 @@
       </div>
     </div>
 
-    <div class="ladder rv d2" id="ladder">
-      <div class="ld-head"><b>What should the VLM output?</b><span>Click an option. From Fig. 6 of the paper.</span></div>
-      <div class="ld-axis"><span>abstract</span><i></i><span>direct</span></div>
-      <div class="ld-opts" role="tablist" aria-label="VLM output type"></div>
-      <div class="ld-panel">
-        <div class="ld-vis"></div>
-        <div class="ld-txt">
-          <div class="ld-k">The VLM outputs</div>
-          <pre class="ld-out"></pre>
-          <div class="ld-needs"></div>
-          <div class="ld-res"></div>
-          <p class="ld-note"></p>
+    <div class="core rv d2" id="core">
+      <div class="core-head"><b>Shape alone doesn't say where to walk</b><span>Real frames from the robot's front camera. Pick a scene, then drag the line.</span></div>
+      <div class="core-chips" role="tablist" aria-label="Scene"></div>
+      <div class="core-panel">
+        <div class="core-vis"></div>
+        <div class="core-txt">
+          <div class="core-row geo"><div class="k"><i>1</i>Geometry alone</div><p></p></div>
+          <div class="core-row vlm"><div class="k"><i>2</i>The VLM says</div><div class="core-labels"></div></div>
+          <div class="core-row act"><div class="k"><i>3</i>So the robot</div><p></p></div>
         </div>
       </div>
     </div>
 
+    <div class="tradeoff rv">
+      <div class="to-card"><div class="k">Geometry + learned control</div><b>Fast and precise</b><p>Elevation maps and RL policies run on board, many times a second, and place every foot. But they are blind to meaning.</p></div>
+      <div class="to-plus" aria-hidden="true">+</div>
+      <div class="to-card"><div class="k">Vision-language model</div><b>Knows what things mean</b><p>A trail, a puddle, a warning sign. But one answer takes seconds, and it is poor at precise spatial reasoning.</p></div>
+    </div>
+
     <div class="answer rv">
       <div class="k">ROAM's answer</div>
-      <p>Ask the VLM <em>what</em> things are, never <em>where</em> to go. It names what it sees and rates each thing. Segmentation, the elevation map and two RL policies trained in simulation handle space and the robot's body, in real time.</p>
+      <p>Use each for what it is good at. Every ten seconds the VLM says <em>what</em> is in view and how risky it is, never <em>where</em> to go. Segmentation paints those labels onto every camera frame, and two RL policies trained in simulation do the walking.</p>
       <a href="#how">See how it works &darr;</a>
     </div>
   </div>
@@ -1155,8 +1192,23 @@
   <div class="wrap">
     <div class="kicker rv"><span class="num">07</span> Design choice</div>
     <h2 class="rv">Ask for <em>labels</em>, not directions</h2>
-    <p class="lead dim rv d1" style="max-width:740px">The evidence for section 01: on 30 hand-labelled scenes, how much of each method's path stays on safe and on preferred ground.</p>
-    <div class="chart-card rv" style="margin-top:36px" id="ratios">
+    <p class="lead dim rv d1" style="max-width:740px">Why not let the VLM draw the path, or drive the robot directly? The more direct its output, the more spatial precision and speed it needs. We compared the options on 30 hand-labelled scenes.</p>
+    <div class="ladder rv" id="ladder">
+      <div class="ld-head"><b>What should the VLM output?</b><span>Click an option. From Fig. 6 of the paper.</span></div>
+      <div class="ld-axis"><span>abstract</span><i></i><span>direct</span></div>
+      <div class="ld-opts" role="tablist" aria-label="VLM output type"></div>
+      <div class="ld-panel">
+        <div class="ld-vis"></div>
+        <div class="ld-txt">
+          <div class="ld-k">The VLM outputs</div>
+          <pre class="ld-out"></pre>
+          <div class="ld-needs"></div>
+          <div class="ld-res"></div>
+          <p class="ld-note"></p>
+        </div>
+      </div>
+    </div>
+    <div class="chart-card rv" style="margin-top:22px" id="ratios">
       <div class="chart-top">
         <h3 id="chart-title">Share of each path on safe ground</h3>
         <div class="seg" role="group" aria-label="Metric">
@@ -1598,7 +1650,58 @@
   // ---------- Before/after sliders ----------
   document.querySelectorAll(".cmp input").forEach(r => r.addEventListener("input", () => r.parentElement.style.setProperty("--x", r.value + "%")));
 
-  // ---------- 01: what should the VLM output? (Fig. 6A/B/C, Table 1) ----------
+  // ---------- 01: the core idea on real frames (onboard camera + ROAM maps, logged VLM values) ----------
+  {
+    const W = "static/img/why/";
+    const SIGN_GEO = "The same in all three sign scenes: flat boards on flat grass. A printed sign has no shape.";
+    const SCENES = [
+      { g: "On the trail", t: "Lakeside trail", cam: "lake-camera", map: "lake-risk", val: "risk",
+        geo: "Shape does not reveal hazards like water, mud or tall grass. And nothing in it says “stay on the trail”.",
+        labels: [["gravel_path", 0], ["grass", .5], ["lake", 1], ["cow", 1]], why: "Seealpsee, 25 June 2024.",
+        act: "Follows the gravel path along the shore.", href: "#hikes", more: "See the hikes" },
+      { t: "Snowy passage", cam: "core-snow-cam", map: "core-snow-pref", val: "preferred",
+        geo: "Snow and cleared ground are both flat. Either one is walkable.",
+        labels: [["cleared_path", 1], ["snow_covered_ground", 0], ["wet_ground", 0], ["concrete_wall", 0]], why: "Both are steppable, but only the cleared strip is preferred. Zurich, November 2024.",
+        act: "Walks up the cleared strip, as a person would.", href: "#explore", more: "See the experiment" },
+      { g: "One place, three signs", t: "No sign", cam: "core-nosign-cam", map: "core-nosign-risk", val: "risk", geo: SIGN_GEO,
+        labels: [["wooden_path", 0], ["grass", .5], ["concrete_cylinder", 1]], why: "With no sign, the wooden path is the safest ground.",
+        act: "Takes the wooden path.", href: "#signs", more: "See the experiment" },
+      { t: "“Do not step here”", cam: "core-boards-cam", map: "core-boards-risk", val: "risk", geo: SIGN_GEO,
+        labels: [["danger_sign", 1], ["wooden_boardwalk", 1], ["grass", .1], ["concrete_barrier", 1]], why: "The VLM reads the sign lying on the boards and flips its answer.",
+        act: "Leaves the boards and walks on the grass.", href: "#signs", more: "See the experiment" },
+      { t: "“Danger: mines”", cam: "core-mines-cam", map: "core-mines-risk", val: "risk", geo: SIGN_GEO,
+        labels: [["mine_warning_sign", 1], ["grass", 1], ["wooden_boardwalk", 0], ["concrete_barrier", 1]], why: "Now the signs lie on the grass, so the grass is the danger.",
+        act: "Stays on the boards. The grass is off limits.", href: "#signs", more: "See the experiment" }
+    ];
+    // coolwarm ends, as in the map overlays: blue = go, red = avoid
+    const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const cw = v => { const c = v < .5 ? mix([59, 76, 192], [221, 221, 221], v * 2) : mix([221, 221, 221], [180, 4, 38], v * 2 - 2 + 1); return `background:rgb(${c});color:${Math.abs(v - .5) > .25 ? "#fff" : "#222"}`; };
+    const core = document.getElementById("core"), chips = core.querySelector(".core-chips"), vis = core.querySelector(".core-vis");
+    chips.innerHTML = SCENES.map((s, i) => `${s.g ? `<span class="grp">${s.g}</span>` : ""}<button role="tab" data-i="${i}" aria-selected="false">${s.t}</button>`).join("");
+    let x = 35, raf = 0;
+    function pick(i, sweep = true) {
+      const s = SCENES[i];
+      chips.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === i));
+      vis.innerHTML = `<div class="cmp" style="--x:${x}%"><img src="${W}${s.map}.jpg" alt="${s.val} map for the scene: blue is go, red is avoid"><img class="top" src="${W}${s.cam}.jpg" alt="Robot front camera: ${s.t}"><span class="tagl">camera</span><span class="tagr">${s.val}</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="${x}" aria-label="Slide between the camera image and the ${s.val} map"></div><div class="cw-legend">go <i></i> avoid</div>`;
+      const cmp = vis.querySelector(".cmp"), rng = cmp.querySelector("input"), set = v => { x = v; rng.value = v; cmp.style.setProperty("--x", v + "%"); };
+      rng.addEventListener("input", () => { cancelAnimationFrame(raf); set(+rng.value); });
+      // sweep from the full camera image to the map, so both are seen once
+      cancelAnimationFrame(raf);
+      if (sweep && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const t0 = performance.now(); set(100);
+        const step = t => { const k = Math.min(1, Math.max(0, (t - t0 - 500) / 1100)), e = 1 - Math.pow(1 - k, 3); set(100 - 65 * e); if (k < 1) raf = requestAnimationFrame(step); };
+        raf = requestAnimationFrame(step);
+      }
+      core.querySelector(".geo p").textContent = s.geo;
+      core.querySelector(".core-labels").innerHTML = s.labels.map(([n, v]) => `<div class="l"><span>${n}</span><em>${s.val}</em><b style="${cw(s.val === "risk" ? v : 1 - v)}">${v.toFixed(1)}</b></div>`).join("") + `<p class="why">${s.why}</p>`;
+      core.querySelector(".act p").innerHTML = `${s.act}<br><a href="${s.href}">${s.more} &rarr;</a>`;
+    }
+    chips.addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(+b.dataset.i); });
+    pick(3, false);
+    new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); pick(3); } }, { threshold: .5 }).observe(vis);
+  }
+
+  // ---------- 07: what should the VLM output? (Fig. 6A/B/C, Table 1) ----------
   {
     const W = "static/img/why/";
     const R = (name, safe, pref, best) => ({ name, safe, pref, best });

@@ -44,7 +44,8 @@ Every file is under GitHub's 100 MB limit, and the site is about 210 MB.
 | Fig. 5A sign lab | `rosbags/2024-arche-experiments/palette_*` and `explosive_cans`: onboard camera plus risk/steppable/preferred renders as a synced 2×2 mosaic. VLM values come from the logged responses. |
 | Fig. 5B route lab | Arche C0272 (ROAM) and C0281 (geometry-only) 8× timelapses, `gpt_rail` and snow onboard mosaics |
 | Fig. 5C lab | `videos/construction-signs/C0333.MP4` (third-person, 20 Sep 2024), 0–192 s at 4×; steps a–d start at 2.5 / 9 / 33.5 / 42.5 s |
-| Section 01 ladder | Fig. 6A output types, Fig. 6B example paths (cropped), Table 1 safety ratios; lakeside frame from `seealpsee2.h5` |
+| Section 01 core demo | Camera and map crops from the onboard mosaics: `pallet-no-sign`, `pallet-sign-on-pallet`, `pallet-signs-on-grass` at 2 s (same viewpoint), `nav-snow-roam` at 10 s (preferred map); lakeside pair from `seealpsee2.h5`. Label values are the logged VLM responses. |
+| Section 07 ladder | Fig. 6A output types, Fig. 6B example paths (cropped), Table 1 safety ratios |
 | Interactive Fig. 1 | Fig. 1 source frame `rosbags/zermatt/mission-nice-1/good_image_1_*` (15 Aug 2024) with its logged VLM response; renders from the Fig. 1 Illustrator links |
 | Fig. 6 chart | Table 1 |
 | Route explorer | Robot GNSS tracks (`zermatt/mission-2`, `seealpsee/mission-new`), elevation profile from swisstopo swissALTI3D. 3D map: MapLibre GL 5.6 with Esri World Imagery (default), swisstopo aerial/topo, AWS terrain tiles |
