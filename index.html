@@ -466,6 +466,20 @@
   .tabs button[aria-selected="true"] { background: var(--snow); color: var(--night); }
   .hike { display: none; }
   .hike.on { display: block; animation: fade .6s; }
+  #hikes .tabs { scroll-margin-top: 84px; }
+  .hls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 26px 0 40px; }
+  .hl { background: var(--night-3); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); overflow: hidden; }
+  .hl video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
+  .hl-body { padding: 16px 18px 18px; }
+  .hl .date { font: 500 12.5px "JetBrains Mono", monospace; color: var(--glacier); }
+  .hl h3 { font-family: Fraunces, Georgia, serif; font-size: 28px; margin: 4px 0 12px; }
+  .hl dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+  .hl dd { margin: 0; font-family: Fraunces, Georgia, serif; font-size: 30px; line-height: 1.1; }
+  .hl dd small { font-size: 14px; margin-left: 3px; color: var(--snow-dim); }
+  .hl dt { font-size: 11.5px; color: var(--snow-dim); text-transform: uppercase; letter-spacing: .08em; margin-top: 3px; }
+  .hl-go { border: 1px solid rgba(255,255,255,.22); background: transparent; color: var(--snow); border-radius: 999px; padding: 8px 14px; font: 600 13px Inter, sans-serif; cursor: pointer; }
+  .hl-go:hover { background: rgba(255,255,255,.08); }
+  @media (max-width: 760px) { .hls { grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 18px 0 30px; } .hl h3 { font-size: 24px; } .hl dd { font-size: 26px; } }
   .hike-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; }
   .hike-meta { display: grid; grid-template-columns: minmax(0, 640px) auto; justify-content: space-between; column-gap: 48px; align-items: end; }
   .hike-meta > :not(dl) { grid-column: 1; }
@@ -999,6 +1013,26 @@
     <div class="kicker rv"><span class="num">03</span> Alpine expeditions</div>
     <h2 class="rv">Kilometers, <em>not meters</em></h2>
     <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes without help.</p>
+    <div class="hls rv d1">
+      <article class="hl" data-hl="zermatt">
+        <video muted loop playsinline preload="none" poster="static/video/zermatt-highlight-poster.jpg" src="static/video/zermatt-highlight.mp4" aria-label="Timelapse of the robot walking down a gravel trail above Zermatt"></video>
+        <div class="hl-body">
+          <div class="date">14–15 August 2024 · Valais</div>
+          <h3>Zermatt</h3>
+          <dl><div><dd>10.1<small>km</small></dd><dt>distance</dt></div><div><dd>1220<small>m</small></dd><dt>descent</dt></div><div><dd>~30<small>%</small></dd><dt>steepest</dt></div></dl>
+          <button class="hl-go" data-hike-go="zermatt">See the route ↓</button>
+        </div>
+      </article>
+      <article class="hl" data-hl="seealpsee">
+        <video muted loop playsinline preload="none" poster="static/video/seealpsee-highlight-poster.jpg" src="static/video/seealpsee-highlight.mp4" aria-label="Timelapse of the robot walking along the lake at Seealpsee"></video>
+        <div class="hl-body">
+          <div class="date">25 June 2024 · Appenzell</div>
+          <h3>Seealpsee</h3>
+          <dl><div><dd>2.38<small>km</small></dd><dt>loop</dt></div><div><dd>20<small>m</small></dd><dt>up and down</dt></div><div><dd>🐄<small></small></dd><dt>on the trail</dt></div></dl>
+          <button class="hl-go" data-hike-go="seealpsee">See the route ↓</button>
+        </div>
+      </article>
+    </div>
     <div class="tabs rv d1" role="tablist">
       <button role="tab" aria-selected="true" data-hike="zermatt">Zermatt</button>
       <button role="tab" aria-selected="false" data-hike="seealpsee">Seealpsee</button>
@@ -1010,12 +1044,6 @@
           <div class="date">14–15 August 2024 · Valais</div>
           <h3>Zermatt</h3>
           <p class="dim">From glacier views down to the village. The route covered gravel, rock, grass, lakesides and train tracks, with slopes of about 30% at the steepest.</p>
-          <dl>
-            <div><dt>Distance</dt><dd>10.1<small>km</small></dd></div>
-            <div><dt>Descent</dt><dd>1220<small>m</small></dd></div>
-            <div><dt>Ascent</dt><dd>30<small>m</small></dd></div>
-            <div><dt>Steepest</dt><dd>~30<small>%</small></dd></div>
-          </dl>
         </div>
         <div class="hike-media">
           <div class="seg hike-view" role="group" aria-label="Zermatt view">
@@ -1063,12 +1091,6 @@
           <div class="date">25 June 2024 · Appenzell</div>
           <h3>Seealpsee</h3>
           <p class="dim">A loop around a mountain lake, sharing the trail with cows, hikers and boulders.</p>
-          <dl>
-            <div><dt>Distance</dt><dd>2.38<small>km</small></dd></div>
-            <div><dt>Ascent</dt><dd>20<small>m</small></dd></div>
-            <div><dt>Descent</dt><dd>20<small>m</small></dd></div>
-            <div><dt>Company</dt><dd>🐄</dd></div>
-          </dl>
         </div>
         <div class="hike-media">
           <div class="seg hike-view" role="group" aria-label="Seealpsee view">
@@ -1652,6 +1674,13 @@
     document.querySelectorAll("[data-hike]").forEach(x => x.setAttribute("aria-selected", x === b));
     document.querySelectorAll(".hike").forEach(h => h.classList.toggle("on", h.id === "hike-" + b.dataset.hike));
     syncHikeMedia();
+  }));
+
+  // ---------- Hike highlight cards: play while on screen; the button opens that hike's map ----------
+  document.querySelectorAll(".hl video").forEach(v => new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 }).observe(v));
+  document.querySelectorAll("[data-hike-go]").forEach(b => b.addEventListener("click", () => {
+    document.querySelector(`[data-hike="${b.dataset.hikeGo}"]`).click();
+    document.querySelector("#hikes .tabs").scrollIntoView({ behavior: "smooth", block: "start" });
   }));
 
   // ---------- Movie 1 (YouTube, only once an ID is set) ----------
