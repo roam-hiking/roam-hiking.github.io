@@ -12,6 +12,12 @@ python3 serve.py 8790
 
 Then open http://localhost:8790. Use `serve.py` rather than `python -m http.server`: it supports byte-range requests, which video seeking (and the map–video sync) needs. GitHub Pages supports them too.
 
+## Leave comments on the draft
+
+The local preview adds a yellow **Comment** button (bottom right). Tap it, tap the part of the page you mean, write a note and save. A numbered pin stays on that part, and the "N open" button lists every comment (show, mark done, delete).
+
+Comments are saved in `review-comments.json` next to `serve.py` (not tracked by git). The button comes from `review/review.js`, which `serve.py` adds to the page on the fly. `index.html` does not load it, so the published site has no comment button.
+
 ## Launch checklist
 
 All fill-in values live in one `SITE` block near the end of `index.html`:
