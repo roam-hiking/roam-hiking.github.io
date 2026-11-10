@@ -116,6 +116,8 @@
   .people { background: var(--night); color: var(--snow); padding: 54px 0 60px; text-align: center; }
   .names { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 22px; font-size: 18px; }
   .names span { white-space: nowrap; }
+  .names a { color: inherit; text-decoration: underline; text-decoration-color: rgba(255,255,255,.3); text-underline-offset: 4px; transition: text-decoration-color .2s; }
+  .names a:hover { text-decoration-color: var(--red); }
   .names sup { color: var(--snow-dim); font-size: 11px; margin-left: 1px; }
   .affil { color: var(--snow-dim); font-size: 14.5px; margin-top: 10px; }
   .venue { margin-top: 14px; font-family: Fraunces, Georgia, serif; font-style: italic; font-size: 20px; color: var(--glacier); }
@@ -164,6 +166,11 @@
   /* ---------- Movie ---------- */
   .movie { position: relative; aspect-ratio: 16/9; border-radius: var(--radius); overflow: hidden; background: #000; box-shadow: 0 40px 80px -30px rgba(0,0,0,.6); }
   .movie iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .movie video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .movie .full { position: absolute; left: 14px; bottom: 14px; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 99px; padding: 10px 16px 10px 12px; background: rgba(11,15,13,.78); color: #fff; font: 600 14px Inter, sans-serif; cursor: pointer; backdrop-filter: blur(6px); }
+  .movie .full svg { width: 18px; height: 18px; }
+  .movie .full:not(:disabled):hover { background: var(--red); }
+  .movie .full:disabled { cursor: default; color: #cfd6d1; }
   .movie .yt-poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .movie .ph {
     position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #fff; width: 100%;
@@ -274,6 +281,7 @@
   .core-row p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.5; color: #dfe6e1; }
   .core-row.vlm { border-color: rgba(255,107,95,.45); }
   .core-row.vlm .k { color: var(--red-soft); } .core-row.vlm .k i { background: var(--red); }
+  .core-resp { font-style: italic; }
   .core-row.act p { font: 500 19px/1.35 Fraunces, Georgia, serif; color: #fff; }
   .core-row.act a { display: inline-block; margin-top: 8px; font: 600 13.5px Inter, sans-serif; color: var(--glacier); text-decoration: none; }
   .core-labels { display: grid; gap: 6px; margin-top: 10px; }
@@ -793,10 +801,10 @@
       <li><a href="#film">Film</a></li>
       <li><a href="#why">Why</a></li>
       <li><a href="#how">How it works</a></li>
-      <li><a href="#places">Places</a></li>
       <li><a href="#hikes">Alpine hikes</a></li>
       <li><a href="#signs">Signs</a></li>
       <li><a href="#explore">Navigation</a></li>
+      <li><a href="#places">Places</a></li>
       <li><a href="#cite">Cite</a></li>
     </ul>
   </div>
@@ -825,15 +833,15 @@
 <div class="people" id="people">
   <div class="wrap">
     <div class="names rv">
-      <span>Takahiro Miki<sup>1*</sup></span>
-      <span>Robin Schmid<sup>1</sup></span>
-      <span>Manthan Patel<sup>1</sup></span>
-      <span>Turcan Tuna<sup>1</sup></span>
-      <span>Julia Richter<sup>1</sup></span>
-      <span>Julian Nubert<sup>1</sup></span>
-      <span>Joonho Lee<sup>1</sup></span>
-      <span>Matthias Müller<sup>2</sup></span>
-      <span>Marco Hutter<sup>1</sup></span>
+      <span><a href="https://takahiromiki.com" target="_blank" rel="noopener">Takahiro Miki</a><sup>1*</sup></span>
+      <span><!-- TODO homepage -->Robin Schmid<sup>1</sup></span>
+      <span><a href="https://manthan99.github.io" target="_blank" rel="noopener">Manthan Patel</a><sup>1</sup></span>
+      <span><a href="https://www.turcantuna.com" target="_blank" rel="noopener">Turcan Tuna</a><sup>1</sup></span>
+      <span><!-- TODO homepage -->Julia Richter<sup>1</sup></span>
+      <span><a href="https://juliannubert.com" target="_blank" rel="noopener">Julian Nubert</a><sup>1</sup></span>
+      <span><!-- TODO homepage -->Joonho Lee<sup>1</sup></span>
+      <span><a href="https://matthias.pw" target="_blank" rel="noopener">Matthias Müller</a><sup>2</sup></span>
+      <span><a href="https://rsl.ethz.ch/the-lab/people/person-detail.hutter.html" target="_blank" rel="noopener">Marco Hutter</a><sup>1</sup></span>
     </div>
     <div class="affil rv d1"><sup>1</sup>ETH Zurich &nbsp;·&nbsp; <sup>2</sup>Apple &nbsp;·&nbsp; <sup>*</sup>Corresponding author</div>
     <div class="venue rv d1">Science Robotics, to appear</div>
@@ -851,8 +859,8 @@
 <section class="dark2" id="film" style="padding-top:20px">
   <div class="wrap">
     <!-- YouTube: set data-youtube to the video ID once uploaded -->
-    <div class="movie yt rv" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36"></div>
-    <p class="cap rv">Movie 1. The ROAM pipeline, deployments indoors and outdoors, the Hönggerberg experiments, and the Zermatt hike.</p>
+    <div class="movie yt rv" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-method.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
+    <p class="cap rv">From Movie 1: one camera image becomes a risk map the robot walks on. The full movie also shows the deployments, the Hönggerberg experiments and the Zermatt hike.</p>
   </div>
 </section>
 
@@ -861,41 +869,23 @@
   <div class="wrap">
     <div class="kicker rv"><span class="num">01</span> The missing piece</div>
     <h2 class="rv">It can already walk. The hard part is deciding <em>where</em>.</h2>
-    <div class="why-intro">
-      <p class="lead rv d1">Hand a person the remote, even someone who has never driven a robot, and it gets through almost any terrain. So the bottleneck is not the robot's ability to move. It is <b>common sense</b>: a gravel path is fine, a lake is not, and a sign can close a trail.</p>
-      <div class="rv d2">
-        <p class="dim">Classic navigation looks at the <b>shape</b> of the ground. Shape cannot tell a trail from a meadow, or see what a warning sign says. Vision-language models (VLMs) can, because they learned it from internet-scale data. This paper asks how far that common sense can take a legged robot in the wild.</p>
-        <details class="rv d2" style="margin-top:22px">
-        <summary style="cursor:pointer;font-weight:600;color:var(--moss)">Read the abstract</summary>
-        <p class="dim" style="margin-top:14px;font-size:15.5px">Autonomous navigation in diverse real-world environments remains one of the greatest challenges in robotics. It demands both robust low-level motion control to handle diverse terrain and high-level reasoning to interpret environmental cues. We present ROAM (Robust Open-world Autonomous Mobility), a system that enables legged robots to perform kilometer-scale navigation in complex alpine and urban settings. ROAM combines the world knowledge of a Vision-Language Model (VLM), pre-trained on internet-scale data, with robust locomotion and local planning policies learned in simulation via reinforcement learning (RL). The VLM provides common-sense reasoning and semantic interpretation of the scene, assessing risks, interpreting signs, and producing semantic labels with associated navigation costs. An open-vocabulary segmentation module converts these labels into a dense, real-time risk map, which conditions two pre-trained RL policies responsible for agile locomotion and local navigation: effectively coupling high-level VLM reasoning with low-level physical control. Real-world experiments showed the system's ability to autonomously navigate a wide range of complex real-world environments. The robot completes kilometer-long hikes with minimal intervention, interprets signs to avoid danger, and evaluates its environment to identify safe areas on which to step. This work represents a step toward the reliable deployment of systems in unstructured environments. However, it also underscores the challenges that remain in VLM reliability and spatial reasoning, indicating that foundational models are a crucial component but not yet a complete solution for navigation in the wild.</p>
-      </details>
-      </div>
-    </div>
+    <p class="lead rv d1" style="max-width:760px">A person with a remote can drive this robot over almost any terrain. What the robot lacks is <b style="color:var(--red);font-weight:600">common sense</b>: gravel is fine, a lake is not, and a sign can close a trail. A vision-language model (VLM) has it.</p>
 
     <div class="core rv d2" id="core">
-      <div class="core-head"><b>Shape alone doesn't say where to walk</b><span>Real frames from the robot's front camera. Pick a scene, then drag the line.</span></div>
+      <div class="core-head"><b>What the VLM sees, and what the robot gets</b><span>Real frames and logged answers. Pick a scene, then drag the line.</span></div>
       <div class="core-chips" role="tablist" aria-label="Scene"></div>
       <div class="core-panel">
         <div class="core-vis"></div>
         <div class="core-txt">
-          <div class="core-row geo"><div class="k"><i>1</i>Geometry alone</div><p></p></div>
-          <div class="core-row vlm"><div class="k"><i>2</i>The VLM says</div><div class="core-labels"></div></div>
-          <div class="core-row act"><div class="k"><i>3</i>So the robot</div><p></p></div>
+          <div class="core-row vlm"><div class="k">The VLM's answer</div><p class="core-resp"></p><div class="core-labels"></div></div>
         </div>
       </div>
     </div>
 
-    <div class="tradeoff rv">
-      <div class="to-card"><div class="k">Geometry + learned control</div><b>Fast and precise</b><p>Elevation maps and RL policies run on board, many times a second, and place every foot. But they are blind to meaning.</p></div>
-      <div class="to-plus" aria-hidden="true">+</div>
-      <div class="to-card"><div class="k">Vision-language model</div><b>Knows what things mean</b><p>A trail, a puddle, a warning sign. But one answer takes seconds, and it is poor at precise spatial reasoning.</p></div>
-    </div>
-
-    <div class="answer rv">
-      <div class="k">ROAM's answer</div>
-      <p>Use each for what it is good at. Every ten seconds the VLM says <em>what</em> is in view and how risky it is, never <em>where</em> to go. Segmentation paints those labels onto every camera frame, and two RL policies trained in simulation do the walking.</p>
-      <a href="#how">See how it works &darr;</a>
-    </div>
+    <details class="rv" style="margin-top:26px">
+      <summary style="cursor:pointer;font-weight:600;color:var(--moss)">Read the abstract</summary>
+      <p class="dim" style="margin-top:14px;font-size:15.5px;max-width:820px">Autonomous navigation in diverse real-world environments remains one of the greatest challenges in robotics. It demands both robust low-level motion control to handle diverse terrain and high-level reasoning to interpret environmental cues. We present ROAM (Robust Open-world Autonomous Mobility), a system that enables legged robots to perform kilometer-scale navigation in complex alpine and urban settings. ROAM combines the world knowledge of a Vision-Language Model (VLM), pre-trained on internet-scale data, with robust locomotion and local planning policies learned in simulation via reinforcement learning (RL). The VLM provides common-sense reasoning and semantic interpretation of the scene, assessing risks, interpreting signs, and producing semantic labels with associated navigation costs. An open-vocabulary segmentation module converts these labels into a dense, real-time risk map, which conditions two pre-trained RL policies responsible for agile locomotion and local navigation: effectively coupling high-level VLM reasoning with low-level physical control. Real-world experiments showed the system's ability to autonomously navigate a wide range of complex real-world environments. The robot completes kilometer-long hikes with minimal intervention, interprets signs to avoid danger, and evaluates its environment to identify safe areas on which to step. This work represents a step toward the reliable deployment of systems in unstructured environments. However, it also underscores the challenges that remain in VLM reliability and spatial reasoning, indicating that foundational models are a crucial component but not yet a complete solution for navigation in the wild.</p>
+    </details>
   </div>
 </section>
 
@@ -903,7 +893,7 @@
 <section class="dark" id="how">
   <div class="wrap">
     <div class="kicker rv"><span class="num">02</span> How ROAM works</div>
-    <h2 class="rv">Slow <em>thinking</em>, fast walking</h2>
+    <h2 class="rv">From words to <em>footsteps</em></h2>
     <p class="lead dim rv d1" style="max-width:720px">The VLM never outputs coordinates or speeds. It only names what it sees and says how risky each thing is. Everything that has to be fast and precise happens downstream.</p>
 
     <div class="fx rv d2" id="fx">
@@ -936,28 +926,10 @@
   </div>
 </section>
 
-<!-- ============ Places ============ -->
-<section class="tint" id="places">
-  <div class="wrap">
-    <div class="kicker rv"><span class="num">03</span> One system, many places</div>
-    <h2 class="rv">From glaciers to <em>stairwells</em></h2>
-    <p class="lead dim rv d1" style="max-width:700px">We used the same system everywhere. No data was collected for any specific place.</p>
-    <div class="filters rv d1" role="group" aria-label="Filter environments">
-      <button class="chip" data-f="all" aria-pressed="true">All <span class="c">15</span></button>
-      <button class="chip" data-f="nature" aria-pressed="false">Nature <span class="c">7</span></button>
-      <button class="chip" data-f="urban" aria-pressed="false">Urban <span class="c">2</span></button>
-      <button class="chip" data-f="indoor" aria-pressed="false">Indoor <span class="c">3</span></button>
-      <button class="chip" data-f="challenge" aria-pressed="false">Challenges <span class="c">3</span></button>
-    </div>
-    <div class="gallery rv d2" id="gallery"></div>
-    <p class="cap">Fig. 2. Mountain trails (A–E), forest (F), grass (G), campus (H), roads (I), indoor spaces (J–L), smoke (M), train tracks (N) and signs (O).</p>
-  </div>
-</section>
-
 <!-- ============ Hikes ============ -->
 <section class="dark" id="hikes">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">04</span> Alpine expeditions</div>
+    <div class="kicker rv"><span class="num">03</span> Alpine expeditions</div>
     <h2 class="rv">Kilometers, <em>not meters</em></h2>
     <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes without help.</p>
     <div class="tabs rv d1" role="tablist">
@@ -1083,7 +1055,7 @@
 <!-- ============ Signs ============ -->
 <section id="signs">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">05</span> World knowledge in action</div>
+    <div class="kicker rv"><span class="num">04</span> World knowledge in action</div>
     <h2 class="rv">It <em>reads the signs</em></h2>
     <p class="lead dim rv d1" style="max-width:720px">Geometry can't tell an open path from a closed one. Text and symbols can, and ROAM reads them.</p>
     <!-- ---------- Lab 1: Hönggerberg course (Fig. 4) ---------- -->
@@ -1155,7 +1127,7 @@
 <!-- ============ Navigation + exploration (Fig. 5B, 5C) ============ -->
 <section class="tint" id="explore">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">06</span> Local navigation</div>
+    <div class="kicker rv"><span class="num">05</span> Local navigation</div>
     <h2 class="rv">Finding its <em>own way</em></h2>
     <p class="lead dim rv d1" style="max-width:720px">Given only a goal, where does the robot choose to walk? Geometry says "anything flat". ROAM prefers what a person would: paths, cleared ground, the side away from the tracks.</p>
 
@@ -1204,6 +1176,24 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ============ Places ============ -->
+<section class="tint" id="places">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">06</span> One system, many places</div>
+    <h2 class="rv">From glaciers to <em>stairwells</em></h2>
+    <p class="lead dim rv d1" style="max-width:700px">We used the same system everywhere. No data was collected for any specific place.</p>
+    <div class="filters rv d1" role="group" aria-label="Filter environments">
+      <button class="chip" data-f="all" aria-pressed="true">All <span class="c">15</span></button>
+      <button class="chip" data-f="nature" aria-pressed="false">Nature <span class="c">7</span></button>
+      <button class="chip" data-f="urban" aria-pressed="false">Urban <span class="c">2</span></button>
+      <button class="chip" data-f="indoor" aria-pressed="false">Indoor <span class="c">3</span></button>
+      <button class="chip" data-f="challenge" aria-pressed="false">Challenges <span class="c">3</span></button>
+    </div>
+    <div class="gallery rv d2" id="gallery"></div>
+    <p class="cap">Fig. 2. Mountain trails (A–E), forest (F), grass (G), campus (H), roads (I), indoor spaces (J–L), smoke (M), train tracks (N) and signs (O).</p>
   </div>
 </section>
 
@@ -1644,12 +1634,17 @@
   // Long videos live on YouTube. Show a poster; load the player only on click.
   document.querySelectorAll(".yt").forEach(el => {
     const id = el.dataset.youtube;
+    const play = () => el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="${el.dataset.title}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+    if (el.dataset.loop) {  // a muted highlight plays by itself; the full movie is one click away
+      el.innerHTML = `<video autoplay muted loop playsinline preload="metadata" poster="${el.dataset.loopPoster}" src="${el.dataset.loop}" aria-label="Highlight from ${el.dataset.title}"></video>
+        <button class="full" ${id ? "" : "disabled"}><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${id ? el.dataset.label : "Full movie on YouTube soon"}</button>`;
+      if (id) el.querySelector(".full").addEventListener("click", play);
+      return;
+    }
     el.innerHTML = `<img class="yt-poster" src="${el.dataset.poster}" alt="" loading="lazy">
       <button class="ph" ${id ? "" : "disabled"} aria-label="${id ? "Play " + el.dataset.title : el.dataset.title + " (coming soon on YouTube)"}">
         <span><span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>${id ? el.dataset.label : el.dataset.title + " · on YouTube soon"}</span></button>`;
-    if (id) el.querySelector(".ph").addEventListener("click", () => {
-      el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="${el.dataset.title}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
-    });
+    if (id) el.querySelector(".ph").addEventListener("click", play);
   });
 
   // ---------- Reveal on scroll ----------
@@ -1674,25 +1669,23 @@
   // ---------- 01: the core idea on real frames (onboard camera + ROAM maps, logged VLM values) ----------
   {
     const W = "static/img/why/";
-    const SIGN_GEO = "The same in all three sign scenes: flat boards on flat grass. A printed sign has no shape.";
+    // resp: the VLM's own words where a response was logged (shortened), otherwise a plain description
     const SCENES = [
       { g: "On the trail", t: "Lakeside trail", cam: "lake-camera", map: "lake-risk", val: "risk",
-        geo: "Shape does not reveal hazards like water, mud or tall grass. And nothing in it says “stay on the trail”.",
-        labels: [["gravel_path", 0], ["grass", .5], ["lake", 1], ["cow", 1]], why: "Seealpsee, 25 June 2024.",
-        act: "Follows the gravel path along the shore.", href: "#hikes", more: "See the hikes" },
+        resp: "Gravel path along a lake, with grass beside it and a cow ahead. (Seealpsee, 25 June 2024)",
+        labels: [["gravel_path", 0], ["grass", .5], ["lake", 1], ["cow", 1]] },
       { t: "Snowy passage", cam: "core-snow-cam", map: "core-snow-pref", val: "preferred",
-        geo: "Snow and cleared ground are both flat. Either one is walkable.",
-        labels: [["cleared_path", 1], ["snow_covered_ground", 0], ["wet_ground", 0], ["concrete_wall", 0]], why: "Both are steppable, but only the cleared strip is preferred. Zurich, November 2024.",
-        act: "Walks up the cleared strip, as a person would.", href: "#explore", more: "See the experiment" },
-      { g: "One place, three signs", t: "No sign", cam: "core-nosign-cam", map: "core-nosign-risk", val: "risk", geo: SIGN_GEO,
-        labels: [["wooden_path", 0], ["grass", .5], ["concrete_cylinder", 1]], why: "With no sign, the wooden path is the safest ground.",
-        act: "Takes the wooden path.", href: "#signs", more: "See the experiment" },
-      { t: "“Do not step here”", cam: "core-boards-cam", map: "core-boards-risk", val: "risk", geo: SIGN_GEO,
-        labels: [["danger_sign", 1], ["wooden_boardwalk", 1], ["grass", .1], ["concrete_barrier", 1]], why: "The VLM reads the sign lying on the boards and flips its answer.",
-        act: "Leaves the boards and walks on the grass.", href: "#signs", more: "See the experiment" },
-      { t: "“Danger: mines”", cam: "core-mines-cam", map: "core-mines-risk", val: "risk", geo: SIGN_GEO,
-        labels: [["mine_warning_sign", 1], ["grass", 1], ["wooden_boardwalk", 0], ["concrete_barrier", 1]], why: "Now the signs lie on the grass, so the grass is the danger.",
-        act: "Stays on the boards. The grass is off limits.", href: "#signs", more: "See the experiment" }
+        resp: "“The center of the pathway is cleared of snow and is the safest route for navigation.”",
+        labels: [["cleared_path", 1], ["snow_covered_ground", 0], ["wet_ground", 0], ["concrete_wall", 0]] },
+      { g: "One place, three signs", t: "No sign", cam: "core-nosign-cam", map: "core-nosign-risk", val: "risk",
+        resp: "“A wooden path leading up a slight incline, bordered by grass […]. The path appears to be well-constructed and stable.”",
+        labels: [["wooden_path", 0], ["grass", .5], ["concrete_cylinder", 1]] },
+      { t: "“Do not step here”", cam: "core-boards-cam", map: "core-boards-risk", val: "risk",
+        resp: "The sign lies on the boards, so the answer flips: boards risky, grass safe.",
+        labels: [["danger_sign", 1], ["wooden_boardwalk", 1], ["grass", .1], ["concrete_barrier", 1]] },
+      { t: "“Danger: mines”", cam: "core-mines-cam", map: "core-mines-risk", val: "risk",
+        resp: "“A grassy area with a clear warning of mines, indicated by the signs on the ground. There is a wooden boardwalk that provides a safe path.”",
+        labels: [["mine_warning_sign", 1], ["grass", 1], ["wooden_boardwalk", 0], ["concrete_barrier", 1]] }
     ];
     // coolwarm ends, as in the map overlays: blue = go, red = avoid
     const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
@@ -1713,9 +1706,8 @@
         const step = t => { const k = Math.min(1, Math.max(0, (t - t0 - 500) / 1100)), e = 1 - Math.pow(1 - k, 3); set(100 - 65 * e); if (k < 1) raf = requestAnimationFrame(step); };
         raf = requestAnimationFrame(step);
       }
-      core.querySelector(".geo p").textContent = s.geo;
-      core.querySelector(".core-labels").innerHTML = s.labels.map(([n, v]) => `<div class="l"><span>${n}</span><em>${s.val}</em><b style="${cw(s.val === "risk" ? v : 1 - v)}">${v.toFixed(1)}</b></div>`).join("") + `<p class="why">${s.why}</p>`;
-      core.querySelector(".act p").innerHTML = `${s.act}<br><a href="${s.href}">${s.more} &rarr;</a>`;
+      core.querySelector(".core-resp").textContent = s.resp;
+      core.querySelector(".core-labels").innerHTML = s.labels.map(([n, v]) => `<div class="l"><span>${n}</span><em>${s.val}</em><b style="${cw(s.val === "risk" ? v : 1 - v)}">${v.toFixed(1)}</b></div>`).join("");
     }
     chips.addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(+b.dataset.i); });
     pick(3, false);
@@ -1937,7 +1929,7 @@
           <div class="fx-slot">${slider("risk", "Risk image")}</div><div class="cw-legend">go <i></i> avoid</div>` },
       { t: "Elevation map", hz: "20 Hz", p: ".05s", k: "04 · map", h: "Projected onto the terrain",
         txt: "The three images are projected onto the robot's <b>elevation map</b>, built from LiDAR and depth cameras. The locomotion policy reads the steppable layer. The navigation policy reads risk and preferred: unpreferred ground is lifted as a <b>virtual height</b>, so the path looks like a valley to walk along.",
-        vis: () => `<img src="${H}elev-pref.jpg" alt="3D elevation map around the robot; grass on both sides rises as red spikes, the path stays low and blue"><div class="row2"><div><p class="lbl">for locomotion: steppable</p><img src="${H}elev-loco-fig.jpg" alt="Steppable layer on the elevation map"></div><div><p class="lbl">for navigation: risk</p><img src="${H}elev-risk-fig.jpg" alt="Risk layer on the elevation map"><p class="lbl" style="margin-top:8px">for navigation: preferred</p><img src="${H}elev-pref-fig.jpg" alt="Preferred layer on the elevation map"></div></div>` },
+        vis: () => `<img src="${H}elev-pref.jpg" alt="3D elevation map with the robot on it: the gravel path is low and blue, the grass on both sides rises as red spikes"><div class="row2"><div><p class="lbl">for locomotion: steppable</p><img src="${H}elev-loco-fig.jpg" alt="Steppable layer on the elevation map"></div><div><p class="lbl">for navigation: risk</p><img src="${H}elev-risk-fig.jpg" alt="Risk layer on the elevation map"><p class="lbl" style="margin-top:8px">for navigation: preferred</p><img src="${H}elev-pref-fig.jpg" alt="Preferred layer on the elevation map"></div></div>` },
       { t: "Navigation policy", hz: "10 Hz", p: ".1s", k: "05 · steer", h: "An RL policy picks the way",
         txt: "Trained in simulation to reach goals over terrain with <b>randomly generated risk scans</b>, so it never needs photo-real scenes. On the robot it reads the real risk layer and sends a velocity command toward the next waypoint of the global path.",
         vis: () => `<div class="row2"><div><p class="lbl">training in simulation</p><img src="${H}nav-train.jpg" alt="Simulation: robot among blocks with a grid of risk samples"></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
