@@ -671,6 +671,10 @@
   .scale.off { visibility: hidden; }
   .vlm-panel { background: var(--night-2); border: 1px solid rgba(255,255,255,.07); border-radius: 14px; padding: 18px; }
   .vp-title { font-weight: 700; margin-bottom: 10px; }
+  .nav-map { margin: 0 0 18px; cursor: zoom-in; }
+  .nav-map.off { display: none; }
+  .nav-map img { display: block; width: 100%; max-width: 300px; margin: 0 auto; border-radius: 10px; }
+  .nav-map figcaption { margin-top: 8px; font-size: 12.5px; line-height: 1.45; color: var(--snow-dim); }
   .vp-legend { display: grid; grid-template-columns: 1fr repeat(3, 56px); gap: 6px; text-align: center; font: 500 9.5px "JetBrains Mono", monospace; color: var(--snow-dim); margin-bottom: 4px; }
   .vp-legend::before { content: "label"; text-align: left; }
   .vp-row { display: grid; grid-template-columns: 1fr repeat(3, 56px); gap: 6px; align-items: center; padding: 6px 0; border-top: 1px solid rgba(255,255,255,.05); font: 12.5px "JetBrains Mono", monospace; }
@@ -1011,7 +1015,7 @@
   <div class="wrap">
     <div class="kicker rv"><span class="num">03</span> Alpine expeditions</div>
     <h2 class="rv">Kilometers, <em>not meters</em></h2>
-    <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes without help.</p>
+    <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes.</p>
     <div class="hls rv d1">
       <article class="hl" data-hl="zermatt">
         <video muted loop playsinline preload="none" poster="static/video/zermatt-descent-poster.jpg" src="static/video/zermatt-descent.mp4" aria-label="Timelapse of the robot walking down along the railway above Zermatt until the trail enters the forest"></video>
@@ -1232,6 +1236,10 @@
           <p class="cap nav-note"></p>
         </div>
         <div class="vlm-panel">
+          <figure class="nav-map" data-lb data-cap="Fig. 5B. Top-down view of the mixed route. ROAM (red) follows the road; geometry-only (blue) cuts straight across the grass.">
+            <img src="static/img/arche-route-map.jpg" alt="Aerial map of the Arche test site with both routes from start to goal: the red ROAM route follows the road, the blue geometry-only route crosses the lawn" loading="lazy">
+            <figcaption>Top-down view. <b style="color:#ff6b5e">ROAM</b> follows the road, <b style="color:#6aa9ff">geometry-only</b> cuts across the grass.</figcaption>
+          </figure>
           <div class="vp-title">What the VLM said</div>
           <div class="vp-legend nav-legend"><span>risk</span><span>steppable</span><span>preferred</span></div>
           <div class="vp-rows nav-rows"></div>
@@ -1281,24 +1289,10 @@
   </div>
 </section>
 
-<!-- ============ Limits ============ -->
-<section class="dark2" id="limits">
-  <div class="wrap">
-    <div class="kicker rv"><span class="num">07</span> Honest limits</div>
-    <h2 class="rv">Not a <em>complete</em> solution, yet</h2>
-    <p class="lead dim rv d1" style="max-width:720px">Foundation models are a key ingredient for navigation in the wild, but they don't solve it on their own.</p>
-    <div class="limits">
-      <div class="limit rv"><div class="ic">reliability</div><h3>Labels can be wrong</h3><p>In a construction zone, fences and paths were sometimes misclassified, which led to interventions.</p></div>
-      <div class="limit rv d1"><div class="ic">spatial reasoning</div><h3>Fine judgments are hard</h3><p>Given a 15 cm limit, models still called a 15.5 cm stair climbable. Coarse rules work, near-threshold ones don't.</p></div>
-      <div class="limit rv d2"><div class="ic">the physical world</div><h3>Some gates won't open</h3><p>A turnstile was simply impassable, and the robot had to be carried over it.</p></div>
-    </div>
-  </div>
-</section>
-
 <!-- ============ Cite ============ -->
 <section id="cite">
   <div class="wrap narrow">
-    <div class="kicker rv"><span class="num">08</span> Citation</div>
+    <div class="kicker rv"><span class="num">07</span> Citation</div>
     <h2 class="rv">Cite this work</h2>
     <!-- TODO: update volume, issue, pages and DOI at publication -->
     <div class="bib rv d1">
@@ -2031,11 +2025,11 @@
       take: "Paths are <b>preferred</b>, grass is walkable but not preferred. So ROAM follows the road, while geometry-only cuts straight across the lawn and squeezes past buildings." },
     { id: "rail", title: "Next to a railroad", sub: "gravel beside the tracks", thumb: "nav-rail-roam",
       views: [["all", "All four"], ["cam", "Camera"], ["risk", "Risk"], ["step", "Steppable"], ["pref", "Preferred"]],
-      mosaic: "nav-rail-roam", note: "ROAM's onboard front camera, sped up 2×.", labels: [], key: [],
+      mosaic: "nav-rail-roam", range: [7, 46.2], note: "ROAM's onboard front camera, sped up 2×.", labels: [], key: [],
       take: "The tracks light up red in the risk map, so ROAM walks the gravel beside them. In the same spot, the geometry-only planner <b>got stuck on the tracks</b> (Fig. 5B)." },
     { id: "snow", title: "Snowy passage", sub: "cleared strip vs snow", thumb: "nav-snow-third",
       views: [["all", "All four"], ["outside", "Outside"], ["cam", "Camera"], ["risk", "Risk"], ["step", "Steppable"], ["pref", "Preferred"]],
-      mosaic: "nav-snow-roam", outside: "nav-snow-third", note: "ROAM's onboard camera walking up the passage, and the same walk from outside. November 2024.",
+      mosaic: "nav-snow-roam", range: [0, 13.2], outside: "nav-snow-third", note: "ROAM's onboard camera walking up the passage to the top, and the same walk from outside. November 2024.",
       key: ["cleared_path", "snow_covered_ground"],
       labels: [["cleared_path", .2, 1, 1], ["snow_covered_ground", .3, 1, 0], ["wet_ground", .4, 1, 0], ["metal_barrier", 1, 0, 0], ["concrete_wall", 1, 0, 0], ["metal_railing", 1, 0, 0]],
       take: "Snow is walkable, but the <b>cleared strip is preferred</b>. ROAM keeps to it, as a person would." }
@@ -2067,11 +2061,16 @@
       if (!m || reload || m.dataset.src !== r.mosaic) {
         navStage.innerHTML = `<div class="mosaic" data-src="${r.mosaic}"><video src="${V}${r.mosaic}.mp4" poster="${V}poster/${r.mosaic}.jpg" muted loop playsinline autoplay preload="auto"></video><div class="q-lbl"></div><div class="quad"><span>camera</span><span>risk</span><span>steppable</span><span>preferred</span></div></div>`;
         m = navStage.querySelector(".mosaic");
+        // Play only the part in r.range: skip the wait at the start, stop before the clip moves on
+        const mv = m.querySelector("video"), [t0, t1] = r.range;
+        mv.addEventListener("loadedmetadata", () => { mv.currentTime = t0; }, { once: true });
+        mv.addEventListener("timeupdate", () => { if (mv.currentTime >= t1 || mv.currentTime < t0 - .3) mv.currentTime = t0; });
       }
       m.dataset.layer = navView; m.querySelector(".q-lbl").textContent = LAYER_NAMES[navView];
     }
     navStage.querySelectorAll("video").forEach(v => v.play().catch(() => {}));
     navLab.querySelector(".nav-note").textContent = r.note;
+    navLab.querySelector(".nav-map").classList.toggle("off", r.id !== "route");
     navLab.querySelector(".nav-legend").classList.toggle("off", !r.labels.length);
     navLab.querySelector(".nav-rows").innerHTML = labelRows(r.labels, r.key);
     navLab.querySelector(".nav-take").innerHTML = (r.labels.length ? "" : "<span style='font-size:12.5px'>No VLM responses were logged for this run.</span><br>") + r.take;
