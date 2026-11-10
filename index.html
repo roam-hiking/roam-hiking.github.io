@@ -464,9 +464,8 @@
     border: 0; background: transparent; color: var(--snow-dim); font: 600 14.5px Inter, sans-serif; padding: 9px 22px; border-radius: 999px; cursor: pointer; transition: all .3s;
   }
   .tabs button[aria-selected="true"] { background: var(--snow); color: var(--night); }
-  .hike { display: none; }
-  .hike.on { display: block; animation: fade .6s; }
-  #hikes .tabs { scroll-margin-top: 84px; }
+  .hike { scroll-margin-top: 84px; }
+  .hike + .hike { margin-top: 72px; }
   .hls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 26px 0 40px; }
   .hl { background: var(--night-3); border: 1px solid rgba(255,255,255,.08); border-radius: var(--radius); overflow: hidden; }
   .hl video { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: #000; }
@@ -1015,7 +1014,7 @@
     <p class="lead dim rv d1" style="max-width:720px">Two long hikes in the Swiss Alps test how far the system goes without help.</p>
     <div class="hls rv d1">
       <article class="hl" data-hl="zermatt">
-        <video muted loop playsinline preload="none" poster="static/video/zermatt-highlight-poster.jpg" src="static/video/zermatt-highlight.mp4" aria-label="Timelapse of the robot walking down a gravel trail above Zermatt"></video>
+        <video muted loop playsinline preload="none" poster="static/video/zermatt-highlight-poster.jpg" src="static/video/zermatt-highlight.mp4" aria-label="Timelapse of the robot leaving the station and walking down along the railway above Zermatt"></video>
         <div class="hl-body">
           <div class="date">14–15 August 2024 · Valais</div>
           <h3>Zermatt</h3>
@@ -1033,12 +1032,8 @@
         </div>
       </article>
     </div>
-    <div class="tabs rv d1" role="tablist">
-      <button role="tab" aria-selected="true" data-hike="zermatt">Zermatt</button>
-      <button role="tab" aria-selected="false" data-hike="seealpsee">Seealpsee</button>
-    </div>
 
-    <div class="hike on" id="hike-zermatt" role="tabpanel">
+    <div class="hike" id="hike-zermatt">
       <div class="hike-grid">
         <div class="hike-meta">
           <div class="date">14–15 August 2024 · Valais</div>
@@ -1085,7 +1080,7 @@
       </div>
     </div>
 
-    <div class="hike" id="hike-seealpsee" role="tabpanel">
+    <div class="hike" id="hike-seealpsee">
       <div class="hike-grid">
         <div class="hike-meta">
           <div class="date">25 June 2024 · Appenzell</div>
@@ -1396,7 +1391,7 @@
   // ---------- Hike media: route explorer / flyover / photos ----------
   function syncHikeMedia() {
     document.querySelectorAll(".hike").forEach(h => {
-      const on = h.classList.contains("on");
+      const on = h._near;  // both hikes show; each loads its map only when it comes near the screen
       const panel = [...h.querySelectorAll("[data-hv-panel]")].find(p => !p.hidden);
       const v = h.querySelector(".flyover video");
       if (v) (on && panel === v.parentElement && hikesVisible) ? v.play().catch(() => {}) : v.pause();
@@ -1410,8 +1405,8 @@
     m.querySelectorAll("[data-hv-panel]").forEach(p => p.hidden = p.dataset.hvPanel !== b.dataset.hv);
     syncHikeMedia();
   })));
-  let hikesVisible = false;
-  new IntersectionObserver(([e]) => { hikesVisible = e.isIntersecting; syncHikeMedia(); }, { threshold: .15 }).observe(document.getElementById("hikes"));
+  const hikesVisible = true;
+  document.querySelectorAll(".hike").forEach(h => new IntersectionObserver(([e]) => { h._near = e.isIntersecting; syncHikeMedia(); }, { rootMargin: "300px 0px" }).observe(h));
 
   // Route explorer: robot's GNSS track on swisstopo imagery + linked elevation profile
   async function initExplorer(el) {
@@ -1669,18 +1664,10 @@
     setIdx(0);
   }
 
-  // ---------- Hike tabs ----------
-  document.querySelectorAll("[data-hike]").forEach(b => b.addEventListener("click", () => {
-    document.querySelectorAll("[data-hike]").forEach(x => x.setAttribute("aria-selected", x === b));
-    document.querySelectorAll(".hike").forEach(h => h.classList.toggle("on", h.id === "hike-" + b.dataset.hike));
-    syncHikeMedia();
-  }));
-
-  // ---------- Hike highlight cards: play while on screen; the button opens that hike's map ----------
+  // ---------- Hike highlight cards: play while on screen; the button scrolls to that hike's map ----------
   document.querySelectorAll(".hl video").forEach(v => new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 }).observe(v));
   document.querySelectorAll("[data-hike-go]").forEach(b => b.addEventListener("click", () => {
-    document.querySelector(`[data-hike="${b.dataset.hikeGo}"]`).click();
-    document.querySelector("#hikes .tabs").scrollIntoView({ behavior: "smooth", block: "start" });
+    document.getElementById("hike-" + b.dataset.hikeGo).scrollIntoView({ behavior: "smooth", block: "start" });
   }));
 
   // ---------- Movie 1 (YouTube, only once an ID is set) ----------
