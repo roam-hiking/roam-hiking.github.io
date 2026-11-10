@@ -922,7 +922,7 @@
       <div class="scrub-pin">
         <div class="scrub-h"><b>How does it work?</b><span class="scrub-hint">Scroll to play ↓</span></div>
         <div class="scrub-title" aria-live="polite"><span class="n"></span><span class="t"></span></div>
-        <div class="movie yt" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-method.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
+        <div class="movie yt" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-how.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
         <div class="scrub-bar"></div>
       </div>
     </div>
@@ -1703,7 +1703,7 @@
     const id = el.dataset.youtube;
     const play = () => el.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0" title="${el.dataset.title}" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
     if (el.dataset.loop) {  // a muted highlight plays by itself; the full movie is one click away
-      el.innerHTML = `<video ${el.closest(".scrub") ? 'preload="auto"' : 'autoplay loop preload="metadata"'} muted playsinline poster="${el.dataset.loopPoster}" src="${el.dataset.loop}" aria-label="Highlight from ${el.dataset.title}"></video>
+      el.innerHTML = `<video ${el.closest(".scrub") ? 'preload="none"' : `autoplay loop preload="metadata" src="${el.dataset.loop}"`} muted playsinline poster="${el.dataset.loopPoster}" aria-label="Highlight from ${el.dataset.title}"></video>
         <button class="full" ${id ? "" : "disabled"}><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${id ? el.dataset.label : "Full movie on YouTube soon"}</button>`;
       if (id) el.querySelector(".full").addEventListener("click", play);
       const track = el.closest(".scrub");
@@ -1711,7 +1711,7 @@
         // Only the method part of the clip is shown; each part gets its own title.
         const PARTS = [[0, "The robot sends a camera image and a question"], [6.5, "The VLM answers: what it sees, how risky each thing is"],
           [13.5, "Each label is found in the image"], [23, "The scores are painted in: a risk image"], [27.5, "And an image of where it prefers to walk"],
-          [34, "Both go onto the 3D terrain map"], [47, "The robot walks where the map says go"]], END = 62;
+          [34, "Both go onto the 3D terrain map"], [47, "The robot walks where the map says go"]], END = 62;  // seconds; the clip is exactly the method part
         const v = el.querySelector("video"), pin = track.querySelector(".scrub-pin"), bar = track.querySelector(".scrub-bar");
         const tn = track.querySelector(".scrub-title .n"), tt = track.querySelector(".scrub-title .t");
         bar.innerHTML = PARTS.map((q, k) => `<span style="--w:${(PARTS[k + 1] ? PARTS[k + 1][0] : END) - q[0]}"><i></i></span>`).join("");
@@ -1729,6 +1729,19 @@
           if (!raf) raf = requestAnimationFrame(tick); };
         addEventListener("scroll", onScroll, { passive: true }); addEventListener("resize", onScroll);
         v.addEventListener("loadedmetadata", onScroll); onScroll();
+        // Phones do not buffer a paused video, so seeking shows nothing. Download the whole clip first
+        // (it is small), then wake the decoder with a muted play/pause.
+        const hint = track.querySelector(".scrub-hint"), ready = hint.textContent;
+        new IntersectionObserver(async ([e], o) => { if (!e.isIntersecting) return; o.disconnect();
+          try {
+            const res = await fetch(el.dataset.loop), total = +res.headers.get("Content-Length") || 0, rd = res.body.getReader(), chunks = [];
+            for (let got = 0;;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); got += value.length;
+              hint.textContent = total ? `Loading ${Math.round(got / total * 100)}%` : "Loading…"; }
+            v.src = URL.createObjectURL(new Blob(chunks, { type: "video/mp4" }));
+          } catch (err) { v.src = el.dataset.loop; }
+          v.load(); try { await v.play(); v.pause(); } catch (err) {}
+          hint.textContent = ready; onScroll();
+        }, { rootMargin: "1200px 0px" }).observe(track);
       }
       return;
     }
