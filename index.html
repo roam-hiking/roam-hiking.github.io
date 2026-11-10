@@ -922,7 +922,7 @@
       <div class="scrub-pin">
         <div class="scrub-h"><b>How does it work?</b><span class="scrub-hint">Scroll to play ↓</span></div>
         <div class="scrub-title" aria-live="polite"><span class="n"></span><span class="t"></span></div>
-        <div class="movie yt" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-how.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
+        <div class="movie yt" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="static/video/movie1-poster.jpg" data-label="Watch Movie 1 · 5:36" data-loop="static/video/movie1-how.mp4" data-loop-small="static/video/movie1-how-360.mp4" data-loop-poster="static/video/movie1-method-poster.jpg"></div>
         <div class="scrub-bar"></div>
       </div>
     </div>
@@ -1264,53 +1264,10 @@
   </div>
 </section>
 
-<!-- ============ Labels vs directions ============ -->
-<section class="tint" id="labels">
-  <div class="wrap">
-    <div class="kicker rv"><span class="num">07</span> Design choice</div>
-    <h2 class="rv">Ask for <em>labels</em>, not directions</h2>
-    <p class="lead dim rv d1" style="max-width:740px">Why not let the VLM draw the path, or drive the robot directly? The more direct its output, the more spatial precision and speed it needs. We compared the options on 30 hand-labelled scenes.</p>
-    <div class="ladder rv" id="ladder">
-      <div class="ld-head"><b>What should the VLM output?</b><span>Click an option. From Fig. 6 of the paper.</span></div>
-      <div class="ld-axis"><span>abstract</span><i></i><span>direct</span></div>
-      <div class="ld-opts" role="tablist" aria-label="VLM output type"></div>
-      <div class="ld-panel">
-        <div class="ld-vis"></div>
-        <div class="ld-txt">
-          <div class="ld-k">The VLM outputs</div>
-          <pre class="ld-out"></pre>
-          <div class="ld-needs"></div>
-          <div class="ld-res"></div>
-          <p class="ld-note"></p>
-        </div>
-      </div>
-    </div>
-    <div class="chart-card rv" style="margin-top:22px" id="ratios">
-      <div class="chart-top">
-        <h3 id="chart-title">Share of each path on safe ground</h3>
-        <div class="seg" role="group" aria-label="Metric">
-          <button data-metric="safety" aria-pressed="true">Safety</button>
-          <button data-metric="preferred" aria-pressed="false">Preferred</button>
-        </div>
-      </div>
-      <div class="bars" role="list" aria-labelledby="chart-title"></div>
-      <div class="axis"><span></span><div><span>0</span><span>0.25</span><span>0.5</span><span>0.75</span><span>1</span></div><span></span></div>
-      <p class="chart-note">Fraction of all trajectory pixels inside the hand-labeled safe (or preferred) regions, pooled over 27 to 30 scenes per method (Table 1).</p>
-      <details class="expand" style="margin-top:6px"><summary style="color:var(--moss)">Show as a table</summary>
-        <table><thead><tr><th>Method</th><th>Category</th><th class="n">Safety</th><th class="n">Preferred</th></tr></thead><tbody id="ratio-table"></tbody></table>
-      </details>
-    </div>
-    <div class="means rv"><b>What this means:</b> paths planned with A* on ROAM's risk map stayed on safe ground 99% of the time, and on preferred ground 85% of the time. Every method that asks the VLM to point at or draw a path was less safe than simply walking in a straight line to the goal.</div>
-    <details class="expand rv"><summary style="color:var(--moss)">Show the paper figure (Fig. 6)</summary>
-      <figure class="fig" data-lb data-cap="Fig. 6. (A) VLM navigation methods by output type. (B) Example paths. (C) Safety and preferred-path ratios."><img src="static/img/fig6-vlm-comparison-v2.jpg" alt="Comparison of VLM navigation methods by output type with example trajectories and safety and preferred-path ratios" loading="lazy"></figure>
-    </details>
-  </div>
-</section>
-
 <!-- ============ Limits ============ -->
 <section class="dark2" id="limits">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">08</span> Honest limits</div>
+    <div class="kicker rv"><span class="num">07</span> Honest limits</div>
     <h2 class="rv">Not a <em>complete</em> solution, yet</h2>
     <p class="lead dim rv d1" style="max-width:720px">Foundation models are a key ingredient for navigation in the wild, but they don't solve it on their own.</p>
     <div class="limits">
@@ -1324,7 +1281,7 @@
 <!-- ============ Cite ============ -->
 <section id="cite">
   <div class="wrap narrow">
-    <div class="kicker rv"><span class="num">09</span> Citation</div>
+    <div class="kicker rv"><span class="num">08</span> Citation</div>
     <h2 class="rv">Cite this work</h2>
     <!-- TODO: update volume, issue, pages and DOI at publication -->
     <div class="bib rv d1">
@@ -1731,17 +1688,18 @@
         v.addEventListener("loadedmetadata", onScroll); onScroll();
         // Phones do not buffer a paused video, so seeking shows nothing. Download the whole clip first
         // (it is small), then wake the decoder with a muted play/pause.
-        const hint = track.querySelector(".scrub-hint"), ready = hint.textContent;
+        const hint = track.querySelector(".scrub-hint"), ready = hint.textContent,
+          file = innerWidth <= 760 && el.dataset.loopSmall || el.dataset.loop;  // phones get the 3 MB version
         new IntersectionObserver(async ([e], o) => { if (!e.isIntersecting) return; o.disconnect();
           try {
-            const res = await fetch(el.dataset.loop), total = +res.headers.get("Content-Length") || 0, rd = res.body.getReader(), chunks = [];
+            const res = await fetch(file), total = +res.headers.get("Content-Length") || 0, rd = res.body.getReader(), chunks = [];
             for (let got = 0;;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); got += value.length;
               hint.textContent = total ? `Loading ${Math.round(got / total * 100)}%` : "Loading…"; }
             v.src = URL.createObjectURL(new Blob(chunks, { type: "video/mp4" }));
-          } catch (err) { v.src = el.dataset.loop; }
+          } catch (err) { v.src = file; }
           v.load(); try { await v.play(); v.pause(); } catch (err) {}
           hint.textContent = ready; onScroll();
-        }, { rootMargin: "1200px 0px" }).observe(track);
+        }, { rootMargin: "6000px 0px" }).observe(track);
       }
       return;
     }
@@ -1826,59 +1784,6 @@
     chips.addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(+b.dataset.i); });
     pick(3, false);
     new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); pick(3); } }, { threshold: .5 }).observe(vis);
-  }
-
-  // ---------- 07: what should the VLM output? (Fig. 6A/B/C, Table 1) ----------
-  {
-    const W = "static/img/why/";
-    const R = (name, safe, pref, best) => ({ name, safe, pref, best });
-    const OPTS = [
-      { t: "Labels + values", s: "ROAM", roam: true, out: "gravel_path  risk 0.0\ncow          risk 1.0\nlake         risk 1.0\ngrass        risk 0.5",
-        space: false, body: false,
-        vis: () => `<div class="cmp" style="--x:50%"><img src="${W}lake-risk.jpg" alt="Risk image of the lakeside scene: lake red, path blue"><img class="top" src="${W}lake-camera.jpg" alt="Robot camera on a gravel path by a lake"><span class="tagl">camera</span><span class="tagr">risk</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image"></div>
-          <div class="cw-legend">safe <i></i> risky</div><div class="ld-ex"><p class="lbl">Fig. 6B: path planned on ROAM's map</p><img src="${W}f6-roam.jpg" alt="A path drawn along the trail, planned with A* on ROAM's risk map"></div>`,
-        res: [R("ROAM + A*", .992, .852, true)],
-        note: "The labels are painted onto the image by segmentation and a planner finds the path. The VLM never has to be spatially precise. Drag the line: this is the lakeside scene Fig. 6A uses, seen by the robot at Seealpsee." },
-      { t: "Select a label", s: "numbered marks", out: "Label: 3",
-        space: true, body: false,
-        vis: () => `<div class="row3"><div><p class="lbl">line labels</p><img src="${W}f6-line.jpg" alt="Labels on a straight line, chosen path in yellow"></div><div><p class="lbl">trajectory labels</p><img src="${W}f6-traj.jpg" alt="Labels on fanned-out trajectories"></div><div><p class="lbl">uniform grid</p><img src="${W}f6-uniform.jpg" alt="Labels on a grid; the chosen sequence zigzags across the scene"></div></div>`,
-        res: [R("Uniform labels", .740, .418), R("Line labels", .702, .416), R("Trajectory labels", .633, .307)],
-        note: "Numbers are drawn on the image and the VLM picks which to follow. It has to judge where each number sits relative to the path. Placing the labels only on ground ROAM marks as steppable helps (0.884 / 0.844 safe) but still trails ROAM." },
-      { t: "Pixel coordinates", s: "a drawn path", out: "(0.50, 0.95), (0.52, 0.88),\n(0.54, 0.81), (0.56, 0.74),\n(0.58, 0.67), (0.62, 0.56), …",
-        space: true, body: false,
-        vis: () => `<div><p class="lbl">A failure from the benchmark: GPT-4o's path, 77% on risky ground</p><img src="${W}f6-pixel-fail.jpg" alt="The path GPT-4o drew starts across a Danger: Mine sign and the grass before joining the wooden walkway"></div>`,
-        res: [R("From a prompt", .721, .406), R("From a goal point", .686, .379)],
-        note: "The VLM writes the path as image coordinates. Here the signs say not to step on the grass, and the drawn path still cuts across a mine sign and the grass to reach the walkway. Small spatial errors like this put the path on risky ground, and turning pixels into robot motion still needs depth and geometry." },
-      { t: "Direction", s: "go left, 50 cm", out: "Forward 50 cm",
-        space: true, body: false,
-        vis: () => `<div class="empty">The VLM must judge distances and angles from a single image, then a controller turns them into motion.</div>`,
-        res: [], note: "Needs spatial reasoning. Not part of the quantitative test in Fig. 6C." },
-      { t: "Velocity command", s: "m/s, rad/s", out: "x_vel: 0.5\ny_vel: 0.1\nyaw:   0.0",
-        space: true, body: true,
-        vis: () => `<div class="empty">Now the VLM must also know how this robot moves, and answer many times a second, which large models cannot do on board.</div>`,
-        res: [], note: "Needs spatial reasoning and an understanding of the robot's body." },
-      { t: "Joint command", s: "VLA models", out: "Action: 1 129 138 122\n        132 135 106 127",
-        space: true, body: true,
-        vis: () => `<div class="empty">Vision-language-action models output motor targets directly. They need large sets of demonstrations for each robot and very fast inference for dynamic walking.</div>`,
-        res: [], note: "The most direct option: spatial reasoning, the robot's kinematics and dynamics, and high-rate control all fall on one model." }
-    ];
-    const lad = document.getElementById("ladder"), opts = lad.querySelector(".ld-opts");
-    opts.innerHTML = OPTS.map((o, i) => `<button role="tab" data-i="${i}" class="${o.roam ? "roam" : ""}" aria-selected="false"><b>${o.t}</b><span>${o.s}</span></button>`).join("");
-    const bar = (label, v, best) => `<div class="r ${best ? "best" : ""}"><span>${label}</span><span class="t"><s style="width:${v * 100}%"></s><u style="left:${LINE * 100}%"></u></span><b>${Math.round(v * 100)}%</b></div>`;
-    let LINE = .902;
-    function pick(i) {
-      const o = OPTS[i];
-      opts.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === i));
-      lad.querySelector(".ld-vis").innerHTML = o.vis();
-      lad.querySelectorAll(".ld-vis .cmp input").forEach(r => r.addEventListener("input", () => r.parentElement.style.setProperty("--x", r.value + "%")));
-      lad.querySelector(".ld-out").textContent = o.out;
-      lad.querySelector(".ld-needs").innerHTML = `<div class="${o.space ? "yes" : "no"}"><i>${o.space ? "!" : "✓"}</i>${o.space ? "Needs" : "No need for"} precise spatial reasoning</div><div class="${o.body ? "yes" : "no"}"><i>${o.body ? "!" : "✓"}</i>${o.body ? "Needs" : "No need for"} knowledge of the robot's body</div>`;
-      LINE = .902;
-      lad.querySelector(".ld-res").innerHTML = o.res.length ? `<div class="ld-k">Share of path on safe ground (30 scenes)</div>${o.res.map(r => bar(r.name, r.safe, r.best)).join("")}<div class="cap2">Black tick: walking in a straight line to the goal (90%).</div>` : "";
-      lad.querySelector(".ld-note").textContent = o.note;
-    }
-    opts.addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(+b.dataset.i); });
-    pick(0);
   }
 
   // ---------- Hero video: pause when off screen ----------
@@ -2183,33 +2088,6 @@
   exSteps.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; const i = +b.dataset.i; showStep(i); exVid.currentTime = EX_T[i]; exVid.play().catch(() => {}); });
   new IntersectionObserver(([e]) => { if (e.isIntersecting) { if (exVid.preload === "none") exVid.preload = "auto"; exVid.play().catch(() => {}); } else exVid.pause(); }, { threshold: .4 }).observe(ex);
   showStep(0);
-
-  // ---------- Fig. 6C / Table 1 chart ----------
-  const RATIOS = [
-    ["ROAM A*", "ROAM", .992, .852], ["Straight line", "Baseline", .902, .556],
-    ["Trajectory label with ROAM", "Label + ROAM risk", .884, .535], ["Line label with ROAM", "Label + ROAM risk", .844, .676],
-    ["Uniform label", "Label only", .740, .418], ["Pixel coordinates from prompt", "Pixel coordinates", .721, .406],
-    ["Line label", "Label only", .702, .416], ["Pixel coordinates from goal", "Pixel coordinates", .686, .379],
-    ["Trajectory label", "Label only", .633, .307]
-  ];
-  const bars = document.querySelector("#ratios .bars");
-  function renderBars(metric) {
-    const k = metric === "safety" ? 2 : 3;
-    const sorted = [...RATIOS].sort((a, b) => b[k] - a[k]);
-    if (!bars.children.length) bars.innerHTML = RATIOS.map(r => `<div class="bar-row ${r[1] === "ROAM" ? "roam" : ""}" role="listitem" data-n="${r[0]}"><span class="nm">${r[0]}<small>${r[1]}</small></span><span class="track"><span class="fill"></span></span><span class="val"></span></div>`).join("");
-    sorted.forEach((r, i) => {
-      const el = bars.querySelector(`[data-n="${r[0]}"]`);
-      el.style.order = i; el.querySelector(".fill").style.width = r[k] * 100 + "%"; el.querySelector(".val").textContent = r[k].toFixed(3);
-      el.title = `${r[0]} (${r[1]}): safety ${r[2].toFixed(3)}, preferred ${r[3].toFixed(3)}`;
-    });
-    bars.style.display = "flex"; bars.style.flexDirection = "column";
-    document.getElementById("chart-title").textContent = metric === "safety" ? "Share of each path on safe ground" : "Share of each path on preferred ground";
-  }
-  document.getElementById("ratio-table").innerHTML = RATIOS.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td class="n">${r[2].toFixed(3)}</td><td class="n">${r[3].toFixed(3)}</td></tr>`).join("");
-  document.querySelectorAll("[data-metric]").forEach(b => b.addEventListener("click", () => {
-    document.querySelectorAll("[data-metric]").forEach(x => x.setAttribute("aria-pressed", x === b)); renderBars(b.dataset.metric);
-  }));
-  renderBars("safety");
 
   // ---------- Copy BibTeX ----------
   document.getElementById("copy").addEventListener("click", async e => {
