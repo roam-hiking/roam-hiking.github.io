@@ -1,45 +1,5 @@
 [
  {
-  "id": "z00",
-  "lat": 45.983139,
-  "lon": 7.779492,
-  "km": 0.28,
-  "caption": "Setting off above the glaciers",
-  "by": "Julia",
-  "w": 1600,
-  "h": 1200
- },
- {
-  "id": "z01",
-  "lat": 45.987189,
-  "lon": 7.778961,
-  "km": 1.17,
-  "caption": "A mountain lake on the way down",
-  "by": "yanqing",
-  "w": 1600,
-  "h": 1200
- },
- {
-  "id": "z02",
-  "lat": 45.986115,
-  "lon": 7.771906,
-  "km": 2.08,
-  "caption": "The Matterhorn comes into view",
-  "by": "Taka",
-  "w": 1200,
-  "h": 1600
- },
- {
-  "id": "z03",
-  "lat": 45.989067,
-  "lon": 7.768686,
-  "km": 2.66,
-  "caption": "Long gravel descent",
-  "by": "Lukas",
-  "w": 1200,
-  "h": 1600
- },
- {
   "id": "z04",
   "lat": 45.991578,
   "lon": 7.763756,
@@ -48,76 +8,6 @@
   "by": "Robin",
   "w": 1200,
   "h": 1600
- },
- {
-  "id": "z05",
-  "lat": 45.992725,
-  "lon": 7.755767,
-  "km": 3.91,
-  "caption": "Past the mountain huts",
-  "by": "Robin",
-  "w": 1600,
-  "h": 1200
- },
- {
-  "id": "z06",
-  "lat": 45.995734,
-  "lon": 7.758655,
-  "km": 4.73,
-  "caption": "A narrow path through a construction site",
-  "by": "Taka",
-  "w": 1600,
-  "h": 1200
- },
- {
-  "id": "z07",
-  "lat": 46.000978,
-  "lon": 7.759625,
-  "km": 5.59,
-  "caption": "Through the alpine meadow",
-  "by": "Lukas",
-  "w": 1200,
-  "h": 1600
- },
- {
-  "id": "z08",
-  "lat": 46.000408,
-  "lon": 7.756236,
-  "km": 5.86,
-  "caption": "Rocky trail, mountains ahead",
-  "by": "Lukas",
-  "w": 1200,
-  "h": 1600
- },
- {
-  "id": "z09",
-  "lat": 46.001883,
-  "lon": 7.753072,
-  "km": 6.31,
-  "caption": "The team follows at a distance",
-  "by": "Lukas",
-  "w": 1600,
-  "h": 900
- },
- {
-  "id": "z10",
-  "lat": 46.002156,
-  "lon": 7.750967,
-  "km": 7.65,
-  "caption": "Next to the mountain railway",
-  "by": "Robin",
-  "w": 1200,
-  "h": 1600
- },
- {
-  "id": "z11",
-  "lat": 46.001852,
-  "lon": 7.750696,
-  "km": 7.69,
-  "caption": "Arriving at the hotel above Zermatt",
-  "by": "Taka",
-  "w": 1600,
-  "h": 900
  },
  {
   "id": "zv0",

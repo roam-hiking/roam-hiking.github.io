@@ -186,28 +186,40 @@
 
   /* ---------- Interactive Fig. 1 ---------- */
   .fx { margin-top: 40px; }
-  .f1 { position: relative; background: #fff; border-radius: var(--radius); overflow: hidden; margin-bottom: 12px; }
-  .f1 img { display: block; width: 100%; height: auto; }
-  .f1 svg { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .f1-dim { fill: rgba(11,15,13,.55); fill-rule: evenodd; transition: opacity .3s; pointer-events: none; }
-  .f1-hot rect { fill: transparent; stroke: transparent; stroke-width: 6; rx: 14; cursor: pointer; transition: stroke .2s; }
-  .f1-hot rect:hover { stroke: rgba(255,107,95,.6); }
-  .f1-hot rect.on { stroke: var(--red-soft); }
-  .f1-flow circle { fill: #ff3b30; stroke: #fff; stroke-width: 3; pointer-events: none; }
-  .f1-hint { position: absolute; right: 12px; bottom: 12px; font: 600 12px Inter, sans-serif; color: #fff; background: rgba(11,15,13,.72); padding: 5px 11px; border-radius: 99px; pointer-events: none; transition: opacity .3s; }
-  .f1.picked .f1-hint { opacity: 0; }
+  .fx-panel { scroll-margin-top: 76px; }
+  .mx-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 34px; }
+  .mx-col { position: relative; --c: var(--glacier); display: grid; grid-template-rows: auto; gap: 10px; align-content: start; }
+  .mx-col.think { --c: var(--red-soft); } .mx-col.walk { --c: var(--amber); }
+  .mx-col + .mx-col::before { content: "\2192"; position: absolute; left: -27px; top: 50%; font-size: 20px; color: rgba(255,255,255,.35); }
+  .mx-head { border-top: 3px solid var(--c); padding-top: 12px; margin-bottom: 4px; }
+  .mx-head > b { display: block; font: 600 26px/1.1 Fraunces, serif; color: var(--snow); }
+  .mx-head > span { display: block; font: 500 12px "JetBrains Mono", monospace; color: var(--c); margin-top: 6px; }
+  .mx-head p b { color: var(--snow); font-weight: 600; }
+  .mx-head p { margin: 8px 0 0; color: var(--snow-dim); font-size: 14.5px; line-height: 1.5; min-height: 3em; }
+  .mx-card { text-align: left; font: inherit; color: var(--snow); background: var(--night-2); border: 1px solid rgba(255,255,255,.1); border-radius: 14px; padding: 10px; cursor: pointer; display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 12px; align-items: center; transition: border-color .2s, background .2s; }
+  .mx-card:hover { border-color: rgba(255,255,255,.3); }
+  .mx-card[aria-selected="true"] { border-color: var(--c); background: #1a221e; box-shadow: 0 0 0 1px var(--c) inset; }
+  .mx-th { width: 96px; height: 72px; border-radius: 8px; overflow: hidden; background: #0c110e; }
+  .mx-th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mx-th.tbl { display: grid; align-content: center; gap: 3px; padding: 6px; font: 500 8.5px "JetBrains Mono", monospace; color: var(--snow-dim); }
+  .mx-th.tbl span { display: flex; justify-content: space-between; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
+  .mx-th.tbl i { flex: none; width: 16px; height: 7px; border-radius: 2px; }
+  .mx-card .t { font-weight: 600; font-size: 15px; line-height: 1.25; }
+  .mx-card .o { display: block; color: var(--snow-dim); font-size: 13px; line-height: 1.4; margin-top: 3px; }
+  .mx-card .hz { display: inline-block; font: 500 11px "JetBrains Mono", monospace; color: var(--c); margin-top: 5px; }
 
-  .fx-flow { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; counter-reset: fx; }
-  .fx-flow li { position: relative; }
-  .fx-flow li + li::before { content: ""; position: absolute; left: -8px; top: 50%; width: 8px; height: 2px; background: rgba(255,255,255,.18); }
-  .fx-flow button { width: 100%; height: 100%; text-align: left; border: 1px solid rgba(255,255,255,.1); background: var(--night-2); color: var(--snow); border-radius: 12px; padding: 10px 12px; cursor: pointer; display: grid; gap: 3px; font: inherit; transition: border-color .2s, background .2s; }
-  .fx-flow button:hover { border-color: rgba(255,255,255,.3); }
-  .fx-flow button[aria-selected="true"] { border-color: var(--red-soft); background: #24151a; }
-  .fx-flow .t { font-weight: 600; font-size: 14px; line-height: 1.25; }
-  .fx-flow .hz { display: flex; align-items: center; gap: 6px; font: 500 11.5px "JetBrains Mono", monospace; color: var(--snow-dim); }
-  .fx-flow .hz i { width: 7px; height: 7px; border-radius: 50%; background: var(--glacier); animation: blink var(--p, 1s) steps(1) infinite; flex: none; }
-  .fx-flow .slow .hz i { background: var(--red-soft); }
-  @keyframes blink { 0% { opacity: 1; } 50% { opacity: .15; } }
+  .tempo { margin: 26px 0 16px; padding: 16px 18px; border: 1px solid rgba(255,255,255,.07); border-radius: var(--radius); background: var(--night-2); display: grid; gap: 8px; }
+  .tempo-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; margin-bottom: 4px; }
+  .tempo-h b { font-size: 15px; } .tempo-h span { color: var(--snow-dim); font-size: 13px; }
+  .lane { --c: var(--glacier); display: grid; grid-template-columns: 104px minmax(0, 1fr) 104px; gap: 12px; align-items: center; font: 500 12px "JetBrains Mono", monospace; color: var(--snow-dim); }
+  .lane.think { --c: var(--red-soft); } .lane.walk { --c: var(--amber); }
+  .lane .c { color: var(--c); text-align: right; }
+  .trk { position: relative; height: 16px; border-radius: 4px; overflow: hidden; background: repeating-linear-gradient(90deg, var(--c) 0 1px, transparent 1px calc(100% / var(--n))); }
+  .trk.one { background: color-mix(in srgb, var(--c) 28%, transparent); border-right: 4px solid var(--c); }
+  .trk.one em { position: absolute; left: 8px; top: 0; line-height: 16px; font-style: normal; font-size: 10.5px; color: var(--snow); }
+  .trk::after { content: ""; position: absolute; top: 0; bottom: 0; right: 0; left: 0; background: rgba(18,25,21,.82); border-left: 2px solid #fff; animation: sweep 10s linear infinite; }
+  @keyframes sweep { from { left: 0; } to { left: 100%; } }
+  @media (prefers-reduced-motion: reduce) { .trk::after { display: none; } }
   .fx-panel { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 28px; align-items: start; background: var(--night-2); border: 1px solid rgba(255,255,255,.07); border-radius: var(--radius); padding: 18px; }
   .fx-vis { min-width: 0; display: grid; gap: 10px; }
   .fx-vis img { width: 100%; border-radius: 10px; display: block; }
@@ -719,7 +731,9 @@
     .steps, .limits { grid-template-columns: 1fr; }
     .gallery { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 130px; }
     .tile.big { grid-column: span 2; grid-row: span 2; } .tile.wide { grid-column: span 2; }
-    .fx-flow { grid-template-columns: repeat(3, minmax(0, 1fr)); } .fx-flow li + li::before { display: none; }
+    .mx-cols { grid-template-columns: minmax(0, 1fr); gap: 26px; } .mx-col + .mx-col::before { content: "\2193"; left: 50%; top: -25px; }
+    .mx-head p { min-height: 0; }
+    .lane { grid-template-columns: 86px minmax(0, 1fr); } .lane .c { grid-column: 2; text-align: left; margin-top: -4px; }
     .fx-panel { grid-template-columns: minmax(0, 1fr); gap: 14px; padding: 12px; }
     .mrow { grid-template-columns: 1fr 1fr; }
     .mrow > div:nth-child(2) { display: none; }
@@ -890,12 +904,14 @@
     <p class="lead dim rv d1" style="max-width:720px">The VLM never outputs coordinates or speeds. It only names what it sees and says how risky each thing is. Everything that has to be fast and precise happens downstream.</p>
 
     <div class="fx rv d2" id="fx">
-      <div class="f1">
-        <img src="static/img/how/fig1.jpg" alt="Fig. 1: the ROAM pipeline. Camera images go to the VLM, its labels become segmentation maps, these are projected onto the elevation map, which the navigation and locomotion policies read" width="2400" height="2043">
-        <svg viewBox="0 0 1874 1595" aria-hidden="true"><path class="f1-dim"/><g class="f1-flow"></g><g class="f1-hot"></g></svg>
-        <div class="f1-hint">Click a block</div>
+      <div class="mx-cols" role="tablist" aria-label="Pipeline stages"></div>
+      <div class="tempo" aria-label="How often each part produces an output, over ten seconds">
+        <div class="tempo-h"><b>Ten seconds, in real time</b><span>The line sweeps once every 10 s. Each tick is one output.</span></div>
+        <div class="lane think"><span class="n">VLM</span><div class="trk one"><em>thinking&hellip;</em></div><span class="c">1 answer</span></div>
+        <div class="lane ground"><span class="n">Segmentation</span><div class="trk" style="--n:50"></div><span class="c">50 frames</span></div>
+        <div class="lane walk"><span class="n">Navigation</span><div class="trk" style="--n:100"></div><span class="c">100 commands</span></div>
+        <div class="lane walk"><span class="n">Locomotion</span><div class="trk" style="--n:500"></div><span class="c">500 commands</span></div>
       </div>
-      <ol class="fx-flow" role="tablist" aria-label="Pipeline stages"></ol>
       <div class="fx-panel">
         <div class="fx-vis"></div>
         <div class="fx-txt">
@@ -905,7 +921,7 @@
           <div class="fx-nav"><button class="fx-prev" aria-label="Previous stage">&larr;</button><button class="fx-next">Next stage &rarr;</button></div>
         </div>
       </div>
-      <p class="cap">Fig. 1 of the paper, made clickable. Every block shows the same real moment from the Zermatt hike (15 August 2024). Dots run along the arrows at the rate each stage works on the robot: one VLM answer every ten seconds, motor commands fifty times a second.</p>
+      <p class="cap">Every picture is from the same moment of the Zermatt hike (15 August 2024), with the values logged on the robot.</p>
     </div>
 
     <details class="expand rv">
@@ -964,7 +980,7 @@
             <button data-hv="fly" aria-pressed="false">Flyover</button>
             <button data-hv="fig" aria-pressed="false">Route photos</button>
           </div>
-          <div class="explorer" data-hv-panel="map" data-route="static/data/zermatt-route.json" data-photos="static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/zermatt-behind.mp4", "poster": "static/video/zermatt-behind-poster.jpg", "timemap": "static/data/zermatt-behind-timemap.json", "yt": "zermattBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/zermatt-onboard.mp4", "poster": "static/video/zermatt-onboard-poster.jpg", "timemap": "static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/zermatt-route.json" data-photos="static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/zermatt-behind.mp4", "poster": "static/video/zermatt-behind-poster.jpg", "timemap": "static/data/zermatt-behind-timemap.json", "start": 2.6, "yt": "zermattBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/zermatt-onboard.mp4", "poster": "static/video/zermatt-onboard-poster.jpg", "timemap": "static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
             <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Zermatt route on swisstopo aerial imagery"></div>
               <div><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span></div>
                 <p class="rx-pip-cap">Play the video and the robot moves along the map. Click the route or the profile to jump the video there. Zoom in for photos; right-drag (or two fingers) to tilt.</p></div></div>
@@ -1016,7 +1032,7 @@
             <button data-hv="map" aria-pressed="true">Route explorer</button>
             <button data-hv="fig" aria-pressed="false">Route photos</button>
           </div>
-          <div class="explorer" data-hv-panel="map" data-route="static/data/seealpsee-route.json" data-photos="static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/seealpsee-behind.mp4", "poster": "static/video/seealpsee-behind-poster.jpg", "timemap": "static/data/seealpsee-behind-timemap.json", "yt": "seealpseeBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/seealpsee-onboard.mp4", "poster": "static/video/seealpsee-onboard-poster.jpg", "timemap": "static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/seealpsee-route.json" data-photos="static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/seealpsee-behind.mp4", "poster": "static/video/seealpsee-behind-poster.jpg", "timemap": "static/data/seealpsee-behind-timemap.json", "start": 3, "yt": "seealpseeBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/seealpsee-onboard.mp4", "poster": "static/video/seealpsee-onboard-poster.jpg", "timemap": "static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
             <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Seealpsee route on swisstopo aerial imagery"></div>
               <div><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span></div>
                 <p class="rx-pip-cap">Play the video and the robot moves along the map. Click the route or the profile to jump the video there. Zoom in for photos; right-drag (or two fingers) to tilt.</p></div></div>
@@ -1561,18 +1577,19 @@
       const a = tm[k], b = tm[Math.min(k + 1, tm.length - 1)], f = b.t > a.t ? Math.min(1, (t - a.t) / (b.t - a.t)) : 0;
       if (Math.abs(b.i - a.i) < 40) setIdx(Math.round(a.i + (b.i - a.i) * f), true, true);
     }
-    function localPlayer(src, poster) {
+    // `start` skips the seconds before the mission begins (the robot is standing still there).
+    function localPlayer(src, poster, start = 0) {
       pip.querySelector(".rx-yt")?.remove();
-      const v = pip.querySelector("video"); v.hidden = false; v.poster = poster; v.src = src; v.controls = true;
-      if (!v._bound) { v.addEventListener("timeupdate", () => vid && vid.kind === "local" && onVideoTime(v.currentTime)); v._bound = true; }
-      return { kind: "local", play: () => v.play().catch(() => {}), pause: () => v.pause(), paused: () => v.paused, seek: t => v.currentTime = t, destroy: () => { v.pause(); } };
+      const v = pip.querySelector("video"); v.hidden = false; v.poster = poster; v.src = start ? `${src}#t=${start}` : src; v.controls = true; v._start = start;
+      if (!v._bound) { v.addEventListener("timeupdate", () => { if (v.currentTime < v._start - .05) v.currentTime = v._start; vid && vid.kind === "local" && onVideoTime(v.currentTime); }); v._bound = true; }
+      return { kind: "local", play: () => v.play().catch(() => {}), pause: () => v.pause(), paused: () => v.paused, seek: t => v.currentTime = Math.max(t, start), destroy: () => { v.pause(); } };
     }
-    function ytPlayer(id, auto) {
+    function ytPlayer(id, auto, start = 0) {
       pip.querySelector("video").hidden = true; pip.querySelector("video").pause();
       pip.querySelector(".rx-yt")?.remove();
       const host = document.createElement("div"); host.className = "rx-yt"; pip.prepend(host);
       let yt = null, ready = false, timer = 0;
-      const make = () => { yt = new YT.Player(host, { videoId: id, playerVars: { rel: 0, playsinline: 1, mute: 1 }, events: { onReady: () => { ready = true; if (auto) yt.playVideo(); } } });
+      const make = () => { yt = new YT.Player(host, { videoId: id, playerVars: { rel: 0, playsinline: 1, mute: 1, start: Math.ceil(start) }, events: { onReady: () => { ready = true; if (auto) yt.playVideo(); } } });
         timer = setInterval(() => { if (ready && yt.getPlayerState() === 1) onVideoTime(yt.getCurrentTime()); }, 250); };
       if (window.YT && YT.Player) make(); else {
         const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { prev && prev(); make(); };
@@ -1602,7 +1619,7 @@
       active = src; tm = src.tm; covers = src.covers; pipOn = true;
       noteEl.dataset.base = noteEl.textContent = src.approx ? `${src.label} · position approximate` : `${src.label} · 10× · GPS-synced`;
       const ytId = (window.SITE && SITE.youtube && SITE.youtube[src.yt]) || "";
-      vid = ytId ? ytPlayer(ytId, play) : localPlayer(src.src, src.poster);
+      vid = ytId ? ytPlayer(ytId, play, src.start) : localPlayer(src.src, src.poster, src.start);
       if (play) { stop(); vid.play(); }
       draw();
     }
@@ -1717,11 +1734,11 @@
         vis: () => `<div class="row3"><div><p class="lbl">line labels</p><img src="${W}f6-line.jpg" alt="Labels on a straight line, chosen path in yellow"></div><div><p class="lbl">trajectory labels</p><img src="${W}f6-traj.jpg" alt="Labels on fanned-out trajectories"></div><div><p class="lbl">uniform grid</p><img src="${W}f6-uniform.jpg" alt="Labels on a grid; the chosen sequence zigzags across the scene"></div></div>`,
         res: [R("Uniform labels", .740, .418), R("Line labels", .702, .416), R("Trajectory labels", .633, .307)],
         note: "Numbers are drawn on the image and the VLM picks which to follow. It has to judge where each number sits relative to the path. Placing the labels only on ground ROAM marks as steppable helps (0.884 / 0.844 safe) but still trails ROAM." },
-      { t: "Pixel coordinates", s: "a drawn path", out: "(0.55, 0.80), (0.58, 0.70),\n(0.60, 0.60), (0.70, 0.45),\n(0.80, 0.20), …",
+      { t: "Pixel coordinates", s: "a drawn path", out: "(0.50, 0.95), (0.52, 0.88),\n(0.54, 0.81), (0.56, 0.74),\n(0.58, 0.67), (0.62, 0.56), …",
         space: true, body: false,
-        vis: () => `<div><p class="lbl">Fig. 6B: path drawn by the VLM</p><img src="${W}f6-pixel.jpg" alt="A path drawn by the VLM that leaves the trail"></div>`,
+        vis: () => `<div><p class="lbl">A failure from the benchmark: GPT-4o's path, 77% on risky ground</p><img src="${W}f6-pixel-fail.jpg" alt="The path GPT-4o drew starts across a Danger: Mine sign and the grass before joining the wooden walkway"></div>`,
         res: [R("From a prompt", .721, .406), R("From a goal point", .686, .379)],
-        note: "The VLM writes the path as image coordinates. Small spatial errors put the path off the trail, and turning pixels into robot motion still needs depth and geometry." },
+        note: "The VLM writes the path as image coordinates. Here the signs say not to step on the grass, and the drawn path still cuts across a mine sign and the grass to reach the walkway. Small spatial errors like this put the path on risky ground, and turning pixels into robot motion still needs depth and geometry." },
       { t: "Direction", s: "go left, 50 cm", out: "Forward 50 cm",
         space: true, body: false,
         vis: () => `<div class="empty">The VLM must judge distances and angles from a single image, then a controller turns them into motion.</div>`,
@@ -1891,7 +1908,7 @@
     e.target.querySelectorAll("video").forEach(v => e.isIntersecting ? v.play().catch(() => {}) : v.pause());
   }), { threshold: .15 }).observe(pal);
 
-  // ---------- Interactive Fig. 1: one Zermatt frame through the pipeline ----------
+  // ---------- 02: think / ground / walk, one Zermatt frame through the pipeline ----------
   {
     const H = "static/img/how/";
     const LABELS = [["gravel_path", .2, 1, 1], ["trail", .1, 1, 1], ["grass", .4, 1, 0], ["slope", .3, 1, 0], ["rocks", .5, 1, 0],
@@ -1924,40 +1941,20 @@
         txt: "Follows the velocity command and chooses footholds. It was trained on <b>random steppable scans</b> in simulation and, on the robot, reads the steppable layer, so it keeps its feet off ground the VLM called unsafe. It sends joint commands 50 times a second, while the VLM is still thinking about the next frame.",
         vis: () => `<div class="row2"><div><p class="lbl">training in simulation</p><img src="${H}loco-train.jpg" alt="Simulation: robot on rough blocks with steppable samples under its feet"></div><div><p class="lbl">on the robot</p><img src="${H}loco-deploy.jpg" alt="Deployment: steppable samples under the robot's feet on the real terrain"></div></div>` }
     ];
-    // Blocks of Fig. 1 per stage, in the figure's own coordinates (1874 x 1595)
-    const AREAS = [[[8, 96, 505, 340], [2, 556, 1122, 634]], [[536, 22, 1324, 524], [1110, 18, 750, 228]], [[1128, 278, 734, 462]],
-      [[1128, 796, 740, 398]], [[1094, 1244, 768, 346]], [[274, 1244, 742, 346]]];
-    // Arrows of Fig. 1: path, stage it belongs to, dots per second
-    const FLOWS = [["M410 552 L410 450", 0, 2], ["M1066 165 L1140 165", 1, .1], ["M1687 240 L1687 300", 1, .1], ["M1500 742 L1500 795", 2, 5],
-      ["M1290 1196 L1290 1212 L790 1212 L790 1242", 3, 20], ["M1650 1196 L1650 1242", 3, 20], ["M1092 1430 L1018 1430", 4, 10], ["M272 1430 L128 1430 L128 1200", 5, 50]];
-    const fx = document.getElementById("fx"), flow = fx.querySelector(".fx-flow"), vis = fx.querySelector(".fx-vis");
-    const f1 = fx.querySelector(".f1"), hot = f1.querySelector(".f1-hot"), dim = f1.querySelector(".f1-dim"), flowG = f1.querySelector(".f1-flow");
-    hot.innerHTML = AREAS.map((rs, i) => rs.map(([x, y, w, h]) => `<rect data-i="${i}" x="${x}" y="${y}" width="${w}" height="${h}"><title>${STAGES[i].t}</title></rect>`).join("")).join("");
-    hot.addEventListener("click", e => { const r = e.target.closest("rect"); if (r) { f1.classList.add("picked"); show(+r.dataset.i); } });
-    const ns = "http://www.w3.org/2000/svg";
-    const flows = FLOWS.map(([d, st, hz]) => { const path = document.createElementNS(ns, "path"); path.setAttribute("d", d); const c = document.createElementNS(ns, "circle"); c.setAttribute("r", 9); flowG.append(c); return { path, len: 0, st, hz, c }; });
-    // Measure lengths with a hidden path inside the svg
-    flows.forEach(f => { flowG.append(f.path); f.path.setAttribute("fill", "none"); f.len = f.path.getTotalLength(); f.path.remove(); });
-    let t0 = performance.now();
-    const tick = now => {
-      // A dot takes ~0.7 s per arrow (VLM: one dot per 10 s), fast stages show several dots at once, capped for readability
-      flows.forEach(f => { const period = 1 / f.hz, vis = cur < 0 || f.st === cur || f.st === cur - 1 ? 1 : .25;
-        const ph = ((now - t0) / 1000 % Math.max(period, .7)) / .7; const on = ph <= 1;
-        f.c.style.opacity = on ? vis : 0;
-        if (on) { flowG.append(f.path); const pt = f.path.getPointAtLength(Math.min(1, ph) * f.len); f.path.remove(); f.c.setAttribute("cx", pt.x); f.c.setAttribute("cy", pt.y); } });
-      requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);   // first frame runs after `cur` below is declared
-    function highlight(i) {
-      hot.querySelectorAll("rect").forEach(r => r.classList.toggle("on", +r.dataset.i === i));
-      const holes = AREAS[i].map(([x, y, w, h]) => `M${x} ${y}h${w}v${h}h${-w}Z`).join("");
-      dim.setAttribute("d", `M0 0H1874V1595H0Z${holes}`);
-    }
-    flow.innerHTML = STAGES.map((st, i) => `<li><button role="tab" data-i="${i}" aria-selected="false" class="${st.slow ? "slow" : ""}"><span class="t">${st.t}</span><span class="hz"><i style="--p:${st.p}"></i>${st.hz}</span></button></li>`).join("");
+    const fx = document.getElementById("fx"), flow = fx.querySelector(".mx-cols"), vis = fx.querySelector(".fx-vis");
+    const th = f => `<span class="mx-th"><img src="${H}${f}.jpg" alt=""></span>`;
+    const THUMBS = [th("cam"), `<span class="mx-th tbl">${[["gravel_path", .2], ["grass", .4], ["rocks", .5], ["people", 1]].map(([l, v]) => `<span>${l}<i style="background:${coolwarm(v)}"></i></span>`).join("")}</span>`,
+      th("risk"), th("elev-pref"), th("nav-deploy"), th("loco-deploy")];
+    const ONE = ["One frame from the front camera.", "Names what is in view and scores it.", "Finds those labels in every new frame.", "Puts the scores on the 3D terrain.", "Steers toward the goal, around risk.", "Places each foot on steppable ground."];
+    const COLS = [["think", "Think", "one answer every 10 s", "A vision-language model says <b>what</b> is in view and how risky it is."],
+      ["ground", "Ground", "5 to 20 times a second", "Segmentation and mapping turn those words into <b>where</b>, on the terrain."],
+      ["walk", "Walk", "10 to 50 times a second", "Two RL policies trained in simulation read the map and <b>move</b>."]];
+    const card = i => `<button class="mx-card" role="tab" data-i="${i}" aria-selected="false">${THUMBS[i]}<span><span class="t">${STAGES[i].t}</span><span class="o">${ONE[i]}</span><span class="hz">${STAGES[i].hz}</span></span></button>`;
+    flow.innerHTML = COLS.map(([c, t, hz, d], k) => `<div class="mx-col ${c}"><div class="mx-head"><b>${t}</b><span>${hz}</span><p>${d}</p></div>${card(2 * k)}${card(2 * k + 1)}</div>`).join("");
     let cur = -1;
     const bindCmp = root => root.querySelectorAll(".cmp input").forEach(r => r.addEventListener("input", () => r.parentElement.style.setProperty("--x", r.value + "%")));
     function show(i) {
-      cur = (i + STAGES.length) % STAGES.length; const st = STAGES[cur]; highlight(cur);
+      cur = (i + STAGES.length) % STAGES.length; const st = STAGES[cur];
       flow.querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", +b.dataset.i === cur));
       fx.querySelector(".fx-k").textContent = st.k; fx.querySelector(".fx-txt h3").textContent = st.h; fx.querySelector(".fx-txt p").innerHTML = st.txt;
       fx.querySelector(".fx-next").innerHTML = cur === STAGES.length - 1 ? "Back to the start &#8635;" : "Next stage &rarr;";
@@ -1969,7 +1966,9 @@
         const c = vis.querySelector(".cmp"); c.style.setProperty("--x", x); c.querySelector("input").value = parseFloat(x); bindCmp(vis);
       }));
     }
-    flow.addEventListener("click", e => { const b = e.target.closest("button"); if (b) show(+b.dataset.i); });
+    flow.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; show(+b.dataset.i);
+      // On a phone the detail panel sits below all six cards, so bring it into view.
+      if (matchMedia("(max-width: 760px)").matches) fx.querySelector(".fx-panel").scrollIntoView({ behavior: "smooth", block: "start" }); });
     fx.querySelector(".fx-next").addEventListener("click", () => show(cur + 1));
     fx.querySelector(".fx-prev").addEventListener("click", () => show(cur - 1));
     show(0);
