@@ -181,8 +181,8 @@
   .scrub-pin .movie { width: min(100%, calc((100vh - 250px) * 16 / 9)); margin: 0 auto; }
   .scrub-h { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
   .scrub-h b { font: 600 22px/1.2 Fraunces, serif; } .scrub-hint { color: var(--snow-dim); font-size: 13px; }
-  .scrub-title { display: flex; align-items: baseline; gap: 10px; min-height: 2.6em; margin-bottom: 8px; font: 600 17px/1.3 Inter, sans-serif; color: var(--snow); }
-  .scrub-title .n { font: 500 12px/1 "JetBrains Mono", monospace; color: var(--red-soft); white-space: nowrap; }
+  .scrub-title { display: flex; align-items: baseline; gap: 10px; min-height: 2.6em; margin-bottom: 8px; font: 600 17px/1.3 Inter, sans-serif; color: var(--ink); }
+  .scrub-title .n { font: 500 12px/1 "JetBrains Mono", monospace; color: var(--red); white-space: nowrap; }
   .scrub-bar { display: flex; gap: 3px; height: 4px; margin: 12px 0 0; }
   .scrub-bar span { flex: var(--w) 1 0; border-radius: 3px; background: rgba(var(--fgrgb),.14); overflow: hidden; }
   .scrub-bar i { display: block; height: 100%; width: 0; background: var(--red-soft); }
@@ -243,6 +243,8 @@
   .mx-card[aria-selected="true"] { border-color: var(--c); background: var(--night-3); box-shadow: 0 0 0 1px var(--c) inset; }
   .mx-th { width: 96px; height: 72px; border-radius: 8px; overflow: hidden; background: var(--night-2); }
   .mx-th img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  /* segmentation: one label's heatmap beside the fused risk image */
+  .mx-th.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; } .mx-th.duo img { min-width: 0; }
   .mx-th.tbl { display: grid; align-content: center; gap: 3px; padding: 6px; font: 500 8.5px "JetBrains Mono", monospace; color: var(--snow-dim); }
   .mx-th.tbl span { display: flex; justify-content: space-between; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; }
   .mx-th.tbl i { flex: none; width: 16px; height: 7px; border-radius: 2px; }
@@ -980,7 +982,7 @@
   <div class="wrap">
     <div class="kicker rv"><span class="num">01</span> The missing piece</div>
     <h2 class="rv">It can already walk. The hard part is deciding <em>where</em>.</h2>
-    <p class="lead rv d1" style="max-width:760px">A person with a remote can drive this robot over almost any terrain. What the robot lacks is <b style="color:var(--red);font-weight:600">common sense</b>: gravel is fine, a lake is not, and a sign can close a trail. A vision-language model (VLM) has it.</p>
+    <p class="lead rv d1" style="max-width:760px">A person with a remote can drive this robot over almost any terrain. What the robot lacks is <b style="color:var(--red);font-weight:600">common sense</b>: gravel is fine, a lake is not, and a sign can close a trail. A vision-language model (VLM) has it. <b style="font-weight:600">ROAM</b> (Robust Open-world Autonomous Mobility) is our system that hands that common sense to the robot's maps and legs.</p>
 
     <div class="core rv d2" id="core">
       <div class="core-head"><b>What the VLM sees, and what the robot gets</b><span>Real frames and logged answers. Pick a scene, then drag the line.</span></div>
@@ -1312,10 +1314,10 @@
         <div>
           <div class="lab-tag">Training in simulation · Isaac</div>
           <h3>Random risk scans</h3>
-          <p>The navigation policy is trained on terrain with randomly generated risk values around the robot (blue safe, red risky), so it learns to steer toward low-risk ground without photo-real scenes.</p>
+          <p>The navigation policy is trained on terrain with randomly generated risk values around the robot (blue safe, red risky), so it learns to steer toward low-risk ground without photo-real scenes. Four terrains, sped up: many robots at once, a stepped pyramid, a narrow corridor and a stairwell.</p>
         </div>
       </div>
-      <div class="screen loco-train"><video src="static/video/exp/nav-training-12x.mp4" poster="static/video/exp/poster/nav-training-12x.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
+      <div class="screen loco-train"><video src="static/video/exp/nav-training-montage.mp4" poster="static/video/exp/poster/nav-training-montage.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
     </div>
 
     <div class="lab rv" id="routes">
@@ -1978,7 +1980,7 @@
   const course = document.getElementById("course");
   const trapList = course.querySelector(".traps"), methodBar = course.querySelector(".methods"),
         screens = course.querySelector(".screens"), verdict = course.querySelector(".verdict"), extra = course.querySelector(".extra");
-  let trap = 0, method = "roam", view = "one";
+  let trap = 3, method = "roam", view = "one";  // open on the construction zone
   trapList.innerHTML = TRAPS.map((t, i) => `<li><button role="tab" aria-selected="${i === 0}" data-i="${i}"><span class="n">0${i + 1}</span><b>${t.title}</b><span>${t.desc}</span></button></li>`).join("");
   methodBar.innerHTML = Object.entries(METHODS).map(([k, [n, c]]) => `<button data-m="${k}" style="--c:${c}" aria-pressed="${k === "roam"}"><i></i>${n}</button>`).join("");
   const dots = (n, cls) => `<span class="dots">${Array.from({ length: 10 }, (_, i) => `<i class="${i < n ? cls : ""}"></i>`).join("")}</span>`;
@@ -2113,7 +2115,7 @@
           <table class="fx-tbl"><tr><th>label</th><th>risk</th><th>steppable</th><th>preferred</th></tr>${LABELS.map(([l, r, st, pr]) => `<tr><td>${l}</td>${cell(r)}${cell(st, true)}${cell(pr, true)}</tr>`).join("")}</table>` },
       { t: "Segmentation", hz: "5 Hz", p: ".2s", k: "03 · paint (fast)", h: "Labels become dense maps",
         txt: "An open-vocabulary segmentation model finds each label in every new camera frame, much faster than the VLM runs. Fusing the per-label heatmaps with the VLM's values gives three images: <b>risk</b>, <b>steppable</b> and <b>preferred</b>. Drag the line to compare one with the camera. Blue means go, red means avoid.",
-        vis: () => `<div class="fx-heat"><figure><img src="${H}heat-gravel.jpg" alt="Heatmap for the label gravel_path"><figcaption>heatmap: gravel_path</figcaption></figure><figure><img src="${H}heat-grass.jpg" alt="Heatmap for the label grass"><figcaption>heatmap: grass</figcaption></figure></div>
+        vis: () => `<div class="fx-heat"><figure><img src="${H}heat-gravel.jpg" alt="Heatmap for the label gravel_path"><figcaption>heatmap: gravel_path (bright = found here)</figcaption></figure><figure><img src="${H}heat-grass.jpg" alt="Heatmap for the label grass"><figcaption>heatmap: grass</figcaption></figure></div>
           <div class="fx-layers" role="group" aria-label="Fused map"><button data-l="risk" aria-pressed="true">Risk</button><button data-l="step" aria-pressed="false">Steppable</button><button data-l="pref" aria-pressed="false">Preferred</button></div>
           <div class="fx-slot">${slider("risk", "Risk image")}</div><div class="cw-legend">go <i></i> avoid</div>` },
       { t: "Elevation map", hz: "20 Hz", p: ".05s", k: "04 · map", h: "Projected onto the terrain",
@@ -2121,7 +2123,7 @@
         vis: () => `<img src="${H}elev-pref.jpg" alt="3D elevation map with the robot on it: the gravel path is low and blue, the grass on both sides rises as red spikes"><div class="row2"><div><p class="lbl">for locomotion: steppable</p><img src="${H}elev-loco-fig.jpg" alt="Steppable layer on the elevation map"></div><div><p class="lbl">for navigation: risk</p><img src="${H}elev-risk-fig.jpg" alt="Risk layer on the elevation map"><p class="lbl" style="margin-top:8px">for navigation: preferred</p><img src="${H}elev-pref-fig.jpg" alt="Preferred layer on the elevation map"></div></div>` },
       { t: "Navigation policy", hz: "10 Hz", p: ".1s", k: "05 · steer", h: "An RL policy picks the way",
         txt: "Trained in simulation to reach goals over terrain with <b>randomly generated risk scans</b>, so it never needs photo-real scenes. On the robot it reads the real risk layer and sends a velocity command toward the next waypoint of the global path.",
-        vis: () => `<div class="row2"><div><p class="lbl">training in simulation (Isaac)</p><video src="static/video/exp/nav-training-12x.mp4" poster="static/video/exp/poster/nav-training-12x.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it, blue safe and red risky"></video></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
+        vis: () => `<div class="row2"><div><p class="lbl">training in simulation (Isaac)</p><video src="static/video/exp/nav-training-montage.mp4" poster="static/video/exp/poster/nav-training-montage.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it, blue safe and red risky"></video></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
       { t: "Locomotion policy", hz: "50 Hz", p: ".02s", k: "06 · walk", h: "Another RL policy moves the legs",
         txt: "Follows the velocity command and chooses footholds. It was trained on <b>random steppable scans</b> in simulation and, on the robot, reads the steppable layer, so it keeps its feet off ground the VLM called unsafe. It sends joint commands 50 times a second, while the VLM is still thinking about the next frame.",
         vis: () => `<div class="row2"><div><p class="lbl">training in simulation (RaiSim)</p><video src="static/video/exp/loco-training.mp4" poster="static/video/exp/poster/loco-training.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot learns to keep its feet off red non-steppable samples on rough terrain"></video></div><div><p class="lbl">on the robot: exploding cans</p><video src="static/video/exp/cans-roam.mp4" poster="static/video/exp/poster/cans-roam.jpg" muted loop playsinline autoplay preload="metadata" aria-label="The real robot steps between cans marked unsteppable after reading a warning sign"></video></div></div>` }
@@ -2129,8 +2131,8 @@
     const fx = document.getElementById("fx"), flow = fx.querySelector(".mx-cols"), vis = fx.querySelector(".fx-vis");
     const th = f => `<span class="mx-th"><img src="${H}${f}.jpg" alt=""></span>`;
     const THUMBS = [th("cam"), `<span class="mx-th tbl">${[["gravel_path", .2], ["grass", .4], ["rocks", .5], ["people", 1]].map(([l, v]) => `<span>${l}<i style="background:${coolwarm(v)}"></i></span>`).join("")}</span>`,
-      th("risk"), th("elev-pref"), th("nav-deploy"), th("loco-deploy")];
-    const ONE = ["One frame from the front camera.", "Names what is in view and scores it.", "Finds those labels in every new frame.", "Puts the scores on the 3D terrain.", "Steers toward the goal, around risk.", "Places each foot on steppable ground."];
+      `<span class="mx-th duo">${["heat-gravel", "risk"].map(f => `<img src="${H}${f}.jpg" alt="">`).join("")}</span>`, th("elev-pref"), th("nav-deploy"), th("loco-deploy")];
+    const ONE = ["One frame from the front camera.", "Names what is in view and scores it.", "Finds each label as a heatmap, then paints in its risk.", "Puts the scores on the 3D terrain.", "Steers toward the goal, around risk.", "Places each foot on steppable ground."];
     const COLS = [["think", "Think", "0.1 Hz · one answer every 10 s", "A vision-language model says <b>what</b> is in view and how risky it is."],
       ["ground", "Ground", "5 to 20 Hz", "Segmentation and mapping turn those words into <b>where</b>, on the terrain."],
       ["walk", "Walk", "10 to 50 Hz", "Two RL policies trained in simulation read the map and <b>move</b>."]];
