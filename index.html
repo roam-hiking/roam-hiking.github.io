@@ -1921,10 +1921,7 @@
         labels: [["gravel_path", 0], ["slope", .3], ["grass", .5], ["building", 1]] },
       { t: "Forest trail", cam: "core-zermatt-forest-cam", map: "core-zermatt-forest-risk", val: "risk",
         resp: "“There are shadows of people in the first image, indicating their presence. They are considered high-risk obstacles.”",
-        labels: [["gravel_path", .2], ["dirt_path", .3], ["vegetation", .5], ["trees", 1]] },
-      { g: "City", t: "Snowy passage", cam: "core-snow-cam", map: "core-snow-pref", val: "preferred",
-        resp: "“The center of the pathway is cleared of snow and is the safest route for navigation.”",
-        labels: [["cleared_path", 1], ["snow_covered_ground", 0], ["wet_ground", 0], ["concrete_wall", 0]] }
+        labels: [["gravel_path", .2], ["dirt_path", .3], ["vegetation", .5], ["trees", 1]] }
     ];
     // coolwarm ends, as in the map overlays: blue = go, red = avoid
     const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
