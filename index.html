@@ -43,7 +43,7 @@
     --radius: 16px;
     --ease: cubic-bezier(.2,.7,.2,1);
   }
-  .hero, .movie, .lb, .rx-base, .rx-pip, .scrub, .cmp, .screen, .quad, .outside, .core {
+  .hero, .movie, .lb, .rx-base, .rx-pip, .scrub, .cmp, .screen, .quad, .outside {
     --night: #0b0f0d; --night-2: #121915; --night-3: #1a231e; --snow: #eef2ee; --snow-dim: #c3cec8;
     --hi: #fff; --fgrgb: 255,255,255; --red-soft: #ff7a6e; --glacier: #7fd1c7; --acc2rgb: 127,209,199;
   }
@@ -297,24 +297,24 @@
   .why-intro { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; margin-top: 8px; }
   .why-intro .lead b { color: var(--red); font-weight: 600; }
   .why-intro .dim b { color: var(--ink); }
-  .core { margin-top: 44px; background: var(--ink); color: #eef2ee; border-radius: var(--radius); padding: 24px; }
+  .core { margin-top: 44px; background: var(--night); color: var(--snow); border-radius: 22px; padding: 24px; box-shadow: 0 50px 90px -50px rgba(0,0,0,.55); }
   .core-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; }
   .core-head b { font: 600 clamp(20px, 2.2vw, 25px)/1.2 Fraunces, Georgia, serif; }
-  .core-head span { font-size: 13.5px; color: #9aa69f; }
+  .core-head span { font-size: 13.5px; color: var(--snow-dim); }
   .core-chips { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 16px; }
-  .core-chips .grp { font: 500 11px "JetBrains Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: #8b978f; margin-right: 2px; }
+  .core-chips .grp { font: 500 11px "JetBrains Mono", monospace; letter-spacing: .06em; text-transform: uppercase; color: var(--snow-dim); margin-right: 2px; }
   .core-chips .grp:not(:first-child) { margin-left: 14px; }
-  .core-chips button { border: 1px solid rgba(var(--fgrgb),.16); background: rgba(var(--fgrgb),.04); color: #dfe6e1; border-radius: 99px; padding: 8px 14px; font: 500 14px Inter, sans-serif; cursor: pointer; transition: background .2s, border-color .2s; }
+  .core-chips button { border: 1px solid rgba(var(--fgrgb),.16); background: rgba(var(--fgrgb),.04); color: var(--snow); border-radius: 99px; padding: 8px 14px; font: 500 14px Inter, sans-serif; cursor: pointer; transition: background .2s, border-color .2s; }
   .core-chips button:hover { border-color: rgba(var(--fgrgb),.4); }
-  .core-chips button[aria-selected="true"] { background: #fff; color: var(--ink); border-color: #fff; }
+  .core-chips button[aria-selected="true"] { background: var(--ink); color: #fff; border-color: var(--ink); }
   .core-panel { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
-  .core-vis .cw-legend { color: #9aa69f; }
+  .core-vis .cw-legend { color: var(--snow-dim); }
   .core-txt { display: grid; gap: 12px; }
   .core-row { border: 1px solid rgba(var(--fgrgb),.1); border-radius: 14px; padding: 14px 16px; background: rgba(var(--fgrgb),.03); }
-  .core-row .k { display: flex; align-items: center; gap: 8px; font: 600 11.5px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: #9aa69f; }
-  .core-row .k i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 600 11px Inter, sans-serif; background: rgba(var(--fgrgb),.1); color: #fff; font-style: normal; }
-  .core-row p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.5; color: #dfe6e1; }
-  .core-row.vlm { border-color: rgba(255,107,95,.45); }
+  .core-row .k { display: flex; align-items: center; gap: 8px; font: 600 11.5px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--snow-dim); }
+  .core-row .k i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 600 11px Inter, sans-serif; background: rgba(var(--fgrgb),.1); color: var(--snow); font-style: normal; }
+  .core-row p { margin: 8px 0 0; font-size: 15.5px; line-height: 1.5; color: var(--snow); }
+  .core-row.vlm { border-color: rgba(217,51,43,.4); background: var(--night-3); }
   .core-row.vlm .k { color: var(--red-soft); } .core-row.vlm .k i { background: var(--red); }
   .core-resp { font-style: italic; }
   .core-row.act p { font: 500 19px/1.35 Fraunces, Georgia, serif; color: var(--hi); }
@@ -322,9 +322,9 @@
   .core-labels { display: grid; gap: 6px; margin-top: 10px; }
   .core-labels .l { display: grid; grid-template-columns: minmax(0, 1fr) auto 64px; align-items: center; gap: 10px; font: 500 13.5px "JetBrains Mono", monospace; }
   .core-labels .l span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .core-labels .l em { font-style: normal; font-size: 11px; color: #8b978f; }
+  .core-labels .l em { font-style: normal; font-size: 11px; color: var(--snow-dim); }
   .core-labels .l b { text-align: center; padding: 4px 0; border-radius: 6px; font-weight: 600; }
-  .core-labels .why { font: 400 13.5px/1.5 Inter, sans-serif; color: #b9c4bd; margin: 6px 0 0; }
+  .core-labels .why { font: 400 13.5px/1.5 Inter, sans-serif; color: var(--snow-dim); margin: 6px 0 0; }
   .tradeoff { display: grid; grid-template-columns: 1fr auto 1fr; gap: 18px; align-items: stretch; margin-top: 44px; }
   .to-card { border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px 22px; background: #fff; }
   .to-card .k { font: 600 11.5px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-dim); }
@@ -1294,7 +1294,7 @@
           <p>The navigation policy is trained on terrain with randomly generated risk values around the robot (blue safe, red risky), so it learns to steer toward low-risk ground without photo-real scenes.</p>
         </div>
       </div>
-      <div class="screen loco-train"><video src="static/video/exp/nav-training.mp4" poster="static/video/exp/poster/nav-training.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
+      <div class="screen loco-train"><video src="static/video/exp/nav-training-4x.mp4" poster="static/video/exp/poster/nav-training-4x.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
     </div>
 
     <div class="lab rv" id="routes">
@@ -1302,7 +1302,7 @@
         <div>
           <div class="lab-tag">Experiment 4 · Fig. 5B</div>
           <h3>Same goal, different route</h3>
-          <p>Arche test site (July 2024) and a snowy city passage (November 2024).</p>
+          <p>Arche test site and a snowy city passage.</p>
         </div>
       </div>
       <div class="conds nav-tabs" role="tablist" aria-label="Route"></div>
@@ -2100,7 +2100,7 @@
         vis: () => `<img src="${H}elev-pref.jpg" alt="3D elevation map with the robot on it: the gravel path is low and blue, the grass on both sides rises as red spikes"><div class="row2"><div><p class="lbl">for locomotion: steppable</p><img src="${H}elev-loco-fig.jpg" alt="Steppable layer on the elevation map"></div><div><p class="lbl">for navigation: risk</p><img src="${H}elev-risk-fig.jpg" alt="Risk layer on the elevation map"><p class="lbl" style="margin-top:8px">for navigation: preferred</p><img src="${H}elev-pref-fig.jpg" alt="Preferred layer on the elevation map"></div></div>` },
       { t: "Navigation policy", hz: "10 Hz", p: ".1s", k: "05 · steer", h: "An RL policy picks the way",
         txt: "Trained in simulation to reach goals over terrain with <b>randomly generated risk scans</b>, so it never needs photo-real scenes. On the robot it reads the real risk layer and sends a velocity command toward the next waypoint of the global path.",
-        vis: () => `<div class="row2"><div><p class="lbl">training in simulation (Isaac)</p><video src="static/video/exp/nav-training.mp4" poster="static/video/exp/poster/nav-training.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it, blue safe and red risky"></video></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
+        vis: () => `<div class="row2"><div><p class="lbl">training in simulation (Isaac)</p><video src="static/video/exp/nav-training-4x.mp4" poster="static/video/exp/poster/nav-training-4x.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it, blue safe and red risky"></video></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
       { t: "Locomotion policy", hz: "50 Hz", p: ".02s", k: "06 · walk", h: "Another RL policy moves the legs",
         txt: "Follows the velocity command and chooses footholds. It was trained on <b>random steppable scans</b> in simulation and, on the robot, reads the steppable layer, so it keeps its feet off ground the VLM called unsafe. It sends joint commands 50 times a second, while the VLM is still thinking about the next frame.",
         vis: () => `<div class="row2"><div><p class="lbl">training in simulation (RaiSim)</p><video src="static/video/exp/loco-training.mp4" poster="static/video/exp/poster/loco-training.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot learns to keep its feet off red non-steppable samples on rough terrain"></video></div><div><p class="lbl">on the robot: exploding cans</p><video src="static/video/exp/cans-roam.mp4" poster="static/video/exp/poster/cans-roam.jpg" muted loop playsinline autoplay preload="metadata" aria-label="The real robot steps between cans marked unsteppable after reading a warning sign"></video></div></div>` }
@@ -2160,11 +2160,11 @@
       take: "Paths are <b>preferred</b>, grass is walkable but not preferred. So ROAM follows the road, while geometry-only cuts straight across the lawn and squeezes past buildings." },
     { id: "rail", title: "Next to a railroad", sub: "gravel beside the tracks", thumb: "nav-rail-roam",
       views: [["all", "All four"], ["cam", "Camera"], ["risk", "Risk"], ["step", "Steppable"], ["pref", "Preferred"]],
-      mosaic: "nav-rail-roam", range: [7, 46.2], note: "ROAM's onboard front camera, sped up 2×.", labels: [], key: [],
+      mosaic: "nav-rail-roam", range: [9.5, 46.2], note: "ROAM's onboard front camera, sped up 2×.", labels: [], key: [],
       take: "The tracks light up red in the risk map, so ROAM walks the gravel beside them. In the same spot, the geometry-only planner <b>got stuck on the tracks</b> (Fig. 5B)." },
     { id: "snow", title: "Snowy passage", sub: "cleared strip vs snow", thumb: "nav-snow-third",
       views: [["all", "All four"], ["outside", "Outside"], ["cam", "Camera"], ["risk", "Risk"], ["step", "Steppable"], ["pref", "Preferred"]],
-      mosaic: "nav-snow-roam", range: [0, 13.2], outside: "nav-snow-third", note: "ROAM's onboard camera walking up the passage to the top, and the same walk from outside. November 2024.",
+      mosaic: "nav-snow-roam", range: [0, 13.2], outside: "nav-snow-third", note: "ROAM's onboard camera walking up the passage to the top, and the same walk from outside.",
       key: ["cleared_path", "snow_covered_ground"],
       labels: [["cleared_path", .2, 1, 1], ["snow_covered_ground", .3, 1, 0], ["wet_ground", .4, 1, 0], ["metal_barrier", 1, 0, 0], ["concrete_wall", 1, 0, 0], ["metal_railing", 1, 0, 0]],
       take: "Snow is walkable, but the <b>cleared strip is preferred</b>. ROAM keeps to it, as a person would." }
@@ -2194,7 +2194,7 @@
     } else {
       let m = navStage.querySelector(".mosaic");
       if (!m || reload || m.dataset.src !== r.mosaic) {
-        navStage.innerHTML = `<div class="mosaic" data-src="${r.mosaic}"><video src="${V}${r.mosaic}.mp4" poster="${V}poster/${r.mosaic}.jpg" muted loop playsinline autoplay preload="auto"></video><div class="q-lbl"></div><div class="quad"><span>camera</span><span>risk</span><span>steppable</span><span>preferred</span></div></div>`;
+        navStage.innerHTML = `<div class="mosaic" data-src="${r.mosaic}"><video src="${V}${r.mosaic}.mp4#t=${r.range[0]}" poster="${V}poster/${r.mosaic}.jpg" muted loop playsinline autoplay preload="auto"></video><div class="q-lbl"></div><div class="quad"><span>camera</span><span>risk</span><span>steppable</span><span>preferred</span></div></div>`;
         m = navStage.querySelector(".mosaic");
         // Play only the part in r.range: skip the wait at the start, stop before the clip moves on
         const mv = m.querySelector("video"), [t0, t1] = r.range;
