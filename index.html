@@ -1370,10 +1370,10 @@
         <div>
           <div class="lab-tag">Indoor → urban → nature · one run</div>
           <h3>From a hall to the fields, without changing anything</h3>
-          <p>ETH Hönggerberg. One continuous run starts inside a building, crosses the campus and heads out onto field and forest trails. The system stays the same the whole way; only what the VLM sees changes.</p>
+          <p>ETH Hönggerberg. One continuous run starts inside a building, crosses the campus, heads out onto field and forest trails and farm roads, and ends in the next village. The system stays the same the whole way; only what the VLM sees changes.</p>
         </div>
       </div>
-      <div class="screen loco-train io-sbs"><video src="static/video/exp/indoor-urban-nature.mp4" poster="static/video/exp/poster/indoor-urban-nature.jpg" muted loop playsinline preload="none" controls aria-label="The robot's front camera and its risk image side by side, from an indoor hall across the campus to field and forest trails"></video>
+      <div class="screen loco-train io-sbs"><video src="static/video/exp/indoor-urban-nature-full.mp4" poster="static/video/exp/poster/indoor-urban-nature.jpg" muted loop playsinline preload="none" controls aria-label="The robot's front camera and its risk image side by side, from an indoor hall across the campus and field and forest trails to farm roads and a village"></video>
         <span class="io-l">camera</span><span class="io-r">risk</span></div>
       <div class="io-now" aria-live="polite"><span class="io-when"></span><span class="io-chips"></span></div>
       <div class="io-tl" data-src="static/data/in-out-labels.json" role="img" aria-label="Which labels the VLM used over the run, and the risk it gave each one"></div>
@@ -1849,7 +1849,7 @@
   {
     const box = document.querySelector("#in-out .io-tl");
     if (box) fetch(box.dataset.src).then(r => r.json()).then(D => {
-      const v = document.querySelector("#in-out video"), A = D.answers, R = D.rows, dur = 41.2;
+      const v = document.querySelector("#in-out video"), A = D.answers, R = D.rows, dur = D.duration;
       const mix = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
       const risk = r => `rgb(${r < .5 ? mix([59, 76, 192], [221, 221, 221], r * 2) : mix([221, 221, 221], [180, 4, 38], r * 2 - 1)})`;
       const L = 122, W = 900, ch = 13, T = 18, H = T + R.length * ch + 4, X = t => L + t / dur * (W - L - 4);
@@ -1857,7 +1857,8 @@
       A.forEach((a, k) => { const x0 = X(a.t), x1 = k + 1 < A.length ? X(A[k + 1].t) : X(dur);
         R.forEach((n, j) => { if (n in a.l) cells += `<rect x="${x0.toFixed(1)}" y="${T + j * ch}" width="${Math.max(1, x1 - x0 - .6).toFixed(1)}" height="${ch - 2}" rx="1.5" fill="${risk(a.l[n])}"/>`; }); });
       const names = R.map((n, j) => `<text x="${L - 6}" y="${T + j * ch + 9}" text-anchor="end">${n}</text>`).join("");
-      const ph = D.phases.map(([t, n]) => `<g class="ph"><line x1="${X(t)}" x2="${X(t)}" y1="2" y2="${H}"/><text x="${X(t) + 4}" y="12">${n}</text></g>`).join("");
+      const ph = D.phases.map(([t, n]) => { const end = t > dur * .9;   // a label near the right edge hangs to the left of its line
+        return `<g class="ph"><line x1="${X(t)}" x2="${X(t)}" y1="2" y2="${H}"/><text x="${X(t) + (end ? -4 : 4)}" y="12" text-anchor="${end ? "end" : "start"}">${n}</text></g>`; }).join("");
       box.innerHTML = `<svg viewBox="0 0 ${W} ${H}">${ph}${names}${cells}<line class="head" x1="${L}" x2="${L}" y1="${T - 3}" y2="${H}"/></svg>`;
       const svg = box.querySelector("svg"), head = svg.querySelector(".head"), when = document.querySelector("#in-out .io-when"), chips = document.querySelector("#in-out .io-chips");
       let cur = -1;
