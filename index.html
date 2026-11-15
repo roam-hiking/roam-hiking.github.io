@@ -716,8 +716,18 @@
   .io-sbs video { width: 100%; height: 100%; object-fit: cover; display: block; }
   .io-sbs .io-l, .io-sbs .io-r { position: absolute; top: 10px; font: 600 11px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.55); padding: 3px 8px; border-radius: 6px; pointer-events: none; }
   .io-sbs .io-l { left: 10px; } .io-sbs .io-r { left: calc(50% + 10px); }
-  .io-steps { display: flex; align-items: center; gap: 10px; margin-top: 12px; font: 600 13px Inter, sans-serif; color: var(--snow); }
-  .io-steps i { flex: 1; height: 2px; background: linear-gradient(90deg, rgba(var(--fgrgb),.15), rgba(var(--fgrgb),.4)); border-radius: 2px; }
+  .io-now { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-height: 30px; margin-top: 12px; }
+  .io-when { font: 600 12px "JetBrains Mono", monospace; color: var(--snow-dim); margin-right: 4px; }
+  .io-chips { display: contents; }
+  .io-chip { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 99px; background: var(--night-3); border: 1px solid var(--rule); font: 500 12px "JetBrains Mono", monospace; color: var(--snow); }
+  .io-chip i { width: 9px; height: 9px; border-radius: 50%; }
+  .io-chip.new { border-color: var(--snow); box-shadow: 0 0 0 1px var(--snow); }
+  .io-tl { margin-top: 10px; overflow-x: auto; }
+  .io-tl svg { display: block; width: 100%; min-width: 560px; height: auto; cursor: pointer; }
+  .io-tl text { font: 500 10px "JetBrains Mono", monospace; fill: var(--snow-dim); }
+  .io-tl .ph text { font: 600 11px Inter, sans-serif; fill: var(--snow); }
+  .io-tl .ph line { stroke: rgba(var(--fgrgb),.25); stroke-dasharray: 3 3; }
+  .io-tl .head { stroke: var(--snow); stroke-width: 2; }
   .nav-stage .screen .res { display: flex; }
   .play-both { margin-top: 10px; border: 1px solid rgba(var(--fgrgb),.18); background: rgba(var(--fgrgb),.06); color: var(--snow); border-radius: 999px; padding: 7px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; }
   .outside { position: relative; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #000; }
@@ -1365,8 +1375,10 @@
       </div>
       <div class="screen loco-train io-sbs"><video src="static/video/exp/indoor-urban-nature.mp4" poster="static/video/exp/poster/indoor-urban-nature.jpg" muted loop playsinline preload="none" controls aria-label="The robot's front camera and its risk image side by side, from an indoor hall across the campus to field and forest trails"></video>
         <span class="io-l">camera</span><span class="io-r">risk</span></div>
-      <div class="io-steps"><span>indoor hall</span><i></i><span>campus</span><i></i><span>fields and forest</span></div>
-      <p class="cap">The robot's front camera (left) and the risk image ROAM builds from it (right), sped up 8×. Blue is go, red is avoid.</p>
+      <div class="io-now" aria-live="polite"><span class="io-when"></span><span class="io-chips"></span></div>
+      <div class="io-tl" data-src="static/data/in-out-labels.json" role="img" aria-label="Which labels the VLM used over the run, and the risk it gave each one"></div>
+      <div class="cw-legend">risk: 0 go <i></i> 1 avoid</div>
+      <p class="cap">The robot's front camera (left) and the risk image ROAM builds from it (right), sped up 8×. Below: every answer the VLM gave on this run (one column each), the labels it used and the risk it gave them. Labels for floors and pillars give way to cobblestones and buildings, then to gravel, grass and trees. Click the chart to jump the video there.</p>
     </div>
 
     <div class="lab rv" id="explorer">
@@ -1831,6 +1843,37 @@
     if (first) choose(first, false); else pip && (pip.parentElement.hidden = true);
     addEventListener("resize", draw);
     setIdx(0);
+  }
+
+  // ---------- Indoor -> urban -> nature: the VLM's labels over the run, synced with the clip ----------
+  {
+    const box = document.querySelector("#in-out .io-tl");
+    if (box) fetch(box.dataset.src).then(r => r.json()).then(D => {
+      const v = document.querySelector("#in-out video"), A = D.answers, R = D.rows, dur = 41.2;
+      const mix = (a, b, t) => a.map((x, i) => Math.round(x + (b[i] - x) * t));
+      const risk = r => `rgb(${r < .5 ? mix([59, 76, 192], [221, 221, 221], r * 2) : mix([221, 221, 221], [180, 4, 38], r * 2 - 1)})`;
+      const L = 122, W = 900, ch = 13, T = 18, H = T + R.length * ch + 4, X = t => L + t / dur * (W - L - 4);
+      let cells = "";
+      A.forEach((a, k) => { const x0 = X(a.t), x1 = k + 1 < A.length ? X(A[k + 1].t) : X(dur);
+        R.forEach((n, j) => { if (n in a.l) cells += `<rect x="${x0.toFixed(1)}" y="${T + j * ch}" width="${Math.max(1, x1 - x0 - .6).toFixed(1)}" height="${ch - 2}" rx="1.5" fill="${risk(a.l[n])}"/>`; }); });
+      const names = R.map((n, j) => `<text x="${L - 6}" y="${T + j * ch + 9}" text-anchor="end">${n}</text>`).join("");
+      const ph = D.phases.map(([t, n]) => `<g class="ph"><line x1="${X(t)}" x2="${X(t)}" y1="2" y2="${H}"/><text x="${X(t) + 4}" y="12">${n}</text></g>`).join("");
+      box.innerHTML = `<svg viewBox="0 0 ${W} ${H}">${ph}${names}${cells}<line class="head" x1="${L}" x2="${L}" y1="${T - 3}" y2="${H}"/></svg>`;
+      const svg = box.querySelector("svg"), head = svg.querySelector(".head"), when = document.querySelector("#in-out .io-when"), chips = document.querySelector("#in-out .io-chips");
+      let cur = -1;
+      const show = t => {
+        head.setAttribute("x1", X(t)); head.setAttribute("x2", X(t));
+        let k = 0; while (k + 1 < A.length && A[k + 1].t <= t) k++;
+        if (k === cur) return; cur = k;
+        const prev = k ? A[k - 1].l : {}, l = Object.entries(A[k].l).sort((a, b) => a[1] - b[1]);
+        when.textContent = `answer ${k + 1} of ${A.length}`;
+        chips.innerHTML = l.map(([n, r]) => `<span class="io-chip${n in prev ? "" : " new"}"><i style="background:${risk(r)}"></i>${n} ${r.toFixed(1)}</span>`).join("");
+      };
+      v.addEventListener("timeupdate", () => show(v.currentTime));
+      svg.addEventListener("click", e => { const r = svg.getBoundingClientRect(), t = ((e.clientX - r.left) / r.width * W - L) / (W - L - 4) * dur;
+        if (t >= 0) { v.currentTime = Math.min(dur - .1, t); show(v.currentTime); v.play().catch(() => {}); } });
+      show(0);
+    });
   }
 
   // ---------- Locomotion training clip: plays only while on screen ----------
