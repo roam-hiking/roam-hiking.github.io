@@ -1907,21 +1907,24 @@
     const W = "static/img/why/";
     // resp: the VLM's own words where a response was logged (shortened), otherwise a plain description
     const SCENES = [
-      { g: "On the trail", t: "Lakeside trail", cam: "lake-camera", map: "lake-risk", val: "risk",
-        resp: "Gravel path along a lake, with grass beside it and a cow ahead. (Seealpsee, 25 June 2024)",
-        labels: [["gravel_path", 0], ["grass", .5], ["lake", 1], ["cow", 1]] },
-      { t: "Snowy passage", cam: "core-snow-cam", map: "core-snow-pref", val: "preferred",
+      { g: "Seealpsee", t: "Cows on the trail", cam: "core-lake-cows-cam", map: "core-lake-cows-risk", val: "risk",
+        resp: "“There are people and animals (cows) present on or near the trail, which are considered high-risk obstacles that the robot should avoid.”",
+        labels: [["gravel_path", .1], ["grass", .5], ["animals", 1], ["trees", 1]] },
+      { t: "Alpine huts", cam: "core-huts-cam", map: "core-huts-risk", val: "risk",
+        resp: "“There are buildings adjacent to the path […]. These are considered high-risk and unsteppable.”",
+        labels: [["gravel_path", .1], ["rocky_ground", .3], ["grass", .5], ["buildings", 1]] },
+      { g: "Zermatt", t: "Beside the railway", cam: "core-zermatt-rail-cam", map: "core-zermatt-rail-risk", val: "risk",
+        resp: "“A gravel path alongside railroad tracks. It prioritizes the gravel path while avoiding the railroad tracks and dense vegetation.”",
+        labels: [["gravel_path", .075], ["vegetation", .5], ["railroad_tracks", 1], ["trees", 1]] },
+      { t: "Chalet and Matterhorn", cam: "core-zermatt-chalet-cam", map: "core-zermatt-chalet-risk", val: "risk",
+        resp: "“The gravel path is a stable surface for the robot to navigate and should be considered the primary route.”",
+        labels: [["gravel_path", 0], ["slope", .3], ["grass", .5], ["building", 1]] },
+      { t: "Forest trail", cam: "core-zermatt-forest-cam", map: "core-zermatt-forest-risk", val: "risk",
+        resp: "“There are shadows of people in the first image, indicating their presence. They are considered high-risk obstacles.”",
+        labels: [["gravel_path", .2], ["dirt_path", .3], ["vegetation", .5], ["trees", 1]] },
+      { g: "City", t: "Snowy passage", cam: "core-snow-cam", map: "core-snow-pref", val: "preferred",
         resp: "“The center of the pathway is cleared of snow and is the safest route for navigation.”",
-        labels: [["cleared_path", 1], ["snow_covered_ground", 0], ["wet_ground", 0], ["concrete_wall", 0]] },
-      { g: "One place, three signs", t: "No sign", cam: "core-nosign-cam", map: "core-nosign-risk", val: "risk",
-        resp: "“A wooden path leading up a slight incline, bordered by grass […]. The path appears to be well-constructed and stable.”",
-        labels: [["wooden_path", 0], ["grass", .5], ["concrete_cylinder", 1]] },
-      { t: "“Do not step here”", cam: "core-boards-cam", map: "core-boards-risk", val: "risk",
-        resp: "The sign lies on the boards, so the answer flips: boards risky, grass safe.",
-        labels: [["danger_sign", 1], ["wooden_boardwalk", 1], ["grass", .1], ["concrete_barrier", 1]] },
-      { t: "“Danger: mines”", cam: "core-mines-cam", map: "core-mines-risk", val: "risk",
-        resp: "“A grassy area with a clear warning of mines, indicated by the signs on the ground. There is a wooden boardwalk that provides a safe path.”",
-        labels: [["mine_warning_sign", 1], ["grass", 1], ["wooden_boardwalk", 0], ["concrete_barrier", 1]] }
+        labels: [["cleared_path", 1], ["snow_covered_ground", 0], ["wet_ground", 0], ["concrete_wall", 0]] }
     ];
     // coolwarm ends, as in the map overlays: blue = go, red = avoid
     const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
@@ -1946,8 +1949,8 @@
       core.querySelector(".core-labels").innerHTML = s.labels.map(([n, v]) => `<div class="l"><span>${n}</span><em>${s.val}</em><b style="${cw(s.val === "risk" ? v : 1 - v)}">${v.toFixed(1)}</b></div>`).join("");
     }
     chips.addEventListener("click", e => { const b = e.target.closest("button"); if (b) pick(+b.dataset.i); });
-    pick(3, false);
-    new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); pick(3); } }, { threshold: .5 }).observe(vis);
+    pick(0, false);
+    new IntersectionObserver(([e], o) => { if (e.isIntersecting) { o.disconnect(); pick(0); } }, { threshold: .5 }).observe(vis);
   }
 
   // ---------- Hero video: pause when off screen ----------
