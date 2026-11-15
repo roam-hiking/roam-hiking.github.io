@@ -2,3 +2,4 @@ __pycache__/
 .DS_Store
 review-comments.json
 share/site/
+static/paper/
