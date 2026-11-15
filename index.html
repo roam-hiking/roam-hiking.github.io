@@ -100,7 +100,7 @@
   .tag::before { content: ""; width: 28px; height: 1px; background: currentColor; }
   .hero h1 {
     font-family: Fraunces, Georgia, serif; font-weight: 700; letter-spacing: -.02em;
-    font-size: clamp(40px, 7.4vw, 96px); line-height: .98; margin: 18px 0 22px; max-width: 13ch;
+    font-size: clamp(30px, 5vw, 66px); line-height: 1.02; margin: 18px 0 22px; max-width: 20ch;
   }
   .hero h1 em { font-style: italic; font-weight: 500; color: var(--red-soft); }
   /* room for descenders (the g in Hiking) inside the overflow mask, without changing line spacing */
@@ -108,6 +108,7 @@
   .hero h1 .line span { display: inline-block; transform: translateY(105%); animation: rise 1.1s var(--ease) forwards; }
   .hero h1 .line:nth-child(2) span { animation-delay: .12s; }
   .hero h1 .line:nth-child(3) span { animation-delay: .24s; }
+  .hero h1 .line:nth-child(4) span { animation-delay: .36s; }
   @keyframes rise { to { transform: none; } }
   .hero .sub { font-size: clamp(17px, 1.6vw, 20px); color: rgba(var(--fgrgb),.86); max-width: 560px; margin: 0; opacity: 0; animation: fade 1s .6s forwards; }
   @keyframes fade { to { opacity: 1; } }
@@ -384,6 +385,14 @@
   .glance-h b { font: 600 22px/1.2 Fraunces, serif; } .glance-h > span { color: var(--snow-dim); font-size: 14px; display: inline-flex; align-items: center; gap: 10px; }
   .glance-h .cw-legend { margin: 0; color: var(--snow-dim); }
   .glance-h b em { font-style: italic; font-weight: 500; color: var(--red-soft); }
+  .heat-how { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; counter-reset: none; }
+  .heat-how li { position: relative; background: var(--night-3); border: 1px solid var(--rule); border-radius: 12px; padding: 10px 14px; font-size: 13.5px; line-height: 1.45; color: var(--snow-dim); }
+  .heat-how li + li::before { content: "\203A"; position: absolute; left: -8px; top: 50%; transform: translate(-50%, -50%); color: var(--snow-dim); font-size: 18px; }
+  .heat-how b { display: block; font: 600 14px/1.3 Inter, sans-serif; color: var(--snow); margin-bottom: 2px; }
+  .heat-how code { font: 500 11.5px "JetBrains Mono", monospace; background: rgba(var(--fgrgb),.06); border-radius: 5px; padding: 1px 5px; white-space: nowrap; }
+  .heat-how .cw-legend { margin: 4px 0 0; }
+  .heat-how .cw-legend i { flex-basis: 110px; }
+  @media (max-width: 760px) { .heat-how { grid-template-columns: 1fr; gap: 6px; } .heat-how li + li::before { display: none; } .heat-how li { padding: 8px 12px; } }
   .glance-sub { margin: 18px 0 10px; font: 500 12px/1 "JetBrains Mono", ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--snow-dim); }
   .glance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
   .glance .cmp { border-radius: 12px; box-shadow: none; }
@@ -886,11 +895,12 @@
   <div class="wrap">
     <div class="tag">Robust Open-world Autonomous Mobility</div>
     <h1>
-      <span class="line"><span>Hiking robots</span></span>
-      <span class="line"><span>with <em>common</em></span></span>
-      <span class="line"><span><em>sense</em></span></span>
+      <span class="line"><span><em>Common-sense</em> reasoning</span></span>
+      <span class="line"><span>from vision-language models</span></span>
+      <span class="line"><span>guides legged robots on</span></span>
+      <span class="line"><span><em>kilometer-scale hikes</em></span></span>
     </h1>
-    <p class="sub">Vision-language models give legged robots the common sense to hike kilometers autonomously in alpine and urban terrain.</p>
+    <p class="sub">The VLM says what is in view and how risky it is. The robot turns that into where to walk, in alpine and urban terrain.</p>
   </div>
   <a class="scroll-cue" href="#people">Scroll</a>
 </header>
@@ -924,6 +934,11 @@
 <section class="dark2" id="glance" style="padding:26px 0 8px">
   <div class="wrap">
     <div class="glance-h rv"><b>The VLM’s answer becomes a <em>risk image</em></b><span>It shows the robot where to walk. Drag any picture. <span class="cw-legend">go <i></i> avoid</span></span></div>
+    <ol class="heat-how rv" aria-label="How the risk image is made">
+      <li><b>1 · The VLM names things</b><span>and gives each a risk from 0 to 1: <code>gravel_path 0</code> <code>grass 0.5</code> <code>cow 1</code></span></li>
+      <li><b>2 · Segmentation finds them</b><span>in the camera image, pixel by pixel</span></li>
+      <li><b>3 · Each pixel gets its risk</b><span><span class="cw-legend">0 go <i></i> 1 avoid</span></span></li>
+    </ol>
     <div class="glance rv d1">
       <div class="cmp" style="--x:50%"><img src="static/img/glance/hall-risk-v3.jpg" alt="Risk image, Indoor hall: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/hall-cam-v3.jpg" alt="Robot front camera, Indoor hall" loading="lazy"><span class="tagl">Indoor hall</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Indoor hall"></div>
       <div class="cmp" style="--x:50%"><img src="static/img/glance/campus-risk-v3.jpg" alt="Risk image, Campus: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/campus-cam-v3.jpg" alt="Robot front camera, Campus" loading="lazy"><span class="tagl">Campus</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Campus"></div>
@@ -1159,6 +1174,13 @@
     <div class="kicker rv"><span class="num">04</span> World knowledge in action</div>
     <h2 class="rv">It <em>reads the signs</em></h2>
     <p class="lead dim rv d1" style="max-width:720px">Geometry can't tell an open path from a closed one. Text and symbols can, and ROAM reads them.</p>
+    <div class="glance-sub rv">One place, different signs: the risk image changes with the sign</div>
+    <div class="glance sign-glance">
+      <div class="cmp" style="--x:50%"><img src="static/img/glance/nosign-risk.jpg" alt="Risk image, No sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/nosign-cam.jpg" alt="Robot front camera, No sign" loading="lazy"><span class="tagl">No sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, No sign"></div>
+      <div class="cmp" style="--x:50%"><img src="static/img/glance/mine-risk.jpg" alt="Risk image, Mine sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/mine-cam.jpg" alt="Robot front camera, Mine sign" loading="lazy"><span class="tagl">Mine sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Mine sign"></div>
+      <div class="cmp" style="--x:50%"><img src="static/img/glance/nostep-risk.jpg" alt="Risk image, “Do not step”: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/nostep-cam.jpg" alt="Robot front camera, “Do not step”" loading="lazy"><span class="tagl">“Do not step”</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, “Do not step”"></div>
+      <div class="cmp" style="--x:50%"><img src="static/img/glance/danger-risk.jpg" alt="Risk image, Danger sign: blue is go, red is avoid" loading="lazy"><img class="top" src="static/img/glance/danger-cam.jpg" alt="Robot front camera, Danger sign" loading="lazy"><span class="tagl">Danger sign</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="Slide between the camera image and the risk image, Danger sign"></div>
+    </div>
     <!-- ---------- Lab 1: Hönggerberg course (Fig. 4) ---------- -->
     <div class="lab rv" id="course">
       <div class="lab-head">
@@ -1187,54 +1209,11 @@
       </details>
     </div>
 
-    <!-- ---------- Lab 2: signs change locomotion (Fig. 5A) ---------- -->
-
-  </div>
-</section>
-
-<!-- ============ Locomotion (Fig. 5A) ============ -->
-<section id="locomotion">
-  <div class="wrap">
-    <div class="kicker rv"><span class="num">05</span> Locomotion</div>
-    <h2 class="rv">Semantic information changed <em>foot placement</em></h2>
-    <p class="lead dim rv d1" style="max-width:720px">The locomotion policy reads a steppable layer next to the terrain height. It learns what that layer means in simulation; on the robot, the VLM fills it in.</p>
-    <div class="lab rv" id="loco-train">
-      <div class="lab-head">
-        <div>
-          <div class="lab-tag">Training in simulation · RaiSim</div>
-          <h3>Steppable and non-steppable regions</h3>
-          <p>Non-steppable patches (red) come from Perlin noise. The policy sees them in its foot-height scan and is penalized for stepping on them.</p>
-        </div>
-      </div>
-      <div class="screen loco-train"><video src="static/video/exp/loco-training.mp4" poster="static/video/exp/poster/loco-training.jpg" muted loop playsinline preload="none" controls aria-label="Simulation of the robot learning to keep its feet off red non-steppable samples on rough terrain and stairs"></video></div>
-    </div>
-
-    <div class="lab rv" id="cans">
-      <div class="lab-head">
-        <div>
-          <div class="lab-tag">Experiment 2 · Fig. 5A(i)</div>
-          <h3>Exploding cans</h3>
-          <p>Arche test site. A sign on the wall reads "WARNING: Exploding Cans".</p>
-        </div>
-      </div>
-      <div class="lab-body two-col">
-        <div>
-          <div class="screen loco-train"><video src="static/video/exp/cans-roam.mp4" poster="static/video/exp/poster/cans-roam.jpg" muted loop playsinline preload="none" controls aria-label="The robot steps between cans after the VLM marks them unsteppable"></video></div>
-          <p class="cap">Third-person view with the steppable map (top left) and elevation map (bottom left) burned in.</p>
-        </div>
-        <div class="vlm-panel">
-          <div class="vp-title">What the VLM said</div>
-          <div class="vp-legend"><span>risk</span><span>steppable</span><span>preferred</span></div>
-          <div class="vp-rows cans-rows"></div>
-          <div class="vp-take">The sign turns harmless-looking cans into <b>no-step zones</b>. The robot places its feet between them.</div>
-        </div>
-      </div>
-    </div>
-
+    <!-- ---------- Lab 2: same terrain, different sign (Fig. 5A ii) ---------- -->
     <div class="lab rv" id="pallets">
       <div class="lab-head">
         <div>
-          <div class="lab-tag">Experiment 3 · Fig. 5A(ii)</div>
+          <div class="lab-tag">Experiment 2 · Fig. 5A(ii)</div>
           <h3>Same terrain, different sign</h3>
           <p>Arche test site. The robot's own camera, with the maps ROAM builds from the VLM's labels.</p>
         </div>
@@ -1266,12 +1245,54 @@
       </details>
     </div>
 
+  </div>
+</section>
+
+<!-- ============ Locomotion (Fig. 5A) ============ -->
+<section id="locomotion">
+  <div class="wrap">
+    <div class="kicker rv"><span class="num">05</span> Locomotion</div>
+    <h2 class="rv">Semantic information changed <em>foot placement</em></h2>
+    <p class="lead dim rv d1" style="max-width:720px">The locomotion policy reads a steppable layer next to the terrain height. It learns what that layer means in simulation; on the robot, the VLM fills it in.</p>
+    <div class="lab rv" id="loco-train">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Training in simulation · RaiSim</div>
+          <h3>Steppable and non-steppable regions</h3>
+          <p>Non-steppable patches (red) come from Perlin noise. The policy sees them in its foot-height scan and is penalized for stepping on them.</p>
+        </div>
+      </div>
+      <div class="screen loco-train"><video src="static/video/exp/loco-training.mp4" poster="static/video/exp/poster/loco-training.jpg" muted loop playsinline preload="none" controls aria-label="Simulation of the robot learning to keep its feet off red non-steppable samples on rough terrain and stairs"></video></div>
+    </div>
+
+    <div class="lab rv" id="cans">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Experiment 3 · Fig. 5A(i)</div>
+          <h3>Exploding cans</h3>
+          <p>Arche test site. A sign on the wall reads "WARNING: Exploding Cans".</p>
+        </div>
+      </div>
+      <div class="lab-body two-col">
+        <div>
+          <div class="screen loco-train"><video src="static/video/exp/cans-roam.mp4" poster="static/video/exp/poster/cans-roam.jpg" muted loop playsinline preload="none" controls aria-label="The robot steps between cans after the VLM marks them unsteppable"></video></div>
+          <p class="cap">Third-person view with the steppable map (top left) and elevation map (bottom left) burned in.</p>
+        </div>
+        <div class="vlm-panel">
+          <div class="vp-title">What the VLM said</div>
+          <div class="vp-legend"><span>risk</span><span>steppable</span><span>preferred</span></div>
+          <div class="vp-rows cans-rows"></div>
+          <div class="vp-take">The sign turns harmless-looking cans into <b>no-step zones</b>. The robot places its feet between them.</div>
+        </div>
+      </div>
+    </div>
+
     <div class="lab rv" id="banana">
       <div class="lab-head">
         <div>
           <div class="lab-tag">Extra experiment · not in the paper</div>
           <h3>Banana peels on the ground</h3>
-          <p>The VLM labels the peels as risky and not steppable, so the robot places its feet around them. Without semantics, the baseline steps on them. ETH Zurich rooftop, April 2024.</p>
+          <p>The VLM labels the peels as risky and not steppable, so the robot places its feet around them. Without semantics, the baseline steps on them. ETH Zurich rooftop.</p>
         </div>
       </div>
       <div class="screen loco-train"><video src="static/video/exp/banana.mp4" poster="static/video/exp/poster/banana.jpg" muted loop playsinline preload="none" controls aria-label="The robot avoids banana peels using the steppable map; a baseline without semantics walks over them"></video></div>
@@ -1294,7 +1315,7 @@
           <p>The navigation policy is trained on terrain with randomly generated risk values around the robot (blue safe, red risky), so it learns to steer toward low-risk ground without photo-real scenes.</p>
         </div>
       </div>
-      <div class="screen loco-train"><video src="static/video/exp/nav-training-4x.mp4" poster="static/video/exp/poster/nav-training-4x.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
+      <div class="screen loco-train"><video src="static/video/exp/nav-training-12x.mp4" poster="static/video/exp/poster/nav-training-12x.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
     </div>
 
     <div class="lab rv" id="routes">
@@ -2100,7 +2121,7 @@
         vis: () => `<img src="${H}elev-pref.jpg" alt="3D elevation map with the robot on it: the gravel path is low and blue, the grass on both sides rises as red spikes"><div class="row2"><div><p class="lbl">for locomotion: steppable</p><img src="${H}elev-loco-fig.jpg" alt="Steppable layer on the elevation map"></div><div><p class="lbl">for navigation: risk</p><img src="${H}elev-risk-fig.jpg" alt="Risk layer on the elevation map"><p class="lbl" style="margin-top:8px">for navigation: preferred</p><img src="${H}elev-pref-fig.jpg" alt="Preferred layer on the elevation map"></div></div>` },
       { t: "Navigation policy", hz: "10 Hz", p: ".1s", k: "05 · steer", h: "An RL policy picks the way",
         txt: "Trained in simulation to reach goals over terrain with <b>randomly generated risk scans</b>, so it never needs photo-real scenes. On the robot it reads the real risk layer and sends a velocity command toward the next waypoint of the global path.",
-        vis: () => `<div class="row2"><div><p class="lbl">training in simulation (Isaac)</p><video src="static/video/exp/nav-training-4x.mp4" poster="static/video/exp/poster/nav-training-4x.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it, blue safe and red risky"></video></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
+        vis: () => `<div class="row2"><div><p class="lbl">training in simulation (Isaac)</p><video src="static/video/exp/nav-training-12x.mp4" poster="static/video/exp/poster/nav-training-12x.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it, blue safe and red risky"></video></div><div><p class="lbl">on the robot</p><img src="${H}nav-deploy.jpg" alt="Deployment: samples from the risk layer around the robot, raised where it is unpreferred"></div></div>` },
       { t: "Locomotion policy", hz: "50 Hz", p: ".02s", k: "06 · walk", h: "Another RL policy moves the legs",
         txt: "Follows the velocity command and chooses footholds. It was trained on <b>random steppable scans</b> in simulation and, on the robot, reads the steppable layer, so it keeps its feet off ground the VLM called unsafe. It sends joint commands 50 times a second, while the VLM is still thinking about the next frame.",
         vis: () => `<div class="row2"><div><p class="lbl">training in simulation (RaiSim)</p><video src="static/video/exp/loco-training.mp4" poster="static/video/exp/poster/loco-training.jpg" muted loop playsinline autoplay preload="metadata" aria-label="Simulation: the robot learns to keep its feet off red non-steppable samples on rough terrain"></video></div><div><p class="lbl">on the robot: exploding cans</p><video src="static/video/exp/cans-roam.mp4" poster="static/video/exp/poster/cans-roam.jpg" muted loop playsinline autoplay preload="metadata" aria-label="The real robot steps between cans marked unsteppable after reading a warning sign"></video></div></div>` }
