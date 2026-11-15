@@ -712,6 +712,12 @@
   /* stacked, so each run is large and the column matches the map beside it */
   .nav-stage .duo-v { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
   .nav-stage .duo-v .screen { aspect-ratio: 2/1; }
+  .io-sbs { aspect-ratio: 3 / 1; }
+  .io-sbs video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .io-sbs .io-l, .io-sbs .io-r { position: absolute; top: 10px; font: 600 11px "JetBrains Mono", monospace; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: rgba(0,0,0,.55); padding: 3px 8px; border-radius: 6px; pointer-events: none; }
+  .io-sbs .io-l { left: 10px; } .io-sbs .io-r { left: calc(50% + 10px); }
+  .io-steps { display: flex; align-items: center; gap: 10px; margin-top: 12px; font: 600 13px Inter, sans-serif; color: var(--snow); }
+  .io-steps i { flex: 1; height: 2px; background: linear-gradient(90deg, rgba(var(--fgrgb),.15), rgba(var(--fgrgb),.4)); border-radius: 2px; }
   .nav-stage .screen .res { display: flex; }
   .play-both { margin-top: 10px; border: 1px solid rgba(var(--fgrgb),.18); background: rgba(var(--fgrgb),.06); color: var(--snow); border-radius: 999px; padding: 7px 16px; font: 600 13px Inter, sans-serif; cursor: pointer; }
   .outside { position: relative; aspect-ratio: 16/9; border-radius: 14px; overflow: hidden; background: #000; }
@@ -1325,7 +1331,7 @@
         <div>
           <div class="lab-tag">Experiment 4 · Fig. 5B</div>
           <h3>Same goal, different route</h3>
-          <p>Arche test site and a snowy city passage.</p>
+          <p>Arche test site and a snowy city passage. Each run gives the local navigation policy a <b>single goal location</b> and nothing else: no waypoints and no global path. The policy picks the route on its own from the risk and preferred maps, and the geometry-only baseline gets the same goal.</p>
         </div>
       </div>
       <div class="conds nav-tabs" role="tablist" aria-label="Route"></div>
@@ -1347,6 +1353,20 @@
           <div class="vp-take nav-take"></div>
         </div>
       </div>
+    </div>
+
+    <div class="lab rv" id="in-out">
+      <div class="lab-head">
+        <div>
+          <div class="lab-tag">Indoor → urban → nature · one run</div>
+          <h3>From a hall to the fields, without changing anything</h3>
+          <p>ETH Hönggerberg. One continuous run starts inside a building, crosses the campus and heads out onto field and forest trails. The system stays the same the whole way; only what the VLM sees changes.</p>
+        </div>
+      </div>
+      <div class="screen loco-train io-sbs"><video src="static/video/exp/indoor-urban-nature.mp4" poster="static/video/exp/poster/indoor-urban-nature.jpg" muted loop playsinline preload="none" controls aria-label="The robot's front camera and its risk image side by side, from an indoor hall across the campus to field and forest trails"></video>
+        <span class="io-l">camera</span><span class="io-r">risk</span></div>
+      <div class="io-steps"><span>indoor hall</span><i></i><span>campus</span><i></i><span>fields and forest</span></div>
+      <p class="cap">The robot's front camera (left) and the risk image ROAM builds from it (right), sped up 8×. Blue is go, red is avoid.</p>
     </div>
 
     <div class="lab rv" id="explorer">
@@ -1672,12 +1692,18 @@
       down = null;
     });
 
-    // Replay: walk the marker along the route in ~18 s, map follows
+    // Replay: with a video, play it from here (or from the start) and let the map follow the footage;
+    // without one, walk the marker along the route in ~18 s
     const btn = el.querySelector(".rx-play"); let raf = 0;
-    function stop() { cancelAnimationFrame(raf); raf = 0; btn.setAttribute("aria-pressed", false); btn.querySelector("span").textContent = "Replay the hike"; }
+    function syncBtn() { const on = !!raf || !!(vid && !vid.paused()); btn.setAttribute("aria-pressed", on); btn.querySelector("span").textContent = on ? "Pause" : "Replay the hike"; }
+    function stop() { cancelAnimationFrame(raf); raf = 0; syncBtn(); }
     btn.addEventListener("click", () => {
       if (raf) return stop();
-      if (vid && !vid.paused()) vid.pause();
+      if (vid && active) {
+        if (!vid.paused()) { vid.pause(); return setTimeout(syncBtn, 50); }
+        if (idx >= N - 1 || idx === 0) vid.seek(active.start || 0); else { const r = tm.reduce((b, x) => Math.abs(x.i - idx) < Math.abs(b.i - idx) ? x : b, tm[0]); vid.seek(r.t); }
+        vid.play(); return setTimeout(syncBtn, 300);
+      }
       btn.setAttribute("aria-pressed", true); btn.querySelector("span").textContent = "Pause";
       let start = null; const from = idx >= N - 1 ? 0 : idx, dur = 18000 * (1 - from / N);
       if (from === 0) cam({ center: [ll[0][1], ll[0][0]], elevation: map.getTerrain() ? P[0][2] * EXAG : 0, zoom: Math.max(map.getZoom(), 14.5), bearing: heading }, 1000);
@@ -1757,6 +1783,7 @@
       if (!v._bound) {
         v.addEventListener("timeupdate", () => { if (v.currentTime < v._start - .05) v.currentTime = v._start; if (vid && vid.kind === "local" && v.paused) onVideoTime(v.currentTime); });
         v.addEventListener("play", () => { if (vid && vid.kind === "local") { stop(); startGlide(true); } });
+        ["play", "pause", "ended"].forEach(ev => v.addEventListener(ev, () => syncBtn()));
         v._bound = true; }
       return { kind: "local", play: () => v.play().catch(() => {}), pause: () => v.pause(), paused: () => v.paused, time: () => v.currentTime, seek: t => v.currentTime = Math.max(t, start), destroy: () => { v.pause(); } };
     }
@@ -1767,7 +1794,7 @@
       let yt = null, ready = false, timer = 0;
       const make = () => { yt = new YT.Player(host, { videoId: id, playerVars: { rel: 0, playsinline: 1, mute: 1, start: Math.ceil(start) }, events: { onReady: () => { ready = true; if (auto) yt.playVideo(); } } });
         let was = false;
-        timer = setInterval(() => { const on = ready && yt.getPlayerState() === 1; if (on && !was) startGlide(true); was = on; }, 250); };
+        timer = setInterval(() => { const on = ready && yt.getPlayerState() === 1; if (on && !was) startGlide(true); if (on !== was) syncBtn(); was = on; }, 250); };
       if (window.YT && YT.Player) make(); else {
         const prev = window.onYouTubeIframeAPIReady; window.onYouTubeIframeAPIReady = () => { prev && prev(); make(); };
         if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) { const sc = document.createElement("script"); sc.src = "https://www.youtube.com/iframe_api"; document.head.append(sc); }
