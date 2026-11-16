@@ -395,6 +395,9 @@
   .heat-how .cw-legend { margin: 4px 0 0; }
   .heat-how .cw-legend i { flex-basis: 110px; }
   @media (max-width: 760px) { .heat-how { grid-template-columns: 1fr; gap: 6px; } .heat-how li + li::before { display: none; } .heat-how li { padding: 8px 12px; } }
+  .abstract { max-width: 820px; margin: 22px auto 0; text-align: left; }
+  .abstract summary { cursor: pointer; font-weight: 600; color: var(--moss); text-align: center; list-style-position: inside; }
+  .abstract p { margin: 12px 0 0; font-size: 15.5px; line-height: 1.6; color: var(--ink-dim); }
   .glance-sub { margin: 18px 0 10px; font: 500 12px/1 "JetBrains Mono", ui-monospace, monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--snow-dim); }
   .glance { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
   .glance .cmp { border-radius: 12px; box-shadow: none; }
@@ -941,10 +944,13 @@
     <div class="buttons rv d2">
       <!-- Links are filled from SITE in the script below -->
       <a class="btn disabled" data-link="paper" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>Paper (soon)</a>
-      <a class="btn primary" href="#film"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Watch</a>
-      <a class="btn disabled" data-link="supplementary" href="#" aria-disabled="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v14m-5-5 5 5 5-5M4 21h16"/></svg>Supplementary (soon)</a>
+      <a class="btn primary" href="#film" data-watch><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>Watch</a>
       <a class="btn" href="#cite"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5z"/></svg>BibTeX</a>
     </div>
+    <details class="abstract rv d2">
+      <summary>Abstract</summary>
+      <p>Autonomous navigation in diverse real-world environments remains one of the greatest challenges in robotics. It demands both robust low-level motion control to handle diverse terrain and high-level reasoning to interpret environmental cues. We present ROAM (Robust Open-world Autonomous Mobility), a system that enables legged robots to perform kilometer-scale navigation in complex alpine and urban settings. ROAM combines the world knowledge of a Vision-Language Model (VLM), pre-trained on internet-scale data, with robust locomotion and local planning policies learned in simulation via reinforcement learning (RL). The VLM provides common-sense reasoning and semantic interpretation of the scene, assessing risks, interpreting signs, and producing semantic labels with associated navigation costs. An open-vocabulary segmentation module converts these labels into a dense, real-time risk map, which conditions two pre-trained RL policies responsible for agile locomotion and local navigation: effectively coupling high-level VLM reasoning with low-level physical control. Real-world experiments showed the system’s ability to autonomously navigate a wide range of complex real-world environments. The robot completes kilometer-long hikes with minimal intervention, interprets signs to avoid danger, and evaluates its environment to identify safe areas on which to step. This work represents a step toward the reliable deployment of systems in unstructured environments. However, it also underscores the challenges that remain in VLM reliability and spatial reasoning, indicating that foundational models are a crucial component but not yet a complete solution for navigation in the wild.</p>
+    </details>
   </div>
 </div>
 
@@ -1011,10 +1017,6 @@
       </div>
     </div>
 
-    <details class="rv" style="margin-top:26px">
-      <summary style="cursor:pointer;font-weight:600;color:var(--moss)">Read the abstract</summary>
-      <p class="dim" style="margin-top:14px;font-size:15.5px;max-width:820px">Autonomous navigation in diverse real-world environments remains one of the greatest challenges in robotics. It demands both robust low-level motion control to handle diverse terrain and high-level reasoning to interpret environmental cues. We present ROAM (Robust Open-world Autonomous Mobility), a system that enables legged robots to perform kilometer-scale navigation in complex alpine and urban settings. ROAM combines the world knowledge of a Vision-Language Model (VLM), pre-trained on internet-scale data, with robust locomotion and local planning policies learned in simulation via reinforcement learning (RL). The VLM provides common-sense reasoning and semantic interpretation of the scene, assessing risks, interpreting signs, and producing semantic labels with associated navigation costs. An open-vocabulary segmentation module converts these labels into a dense, real-time risk map, which conditions two pre-trained RL policies responsible for agile locomotion and local navigation: effectively coupling high-level VLM reasoning with low-level physical control. Real-world experiments showed the system's ability to autonomously navigate a wide range of complex real-world environments. The robot completes kilometer-long hikes with minimal intervention, interprets signs to avoid danger, and evaluates its environment to identify safe areas on which to step. This work represents a step toward the reliable deployment of systems in unstructured environments. However, it also underscores the challenges that remain in VLM reliability and spatial reasoning, indicating that foundational models are a crucial component but not yet a complete solution for navigation in the wild.</p>
-    </details>
   </div>
 </section>
 
@@ -1330,7 +1332,7 @@
         <div>
           <div class="lab-tag">Training in simulation · Isaac</div>
           <h3>Random risk scans</h3>
-          <p>The navigation policy is trained on terrain with randomly generated risk values around the robot (blue safe, red risky), so it learns to steer toward low-risk ground without photo-real scenes. Four terrains, sped up: many robots at once, a stepped pyramid, a narrow corridor and a stairwell.</p>
+          <p>We trained the navigation policy in simulation to reach its goal while avoiding obstacles and risky areas assigned at random (blue safe, red risky). Paths that cross high-risk areas are penalized, so it learns to steer toward low-risk ground without needing photo-real scenes.</p>
         </div>
       </div>
       <div class="screen loco-train"><video src="static/video/exp/nav-training-montage.mp4" poster="static/video/exp/poster/nav-training-montage.jpg" muted loop playsinline preload="none" controls aria-label="Simulation: the robot walks over random blocks and stairs with a grid of risk samples around it"></video></div>
@@ -1408,7 +1410,7 @@
 <section class="tint" id="places">
   <div class="wrap">
     <div class="kicker rv"><span class="num">07</span> One system, many places</div>
-    <h2 class="rv">From glaciers to <em>stairwells</em></h2>
+    <h2 class="rv">From mountain trails to <em>stairwells</em></h2>
     <p class="lead dim rv d1" style="max-width:700px">We used the same system everywhere. No data was collected for any specific place.</p>
     <div class="filters rv d1" role="group" aria-label="Filter environments">
       <button class="chip" data-f="all" aria-pressed="true">All <span class="c">15</span></button>
@@ -1472,6 +1474,9 @@
     a.href = url; a.classList.remove("disabled"); a.removeAttribute("aria-disabled"); a.target = "_blank"; a.rel = "noopener";
     a.lastChild.textContent = a.dataset.link === "paper" ? "Paper (PDF)" : "Supplementary";
   });
+  // "Watch" opens Movie 1 on YouTube once its ID is set; until then it scrolls to the highlight
+  const watch = document.querySelector("[data-watch]");
+  if (watch && SITE.youtube.movie1) { watch.href = "https://www.youtube.com/watch?v=" + SITE.youtube.movie1; watch.target = "_blank"; watch.rel = "noopener"; }
   if (SITE.published) document.querySelector(".draft-bar")?.remove();
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js"></script>
@@ -2071,7 +2076,7 @@
       const [name, c] = METHODS[m];
       if (!t.runs[m]) return `<div class="screen none" style="--c:${c}"><div><b>${name}</b>Not tested on this trap.</div></div>`;
       const [ok, head] = t.runs[m];
-      return `<div class="screen" style="--c:${c}"><video src="${V}hg-${t.id}-${m}.mp4" poster="${V}poster/hg-${t.id}-${m}.jpg" muted loop playsinline autoplay preload="auto"></video>
+      return `<div class="screen" style="--c:${c}"><video src="${V}hg-${t.id}-${m}.mp4" poster="${V}poster/hg-${t.id}-${m}.jpg" muted loop playsinline autoplay controls preload="auto"></video>
         <div class="who"><i></i>${name}</div><div class="res ${ok ? "ok" : "bad"}"><span class="ic">${ok ? "✓" : "✕"}</span><span class="nm">${name}</span>${head}</div></div>`;
     }).join("");
     const [ok, head, body] = t.runs[method] || [null, "Not tested on this trap", NONE];
@@ -2279,13 +2284,13 @@
       const shown = navView === "compare" ? ["roam", "geometry"] : [navView];
       navStage.innerHTML = `<div class="duo-v" style="${shown.length === 1 ? "grid-template-columns:1fr" : ""}">${shown.map(m => {
         const [name, c] = METHODS[m];
-        return `<div class="screen" style="--c:${c}"><video src="${V}nav-route-${m}.mp4" poster="${V}poster/nav-route-${m}.jpg" muted loop playsinline autoplay preload="auto"></video>
+        return `<div class="screen" style="--c:${c}"><video src="${V}nav-route-${m}.mp4" poster="${V}poster/nav-route-${m}.jpg" muted loop playsinline autoplay controls preload="auto"></video>
           <div class="who"><i></i>${name}</div><div class="res ${m === "roam" ? "ok" : "bad"}"><span class="ic">${m === "roam" ? "✓" : "✕"}</span>${m === "roam" ? "Stays on the road" : "Cuts across the grass"}</div></div>`; }).join("")}</div>
         ${shown.length > 1 ? '<button class="play-both">Restart both together</button>' : ""}`;
       const pb = navStage.querySelector(".play-both");
       if (pb) pb.onclick = () => navStage.querySelectorAll("video").forEach(v => { v.currentTime = 0; v.play().catch(() => {}); });
     } else if (navView === "outside") {
-      navStage.innerHTML = `<div class="outside"><video src="${V}${r.outside}.mp4" poster="${V}poster/${r.outside}.jpg" muted loop playsinline autoplay preload="auto"></video></div>`;
+      navStage.innerHTML = `<div class="outside"><video src="${V}${r.outside}.mp4" poster="${V}poster/${r.outside}.jpg" muted loop playsinline autoplay controls preload="auto"></video></div>`;
     } else {
       let m = navStage.querySelector(".mosaic");
       if (!m || reload || m.dataset.src !== r.mosaic) {
