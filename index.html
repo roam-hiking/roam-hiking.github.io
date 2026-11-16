@@ -280,6 +280,12 @@
   .fx-txt p b { color: var(--snow); font-weight: 600; }
   .fx-nav { display: flex; gap: 8px; margin-top: 18px; }
   .fx-nav button { border: 1px solid rgba(var(--fgrgb),.15); background: rgba(var(--fgrgb),.05); color: var(--snow); border-radius: 999px; padding: 7px 14px; font: 600 13px Inter, sans-serif; cursor: pointer; }
+  .fx-nav .fx-tour { margin-left: auto; background: none; color: var(--snow-dim); }
+  /* Auto tour: the selected step fills up until the tour moves on */
+  .mx-card { position: relative; overflow: hidden; }
+  .fx.touring .mx-card[aria-selected="true"]::after, .fx.touring .pipe button[aria-selected="true"]::after {
+    content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; background: var(--c); transform-origin: left; animation: fxfill var(--dwell, 7s) linear; }
+  @keyframes fxfill { from { transform: scaleX(0); } }
   .fx-chat { display: grid; gap: 8px; font-size: 13px; line-height: 1.5; }
   .fx-chat .q, .fx-chat .a { border-radius: 12px; padding: 10px 12px; }
   .fx-chat .q { background: rgba(var(--fgrgb),.05); color: var(--snow-dim); }
@@ -1036,7 +1042,7 @@
           <div class="fx-k"></div>
           <h3></h3>
           <p></p>
-          <div class="fx-nav"><button class="fx-prev" aria-label="Previous stage">&larr;</button><button class="fx-next">Next stage &rarr;</button></div>
+          <div class="fx-nav"><button class="fx-prev" aria-label="Previous stage">&larr;</button><button class="fx-next">Next stage &rarr;</button><button class="fx-tour" aria-pressed="false"></button></div>
         </div>
       </div>
       <div class="tempo" aria-label="Update rate of each part, shown over one second">
@@ -1795,9 +1801,11 @@
       glide = requestAnimationFrame(step);
     }
     // `start` skips the seconds before the mission begins (the robot is standing still there).
-    function localPlayer(src, poster, start = 0) {
+    // `rate` makes both cameras replay the hike in the same time.
+    function localPlayer(src, poster, start = 0, rate = 1) {
       pip.querySelector(".rx-yt")?.remove();
       const v = pip.querySelector("video"); v.hidden = false; v.poster = poster; v.src = start ? `${src}#t=${start}` : src; v.controls = true; v._start = start;
+      v.defaultPlaybackRate = v.playbackRate = rate;
       if (!v._bound) {
         v.addEventListener("timeupdate", () => { if (v.currentTime < v._start - .05) v.currentTime = v._start; if (vid && vid.kind === "local" && v.paused) onVideoTime(v.currentTime); });
         v.addEventListener("play", () => { if (vid && vid.kind === "local") { stop(); startGlide(true); } });
@@ -1805,12 +1813,12 @@
         v._bound = true; }
       return { kind: "local", play: () => v.play().catch(() => {}), pause: () => v.pause(), paused: () => v.paused, time: () => v.currentTime, seek: t => v.currentTime = Math.max(t, start), destroy: () => { v.pause(); } };
     }
-    function ytPlayer(id, auto, start = 0) {
+    function ytPlayer(id, auto, start = 0, rate = 1) {
       pip.querySelector("video").hidden = true; pip.querySelector("video").pause();
       pip.querySelector(".rx-yt")?.remove();
       const host = document.createElement("div"); host.className = "rx-yt"; pip.prepend(host);
       let yt = null, ready = false, timer = 0;
-      const make = () => { yt = new YT.Player(host, { videoId: id, playerVars: { rel: 0, playsinline: 1, mute: 1, start: Math.ceil(start) }, events: { onReady: () => { ready = true; if (auto) yt.playVideo(); } } });
+      const make = () => { yt = new YT.Player(host, { videoId: id, playerVars: { rel: 0, playsinline: 1, mute: 1, start: Math.ceil(start) }, events: { onReady: () => { ready = true; yt.setPlaybackRate(rate); if (auto) yt.playVideo(); } } });
         let was = false;
         timer = setInterval(() => { const on = ready && yt.getPlayerState() === 1; if (on && !was) startGlide(true); if (on !== was) syncBtn(); was = on; }, 250); };
       if (window.YT && YT.Player) make(); else {
@@ -1826,7 +1834,7 @@
       try {
         const j = await (await fetch(src.timemap)).json();
         src.tm = j.map.map(r => ({ t: r[0], i: nearest({ lat: r[1], lng: r[2] }) }));
-        src.approx = !!j.approx; src.matched = !!j.matched; src.covers = [];
+        src.approx = !!j.approx; src.matched = !!j.matched; src.speed = j.speed || 10; src.covers = [];
         src.tm.forEach((r, k) => { if (!k || Math.abs(r.i - src.tm[k - 1].i) > 40) src.covers.push([r.i, r.i]); else { const c = src.covers[src.covers.length - 1]; c[0] = Math.min(c[0], r.i); c[1] = Math.max(c[1], r.i); } });
         const btn = document.createElement("button"); btn.className = "rx-icon"; btn.setAttribute("aria-pressed", "false"); btn.innerHTML = camIcon + `<span>${src.label}</span>`;
         btn.title = `Play “${src.label}” synced with the map`;
@@ -1834,15 +1842,25 @@
         btn.addEventListener("click", () => choose(src, true));
       } catch (e) { /* source without timemap: skip */ }
     }
+    // Both cameras replay the hike in the same time: the longer clip plays faster
+    const timed = sources.filter(o => o.tm);
+    timed.forEach(o => o.span = o.tm[o.tm.length - 1].t - Math.max(o.start || 0, o.tm[0].t));
+    const span = Math.min(...timed.map(o => o.span));
+    timed.forEach(o => o.rate = Math.round(o.span / span * 100) / 100);
+    const timeAt = (tm, i) => tm.reduce((b, x) => Math.abs(x.i - i) < Math.abs(b.i - i) ? x : b, tm[0]).t;
     function choose(src, play) {
       if (active === src) { if (play) vid.play(); return; }
+      const was = !!vid && !vid.paused();
       if (vid) { vid.destroy(); vid = null; }
       sources.forEach(o => o.btn && o.btn.setAttribute("aria-pressed", o === src));
       active = src; tm = src.tm; covers = src.covers; pipOn = true;
-      noteEl.dataset.base = noteEl.textContent = src.approx ? `${src.label} · position approximate` : src.matched ? `${src.label} · image-matched to GPS` : `${src.label} · 10× · GPS-synced`;
+      noteEl.dataset.base = noteEl.textContent = src.approx ? `${src.label} · position approximate` : src.matched ? `${src.label} · image-matched to GPS` : `${src.label} · ${Math.round(src.speed * src.rate)}× · GPS-synced`;
+      // Switching cameras keeps the place on the route
+      const here = idx > 0 && idx < N - 1 ? timeAt(src.tm, idx) : null;
       const ytId = (window.SITE && SITE.youtube && SITE.youtube[src.yt]) || "";
-      vid = ytId ? ytPlayer(ytId, play, src.start) : localPlayer(src.src, src.poster, src.start);
-      if (play) { stop(); vid.play(); }
+      vid = ytId ? ytPlayer(ytId, play || was, Math.max(here ?? 0, src.start || 0), src.rate) : localPlayer(src.src, src.poster, src.start, src.rate);
+      if (!ytId && here !== null) vid.seek(here);
+      if (play || was) { stop(); vid.play(); }
       draw();
     }
     const first = sources.find(o => o.tm);
@@ -2234,13 +2252,26 @@
         const c = vis.querySelector(".cmp"); c.style.setProperty("--x", x); c.querySelector("input").value = parseFloat(x); bindCmp(vis);
       }));
     }
-    const onPick = e => { const b = e.target.closest("button"); if (!b) return; show(+b.dataset.i);
+    // Auto tour: while the figure is on screen, step through the stages until the reader takes over
+    const DWELL = 7000, tourBtn = fx.querySelector(".fx-tour");
+    let tour = !matchMedia("(prefers-reduced-motion: reduce)").matches, onScreen = false, tourT = 0;
+    fx.style.setProperty("--dwell", DWELL + "ms");
+    function arm() {
+      clearTimeout(tourT); fx.classList.toggle("touring", tour && onScreen);
+      tourBtn.setAttribute("aria-pressed", tour); tourBtn.innerHTML = tour ? "&#10073;&#10073; Pause tour" : "&#9654; Play tour";
+      if (tour && onScreen) tourT = setTimeout(() => { show(cur + 1); arm(); }, DWELL);
+    }
+    const takeOver = () => { if (tour) { tour = false; arm(); } };
+    new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; arm(); }, { rootMargin: "-30% 0px -30% 0px" }).observe(fx);   // on screen = crossing the middle of the viewport (the figure is taller than a phone screen)
+    tourBtn.addEventListener("click", () => { tour = !tour; if (tour) show(cur + 1); arm(); });
+    fx.querySelector(".fx-panel").addEventListener("pointerdown", e => { if (!e.target.closest(".fx-tour")) takeOver(); });
+    const onPick = e => { const b = e.target.closest("button"); if (!b) return; takeOver(); show(+b.dataset.i);
       // On a phone the detail panel sits below all six cards, so bring it into view.
       if (matchMedia("(max-width: 760px)").matches) fx.querySelector(".fx-panel").scrollIntoView({ behavior: "smooth", block: "start" }); };
     flow.addEventListener("click", onPick); pipe.addEventListener("click", onPick);
     fx.querySelector(".fx-next").addEventListener("click", () => show(cur + 1));
     fx.querySelector(".fx-prev").addEventListener("click", () => show(cur - 1));
-    show(0);
+    show(0); arm();
   }
 
   // Shared: VLM label rows (label, risk, steppable, preferred)
@@ -2303,7 +2334,8 @@
       }
       m.dataset.layer = navView; m.querySelector(".q-lbl").textContent = LAYER_NAMES[navView];
     }
-    navStage.querySelectorAll("video").forEach(v => v.play().catch(() => {}));
+    // If the browser refuses autoplay (e.g. low-power mode on a phone), give the video controls so a tap starts it
+    navStage.querySelectorAll("video").forEach(v => v.play().catch(() => { v.controls = true; }));
     navLab.querySelector(".nav-note").textContent = r.note;
     navLab.querySelector(".nav-map").classList.toggle("off", r.id !== "route");
     navLab.querySelector(".nav-legend").classList.toggle("off", !r.labels.length);
