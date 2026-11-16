@@ -32,7 +32,7 @@ const SITE = {
 
 1. Upload Movie 1 and "A day at Seealpsee" to YouTube, then paste each video ID into `SITE.youtube`. Until then the players show a "on YouTube soon" poster.
    The four map-synced videos (`zermatt-behind`, `zermatt-onboard`, `seealpsee-behind`, `seealpsee-onboard` in `static/video/`) can also go on YouTube. Set the matching `SITE.youtube` key and the map sync drives the YouTube player instead; then you can delete the local file.
-2. Paste the paper and supplementary URLs into `SITE.links`. The buttons switch on by themselves. For now `paper` points at a local copy of the arXiv build (`static/paper/roam-arxiv-draft.pdf`, copied from `~/Claude/roam-arxiv/main.pdf`). That file is git-ignored so it can't be published by accident: replace the link with the arXiv URL once the paper is up.
+2. Paste the paper and supplementary URLs into `SITE.links`. The buttons switch on by themselves. For now `paper` points at a local copy of the arXiv build (`static/paper/roam-arxiv-draft.pdf`, a 150-dpi Ghostscript copy of `~/Claude/roam-arxiv/main.pdf`: 5.8 MB instead of 36 MB, made with `gs -sDEVICE=pdfwrite -dPDFSETTINGS=/ebook -dColorImageResolution=150 -dGrayImageResolution=150`). That file is git-ignored so it can't be published by accident: replace the link with the arXiv URL once the paper is up.
 3. Set `published: true` to hide the embargo bar, and delete `<meta name="robots" content="noindex, nofollow">` in `<head>`.
 4. Fill in volume, issue, pages and DOI in the BibTeX block (search for `TODO`).
 5. Create the GitHub repo, push, and turn on Pages (Settings → Pages → deploy from branch `main`, root folder).
