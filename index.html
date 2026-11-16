@@ -1042,7 +1042,7 @@
       <div class="tempo" aria-label="Update rate of each part, shown over one second">
         <div class="tempo-h"><b>One second, in real time</b><span>The line crosses once a second. Each tick is one update.</span></div>
         <div class="lane think"><span class="n">VLM</span><div class="trk one"><i></i><em>10 s for one answer</em></div><span class="c">0.1 Hz</span></div>
-        <div class="lane ground"><span class="n">Segmentation</span><div class="trk" style="--n:5"></div><span class="c">5 Hz</span></div>
+        <div class="lane ground"><span class="n">Segmentation</span><div class="trk" style="--n:6"></div><span class="c">6 Hz</span></div>
         <div class="lane ground"><span class="n">Elevation map</span><div class="trk" style="--n:20"></div><span class="c">20 Hz</span></div>
         <div class="lane walk"><span class="n">Navigation</span><div class="trk" style="--n:10"></div><span class="c">10 Hz</span></div>
         <div class="lane walk"><span class="n">Locomotion</span><div class="trk" style="--n:50"></div><span class="c">50 Hz</span></div>
@@ -1178,7 +1178,7 @@
       <div>
         <span class="date-pill">25 June 2024</span>
         <h3>A day at Seealpsee</h3>
-        <p class="dim">Behind the scenes: the setup, the 2.4 km lakeside route, cows on the trail, and the team explaining what the robot is doing. 5 min, with sound.</p>
+        <p class="dim">Behind the scenes: the setup, the 2.38 km lakeside route, cows on the trail, and the team explaining what the robot is doing. 5 min, with sound.</p>
       </div>
     </div>
 
@@ -2190,7 +2190,7 @@
         vis: () => `<div class="fx-chat"><div class="q"><small>prompt (shortened)</small>I give you an image taken by an onboard camera of a robot. Please analyze the image and identify potential hazards and safe paths. […] Assign a risk, steppable and preferred value to each label.</div>
           <div class="a"><small>answer, as logged on the robot</small>The robot is navigating a mountainous terrain with a clear gravel path […]. The robot should continue to follow the gravel path, which is the preferred area for navigation, and avoid people.</div></div>
           <table class="fx-tbl"><tr><th>label</th><th>risk</th><th>steppable</th><th>preferred</th></tr>${LABELS.map(([l, r, st, pr]) => `<tr><td>${l}</td>${cell(r)}${cell(st, true)}${cell(pr, true)}</tr>`).join("")}</table>` },
-      { t: "Segmentation", hz: "5 Hz", p: ".2s", k: "03 · paint (fast)", h: "Labels become dense maps",
+      { t: "Segmentation", hz: "6 Hz", p: ".17s", k: "03 · paint (fast)", h: "Labels become dense maps",
         txt: "An open-vocabulary segmentation model finds each label in every new camera frame, much faster than the VLM runs. Fusing the per-label heatmaps with the VLM's values gives three images: <b>risk</b>, <b>steppable</b> and <b>preferred</b>. Drag the line to compare one with the camera. Blue means go, red means avoid.",
         vis: () => `<div class="fx-heat"><figure><img src="${H}heat-gravel.jpg" alt="Heatmap for the label gravel_path"><figcaption>heatmap: gravel_path (bright = found here)</figcaption></figure><figure><img src="${H}heat-grass.jpg" alt="Heatmap for the label grass"><figcaption>heatmap: grass</figcaption></figure></div>
           <div class="fx-layers" role="group" aria-label="Fused map"><button data-l="risk" aria-pressed="true">Risk</button><button data-l="step" aria-pressed="false">Steppable</button><button data-l="pref" aria-pressed="false">Preferred</button></div>
@@ -2211,7 +2211,7 @@
       `<span class="mx-th duo">${["heat-gravel", "risk"].map(f => `<img src="${H}${f}.jpg" alt="">`).join("")}</span>`, th("elev-pref"), th("nav-deploy"), th("loco-deploy")];
     const ONE = ["One frame from the front camera.", "Names what is in view and scores it.", "Finds each label as a heatmap, then paints in its risk.", "Puts the scores on the 3D terrain.", "Steers toward the goal, around risk.", "Places each foot on steppable ground."];
     const COLS = [["think", "Think", "0.1 Hz · one answer every 10 s", "A vision-language model says <b>what</b> is in view and how risky it is."],
-      ["ground", "Ground", "5 to 20 Hz", "Segmentation and mapping turn those words into <b>where</b>, on the terrain."],
+      ["ground", "Ground", "6 to 20 Hz", "Segmentation and mapping turn those words into <b>where</b>, on the terrain."],
       ["walk", "Walk", "10 to 50 Hz", "Two RL policies trained in simulation read the map and <b>move</b>."]];
     const card = i => `<button class="mx-card" role="tab" data-i="${i}" aria-selected="false">${THUMBS[i]}<span><span class="t">${STAGES[i].t}</span><span class="o">${ONE[i]}</span><span class="hz">${STAGES[i].hz}</span></span></button>`;
     flow.innerHTML = COLS.map(([c, t, hz, d], k) => `<div class="mx-col ${c}"><div class="mx-head"><b>${t}</b><span>${hz}</span><p>${d}</p></div>${card(2 * k)}${card(2 * k + 1)}</div>`).join("");
