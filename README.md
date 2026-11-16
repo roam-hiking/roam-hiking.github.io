@@ -1,6 +1,6 @@
 # ROAM project page
 
-Static project page for *Common-sense reasoning from vision-language models guides legged robots on kilometer-scale hikes* (Science Robotics, aee1549). One `index.html` with no build step, plus media in `static/`.
+Static project page for *Bridging vision-language reasoning and learned control for legged navigation in the wild* (Science Robotics, aee1549). One `index.html` with no build step, plus media in `static/`.
 
 **Status: embargoed draft.** Don't publish it until the paper is out.
 
