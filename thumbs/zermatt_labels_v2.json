@@ -1,0 +1,60 @@
+{
+ "label_estimation": {
+  "gravel_path": {
+   "risk": 0.2,
+   "steppable": 1.0,
+   "preferred_area": 1.0
+  },
+  "people": {
+   "risk": 1.0,
+   "steppable": 0.0,
+   "preferred_area": 0.0
+  },
+  "grass": {
+   "risk": 0.430517578125,
+   "steppable": 1.0,
+   "preferred_area": 0.0
+  },
+  "rocks": {
+   "risk": 0.95,
+   "steppable": 1.0,
+   "preferred_area": 0.0
+  },
+  "snow_patches": {
+   "risk": 0.7,
+   "steppable": 1.0,
+   "preferred_area": 0.0
+  },
+  "slope": {
+   "risk": 0.3,
+   "steppable": 1.0,
+   "preferred_area": 0.0
+  },
+  "cable_car_pylon": {
+   "risk": 1.0,
+   "steppable": 0.0,
+   "preferred_area": 0.0
+  },
+  "dense_vegetation": {
+   "risk": 0.5,
+   "steppable": 1.0,
+   "preferred_area": 0.0
+  },
+  "large_rock_outcrop": {
+   "risk": 0.95,
+   "steppable": 0.0,
+   "preferred_area": 0.0
+  },
+  "mountain": {
+   "risk": 1.0,
+   "steppable": 0.0,
+   "preferred_area": 0.0
+  },
+  "sky": {
+   "risk": 1.0,
+   "steppable": 0.0,
+   "preferred_area": 0.0
+  }
+ },
+ "memory": "The robot is navigating a mountainous terrain with a gravel path as the preferred route. People are present on the path and are considered high-risk obstacles. Surrounding areas consist of grass and rocks, which are less preferred for navigation. Snow patches are visible in the distance but do not pose an immediate risk. Slopes are navigable but require caution. A cable car pylon is identified as a high-risk obstacle and should be avoided. The robot should continue to follow the gravel path, treating it as the preferred area for navigation, and avoid people and dense vegetation."
+}
