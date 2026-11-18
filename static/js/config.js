@@ -4,7 +4,7 @@
 // ============================================================
 window.SITE = {
   youtube: { movie1: "xcqVpbgklD4", seealpsee: "wrbAq2HXE8E", zermattOnboard: "", zermattBehind: "", seealpseeBehind: "", seealpseeOnboard: "" },   // YouTube video IDs, e.g. "dQw4w9WgXcQ"
-  links: { paper: "https://doi.org/10.1126/scirobotics.aee1549", supplementary: "" },   // the paper at Science Robotics; swap for the arXiv URL once it is up if preferred
+  links: { paper: "static/paper/roam-paper.pdf", supplementary: "" },   // authors' version (same build as the arXiv upload); swap for the arXiv URL once it is up
   published: true                                 // true hides the embargo bar (the noindex <meta> is gone from both pages)
 };
 document.querySelectorAll("[data-yt-key]").forEach(el => el.dataset.youtube = SITE.youtube[el.dataset.ytKey] || "");
