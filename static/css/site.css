@@ -935,3 +935,5 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 .mv figcaption { margin-top: 12px; display: grid; gap: 3px; font-size: 14.5px; line-height: 1.45; }
 .mv figcaption b { font-size: 16px; color: var(--ink); }
 @media (max-width: 760px) { .movies { grid-template-columns: 1fr; gap: 22px; } }
+
+.btn[hidden] { display: none; }
