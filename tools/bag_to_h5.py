@@ -1,6 +1,6 @@
 """Pull the topics the page needs out of a raw ROS 1 bag into a compact h5 with the same layout as the full
 recordings (so tools/build_vlm_moments.py and tools/build_robotcam.py read it unchanged). For Zermatt segments
-that exist only as raw bags (14 Aug 13:15, 15 Aug 11:06 and 11:59).
+that exist only as raw bags (14 Aug 13:15, 15 Aug 11:06 and 11:59, and the 16 Aug recordings).
 
     uv run --with rosbags --with h5py --with numpy --with pillow python tools/bag_to_h5.py <bag> <out.h5>
 
@@ -11,7 +11,8 @@ channel only, float16) and only those front-camera frames whose header stamp equ
 import base64, io, sys
 import h5py, numpy as np
 from PIL import Image
-from rosbags.highlevel import AnyReader
+from rosbags.rosbag1 import Reader
+from rosbags.typesys import Stores, get_typestore, get_types_from_msg
 from pathlib import Path
 
 CAM, SEM = "/hdr_camera_front/image_raw/compressed", "/hdr_camera_front/lmm_nav_sem"
@@ -25,14 +26,17 @@ def main(bag, out):
     from collections import OrderedDict
     resp, gps, cmd = [], [], []
     cams = OrderedDict()   # camera frames of the last few seconds, by header stamp: the risk layer arrives ~0.4 s after its frame
-    with AnyReader([Path(bag)]) as r, h5py.File(out, "w") as h:
+    ts = get_typestore(Stores.ROS1_NOETIC)   # only our five topics are deserialized; other (custom) types in the bag are never touched
+    with Reader(Path(bag)) as r, h5py.File(out, "w") as h:
         conns = [c for c in r.connections if c.topic in (CAM, SEM, RESP, GPS, CMD)]
+        for c in conns:
+            if c.msgtype not in ts.fielddefs: ts.register(get_types_from_msg(c.msgdef.data, c.msgtype))
         print({c.topic: c.msgcount for c in conns}, flush=True)
         S = "hdr_camera_front/lmm_nav_sem/"; C = "hdr_camera_front/image_raw/compressed/"
         sem_img = None; st, smt, ct, cmt, cimg = [], [], [], [], h.create_dataset(C + "image", (0,), maxshape=(None,), dtype=h5py.string_dtype(encoding="ascii"))
         n = 0
         for c, t, raw in r.messages(connections=conns):
-            m = r.deserialize(raw, c.msgtype); tt = t * 1e-9; n += 1
+            m = ts.deserialize_ros1(raw, c.msgtype); tt = t * 1e-9; n += 1
             if c.topic == RESP: resp.append((tt, m.data))
             elif c.topic == GPS: gps.append((stamp(m) or tt, tt, m.latitude, m.longitude))
             elif c.topic == CMD: cmd.append(stamp(m) or tt)
@@ -52,6 +56,11 @@ def main(bag, out):
         h["lmm_nav_ros/response/msg_t"] = np.array([x[0] for x in resp]); h.create_dataset("lmm_nav_ros/response/data", data=[x[1] for x in resp], dtype=h5py.string_dtype())
         g = "rtk_gps_driver/position_receiver_0/ros/navsatfix/"
         for key, i in (("time", 0), ("msg_t", 1), ("latitude", 2), ("longitude", 3)): h[g + key] = np.array([x[i] for x in gps])
+        if not cmd:   # some bags lack the joystick topic: take the operator commands from the matching command_hdf5 file
+            ch = Path(bag).parent.parent / "command_hdf5" / (Path(bag).stem + ".h5")
+            if ch.exists():
+                with h5py.File(ch, "r") as c5: cmd = list(c5["user_twist/timestamps"][:]) if "user_twist/timestamps" in c5 else []
+                print(f"{len(cmd)} operator commands taken from {ch.name} (command_hdf5)", flush=True)
         h["user_command_relay/twist_input/time"] = np.array(cmd)
         print(f"wrote {out}: {len(st)} camera+risk pairs, {len(resp)} answers, {len(gps)} fixes, {len(cmd)} commands", flush=True)
 

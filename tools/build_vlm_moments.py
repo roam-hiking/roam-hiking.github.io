@@ -16,11 +16,15 @@ import h5py, numpy as np
 from PIL import Image
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
+# Zermatt segments that exist only as raw bags, extracted by tools/bag_to_h5.py (used once present)
+BAGCACHE = [p for p in (os.path.abspath(os.path.join(os.path.dirname(__file__), "../review/bagcache", f"{b}.h5")) for b in
+            ("2024-08-14-13-15-40", "2024-08-15-11-06-44", "2024-08-15-11-59-14", "2024-08-16-08-59-51", "2024-08-16-09-42-21",
+             "2024-08-16-16-22-45", "2024-08-16-16-50-22")) if os.path.exists(p)]
 BAGS = "/run/media/takahiro/takahiroSSD/nature_hiking/rosbags"
 HIKES = {
     # every full recording (with camera, risk layer and VLM answers); 14 Aug 13:15 and 15 Aug 11:06 / 11:59 exist only as stripped command_hdf5
     "zermatt": dict(files=["zermatt/2024-08-14-12-51-55-merged.h5", "zermatt/map_o3d/2024-08-14-13-47-27-merged.h5",
-                           "zermatt/2024-08-15-09-47-11-merged.h5", "zermatt/2024-08-15-10-06-54-merged.h5"], gap=30),
+                           "zermatt/2024-08-15-09-47-11-merged.h5", "zermatt/2024-08-15-10-06-54-merged.h5"] + BAGCACHE, gap=30),
     "seealpsee": dict(files=["seealpsee/seealpsee1.h5", "seealpsee/seealpsee2.h5", "seealpsee/seealpsee4.h5"], gap=12),
 }
 COOLWARM = np.array([[58, 76, 192], [141, 175, 253], [221, 220, 219], [243, 152, 121], [179, 3, 38]], float)

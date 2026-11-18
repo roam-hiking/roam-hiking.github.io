@@ -6,13 +6,29 @@
  "frames": 1209,
  "holes": [
   [
-   562.0,
-   614.0
+   404.0,
+   444.0
+  ],
+  [
+   486.0,
+   530.0
+  ],
+  [
+   1066.0,
+   1122.0
+  ],
+  [
+   1290.0,
+   1336.0
+  ],
+  [
+   1386.0,
+   1596.0
   ],
   [
    2014.0,
-   2074.0
+   2060.0
   ]
  ],
- "source": "hdr_camera_front frames paired with lmm_nav_sem by header stamp; RTK GPS; none within 30 s of an operator command"
+ "source": "hdr_camera_front frames paired with lmm_nav_sem by header stamp; RTK GPS; none during or within 60 s of manual driving"
 }
