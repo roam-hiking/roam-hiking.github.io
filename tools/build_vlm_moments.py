@@ -9,7 +9,7 @@ Two steps, because only hand-picked moments go on the page (no interventions, ri
         -> review/vlmcand/<hike>/: candidates c<id>-{cam,risk}.jpg, cand.json and contact sheets to pick from
     python3 tools/build_vlm_moments.py publish zermatt|seealpsee      (needs only numpy + pillow-free stdlib)
         -> the ids listed in tools/vlm_picks.json go to static/data/<hike>-vlm.json and static/img/vlm/<hike>/<n>-{cam,risk}.jpg
-Answers within NEAR_CMD s of an operator command (user_command_relay/twist_input) are never candidates.
+Answers during or within 60 s of a manual-driving stretch (user_command_relay/twist_input bursts) are never candidates.
 """
 import base64, io, json, math, os, re, sys
 import h5py, numpy as np
@@ -25,7 +25,17 @@ HIKES = {
 }
 COOLWARM = np.array([[58, 76, 192], [141, 175, 253], [221, 220, 219], [243, 152, 121], [179, 3, 38]], float)
 W, H = 640, 427
-NEAR_CMD = 30
+
+def manual_spans(cmd, join=120, pad=60):
+    """Operator joystick commands come in sparse bursts: commands less than `join` s apart are one manual stretch.
+    Returns [start - pad, end + pad] per stretch; nothing inside one is shown (no interventions on the page)."""
+    S = []
+    for t in sorted(cmd):
+        if S and t - S[-1][1] < join: S[-1][1] = t
+        else: S.append([t, t])
+    return [(a - pad, b + pad) for a, b in S]
+
+def manual(t, spans): return any(a <= t <= b for a, b in spans)
 
 def coolwarm(x):
     x = np.clip(x, 0, 1) * (len(COOLWARM) - 1); k = np.minimum(np.floor(x).astype(int), len(COOLWARM) - 2); t = (x - k)[..., None]
@@ -69,12 +79,12 @@ def cand(hike):
     for rel in cfg["files"]:
         with h5py.File(os.path.join(BAGS, rel), "r") as h:
             rt = h["lmm_nav_ros/response/msg_t"][:]; rd = h["lmm_nav_ros/response/data"]
-            cmd = h["user_command_relay/twist_input/msg_t"][:] if "user_command_relay/twist_input/msg_t" in h else np.array([])
+            k = "user_command_relay/twist_input/time"; spans = manual_spans(h[k][:] if k in h else [])
             g = "rtk_gps_driver/position_receiver_0/ros/navsatfix/"
             gt = h[g + "msg_t"][:]; glat = h[g + "latitude"][:]; glon = h[g + "longitude"][:]
             n0 = len(found); skipped = 0
             for k, t in enumerate(rt):
-                if len(cmd) and np.min(np.abs(cmd - t)) < NEAR_CMD: skipped += 1; continue
+                if manual(t, spans): skipped += 1; continue
                 j = int(np.clip(np.searchsorted(gt, t), 1, len(gt) - 1))
                 if min(abs(gt[j] - t), abs(gt[j - 1] - t)) > 3 or not np.isfinite(glat[j]): continue
                 d = np.hypot(*(RM - to_m(glat[j], glon[j])).T); i = int(d.argmin())
@@ -121,14 +131,18 @@ def cand(hike):
 
 def publish(hike):
     out = os.path.join(ROOT, f"review/vlmcand/{hike}"); kept = {m["id"]: m for m in json.load(open(f"{out}/cand.json"))}
-    picks = json.load(open(os.path.join(ROOT, "tools/vlm_picks.json")))[hike]
+    picks = json.load(open(os.path.join(ROOT, "tools/vlm_picks.json")))[hike]   # answer timestamps
+    byt = {round(m["t"], 1): m["id"] for m in kept.values()}
+    missing = [t for t in picks if round(t, 1) not in byt]
+    if missing: print("picks no longer candidates (manual driving nearby?):", missing)
+    picks = [byt[round(t, 1)] for t in picks if round(t, 1) in byt]
     dst = os.path.join(ROOT, f"static/img/vlm/{hike}")
     import shutil; shutil.rmtree(dst, ignore_errors=True); os.makedirs(dst)
     ms = sorted((kept[c] for c in picks), key=lambda m: m["i"])
     for n, m in enumerate(ms):
         for kind in ("cam", "risk"): shutil.copy(f"{out}/c{m['id']:03d}-{kind}.jpg", f"{dst}/{n:03d}-{kind}.jpg")
         m["n"] = n
-    data = dict(hike=hike, source="lmm_nav_ros/response + RTK GPS + hdr_camera_front from the recorded h5 files; hand-picked (tools/vlm_picks.json), none near an operator command",
+    data = dict(hike=hike, source="lmm_nav_ros/response + RTK GPS + hdr_camera_front from the recorded h5 files; hand-picked (tools/vlm_picks.json), none during or near manual driving",
                 moments=[dict(n=m["n"], i=m["i"], km=m["km"], t=round(m["t"], 1), text=m["text"], labels=m["labels"]) for m in ms])
     json.dump(data, open(os.path.join(ROOT, f"static/data/{hike}-vlm.json"), "w"), separators=(",", ":"))
     print(hike, len(ms), "moments published")

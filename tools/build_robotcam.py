@@ -1,8 +1,8 @@
 """Robot-camera video sampled by distance along the route, for scroll-scrubbing on expedition.html.
 
 From every full h5 recording of a hike: each risk layer (lmm_nav_sem) and the camera frame with exactly its header
-stamp (never pair by arrival time), placed on the route by the RTK-GPS fix at that stamp. Frames within NEAR_CMD s
-of an operator command are skipped. Then one frame per STEP metres along the route: frame k shows the route at
+stamp (never pair by arrival time), placed on the route by the RTK-GPS fix at that stamp. Frames during or within
+60 s of a manual-driving stretch are skipped. Then one frame per STEP metres along the route: frame k shows the route at
 s0 + k * STEP, so a page can seek to (s - s0) / STEP / FPS.
 
     uv run --with h5py --with pillow --with numpy python tools/build_robotcam.py zermatt|seealpsee
@@ -20,7 +20,18 @@ FILES = {
     "seealpsee": ["seealpsee/seealpsee1.h5", "seealpsee/seealpsee2.h5", "seealpsee/seealpsee4.h5"],
 }
 STEP = {"zermatt": 4.0, "seealpsee": 2.0}
-NEAR_CMD, W, H = 30, 768, 512
+W, H = 768, 512
+def manual_spans(cmd, join=120, pad=60):
+    """Operator joystick commands come in sparse bursts: commands less than `join` s apart are one manual stretch.
+    Returns [start - pad, end + pad] per stretch; nothing inside one is shown (no interventions on the page)."""
+    S = []
+    for t in sorted(cmd):
+        if S and t - S[-1][1] < join: S[-1][1] = t
+        else: S.append([t, t])
+    return [(a - pad, b + pad) for a, b in S]
+
+def manual(t, spans): return any(a <= t <= b for a, b in spans)
+
 COOLWARM = np.array([[58, 76, 192], [141, 175, 253], [221, 220, 219], [243, 152, 121], [179, 3, 38]], float)
 
 def coolwarm(x):
@@ -36,10 +47,10 @@ def main(hike):
         with h5py.File(os.path.join(BAGS, rel), "r") as h:
             st = h["hdr_camera_front/lmm_nav_sem/time"][:]; ct = h["hdr_camera_front/image_raw/compressed/time"][:]
             g = "rtk_gps_driver/position_receiver_0/ros/navsatfix/"; gt = h[g + "time"][:]; gla = h[g + "latitude"][:]; glo = h[g + "longitude"][:]
-            cmd = h["user_command_relay/twist_input/time"][:] if "user_command_relay/twist_input/time" in h else np.array([])
+            k = "user_command_relay/twist_input/time"; spans = manual_spans(h[k][:] if k in h else [])
             order = np.argsort(ct); cts = ct[order]; prev = None; n0 = len(cands)
             for j, t in enumerate(st):
-                if len(cmd) and np.min(np.abs(cmd - t)) < NEAR_CMD: continue
+                if manual(t, spans): continue
                 c = int(np.clip(np.searchsorted(cts, t), 0, len(cts) - 1))
                 c = min((c, max(0, c - 1)), key=lambda q: abs(cts[q] - t))
                 if abs(cts[c] - t) > 1e-3: continue                      # no camera frame with this stamp
@@ -79,7 +90,7 @@ def main(hike):
         else: k += 1
     holes = [h for h in holes if h[1] - h[0] >= 40]
     json.dump(dict(hike=hike, step_m=step, fps=30, s0=round(float(s0), 1), frames=len(pick), holes=holes,
-                   source="hdr_camera_front frames paired with lmm_nav_sem by header stamp; RTK GPS; none within 30 s of an operator command"),
+                   source="hdr_camera_front frames paired with lmm_nav_sem by header stamp; RTK GPS; none during or within 60 s of manual driving"),
               open(os.path.join(ROOT, f"static/data/{hike}-robotcam.json"), "w"), indent=1)
     print(hike, len(pick), "frames, km", round(s0 / 1000, 2), "-", round(s1 / 1000, 2), "holes", holes)
 

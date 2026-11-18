@@ -910,7 +910,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   .nav-tabs { grid-template-columns: minmax(0, 1fr); }
   .nav-stage .duo-v { grid-template-columns: minmax(0, 1fr); }
   .ex-body { grid-template-columns: minmax(0, 1fr); }
-  .ex-map { max-height: 220px; } .ex-map img { object-fit: cover; height: 220px; }
+  .ex-map { max-width: 420px; width: 100%; justify-self: center; } .ex-map img { display: block; height: auto; }   /* the whole map: a cropped strip hid the route and its steps */
   .ex-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rx-sel { grid-template-columns: repeat(3, auto); }
   .rx-icon span { display: none; }
