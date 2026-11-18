@@ -16,8 +16,8 @@ async def main():
                 await pg.wait_for_function(f"document.querySelector('{sel}')._map && document.querySelector('{sel}')._map.loaded()", timeout=60000)
                 await pg.wait_for_timeout(6000)
                 await pg.evaluate("""([sel, cam]) => new Promise(r => { const el = document.querySelector(sel), m = el._map, c = m.getContainer();
-                    c.style.width = '900px'; c.style.height = '900px'; c.style.flex = 'none'; m.resize();
-                    m.getSource("done").setData(m.getSource("route").serialize().data); m.setPaintProperty("route-done","line-width",5.5); m.setPaintProperty("route-base","line-width",5.5); m.setPaintProperty("route-casing","line-width",11); m.jumpTo(cam); m.once('idle', () => { m.resize(); m.once('idle', r); m.triggerRepaint(); }); })""", [sel, cam])
+                    c.style.width = (cam.w||900)+'px'; c.style.height = (cam.h||900)+'px'; c.style.flex = 'none'; m.resize();
+                    m.getSource("done").setData(m.getSource("route").serialize().data); m.setPaintProperty("route-done","line-width",5.5); m.setPaintProperty("route-base","line-width",5.5); m.setPaintProperty("route-casing","line-width",11); const {w, h, ...cc} = cam; m.jumpTo(cc); m.once('idle', () => { m.resize(); m.once('idle', r); m.triggerRepaint(); }); })""", [sel, cam])
                 await pg.wait_for_timeout(2500)
                 await pg.locator(f"{sel} .rx-map").screenshot(path=f"shots/teaser-{key}.png")
         finally:
