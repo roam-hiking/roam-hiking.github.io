@@ -102,8 +102,9 @@
     const tube = stampS(new THREE.TubeGeometry(curve, Math.min(4000, N * 3), 1.3, 8, false), Math.min(4000, N * 3), 8);
     // the tube's u runs 0..1 along the curve; map it to metres along the route
     H.routeMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
-      uniforms: { prog: { value: 0 }, time: { value: 0 }, total: { value: H.total } },
-      vertexShader: "attribute float sd; varying vec2 vU; varying float vS; void main(){ vU = uv; vS = sd; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+      uniforms: { prog: { value: 0 }, time: { value: 0 }, total: { value: H.total }, widen: { value: 0 } },
+      // widen > 0 (map mode): push the tube out along its normals in proportion to the camera distance, so it stays a few pixels wide
+      vertexShader: "attribute float sd; uniform float widen; varying vec2 vU; varying float vS; void main(){ vU = uv; vS = sd; vec4 w = modelMatrix * vec4(position, 1.); float d = distance(cameraPosition, w.xyz); gl_Position = projectionMatrix * viewMatrix * vec4(w.xyz + normalize(mat3(modelMatrix) * normal) * widen * d * .0022, 1.); }",
       fragmentShader: `uniform float prog, time, total; varying vec2 vU; varying float vS;
         void main(){ float m = vS, ahead = step(prog, vS);
           vec3 walked = vec3(1., .2, .16) * (1.25 + .35 * sin(m * .05 - time * 6.));
@@ -283,7 +284,7 @@
     const g = H.segs.find(x => !x.m && s <= x.s1) || H.segs[H.segs.length - 1], f = g.s1 > g.s0 ? (s - g.s0) / (g.s1 - g.s0) : 0;
     const u = (H === Z ? U.z0 : U.s0) + g.u0 + f * (g.u1 - g.u0); stopPlay(); scrollTo({ top: u * VH, behavior: "smooth" });
   }
-  document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { stopPlay(); scrollTo({ top: (b.dataset.go === "zermatt" ? U.z0 : U.s0) * VH, behavior: "smooth" }); }));
+  document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { if (mapMode) { mapH = b.dataset.go === "zermatt" ? Z : S; frameRoute(mapH); return; } stopPlay(); scrollTo({ top: (b.dataset.go === "zermatt" ? U.z0 : U.s0) * VH, behavior: "smooth" }); }));
 
   // ---------- Play: fly the journey by itself (the scroll position follows, so the user can take over any time) ----------
   let playing = false, lastT = 0, speed = 1;
@@ -307,10 +308,34 @@
     if (v.readyState >= 1 && !v.seeking && Math.abs(v.currentTime - t) > .4 / rc.fps) v.currentTime = t;
   }
 
+  // ---------- Map mode: just the 3D route of one hike, free orbit ----------
+  const orbit = new THREE.OrbitControls(camera, canvas); orbit.enabled = false; orbit.enableDamping = true; orbit.dampingFactor = .08;
+  orbit.maxPolarAngle = Math.PI * .47; orbit.screenSpacePanning = false;
+  let mapMode = false, mapH = Z, savedY = 0;
+  function frameRoute(H) {   // look at the whole route from the south-west, tilted
+    const b = new THREE.Box3(); H.pts.forEach(p => b.expandByPoint(p)); const c = b.getCenter(V()), r = b.getSize(V()).length() * .5;
+    orbit.target.copy(c); camera.position.set(c.x - r * .55, c.y + r * 1.05, c.z + r * 1.25); orbit.minDistance = 60; orbit.maxDistance = r * 6; orbit.update();
+  }
+  function setMap(on, H) {
+    mapMode = on; document.body.classList.toggle("mapmode", on); $("#mapmode").setAttribute("aria-pressed", on); orbit.enabled = on;
+    [Z, S].forEach(X => X.routeMat.uniforms.widen.value = on ? 1 : 0);
+    if (on) { stopPlay(); savedY = scrollY; mapH = H || (stateAt(uNow).H); frameRoute(mapH); robot.visible = false; showMoment(mapH, null); }
+    else { robot.visible = true; scrollTo(0, savedY); camPos.copy(camera.position); }
+  }
+  $("#mapmode").addEventListener("click", () => setMap(!mapMode));
+  addEventListener("keydown", e => { if (e.key === "Escape" && mapMode) setMap(false); });
+
   // ---------- Frame loop ----------
   let uNow = 0, phase = 0, prevS = 0, prevH = null;
   function frame(now) {
     const dt = Math.min(.05, (now - (lastT || now)) / 1000); lastT = now; const t = now / 1000;
+    if (mapMode) {   // whole route lit, beams as landmarks, no story
+      orbit.update(); sky.position.copy(camera.position);
+      [Z, S].forEach(X => { X.routeMat.uniforms.prog.value = X === mapH ? X.total + 1 : -1; X.routeMat.uniforms.time.value = t; X.routeMat.uniforms.widen.value = 1; X.glowMat.uniforms.prog.value = X === mapH ? X.total + 1 : -1;
+        X.moments.forEach(m => { m.screen.visible = false; m.beam.material.uniforms.on.value = .55; m.beam.material.uniforms.time.value = t; m.beam.scale.y = 90; }); });
+      document.querySelectorAll("[data-go]").forEach(b => b.classList.toggle("on", (b.dataset.go === "zermatt") === (mapH === Z)));
+      renderer.render(scene, camera); requestAnimationFrame(frame); return;
+    }
     if (playing) { const st0 = stateAt(scrollY / VH); const v = (st0.m ? .55 : st0.phase === "hike" ? 1.05 : .7) * (st0.m ? Math.sqrt(speed) : speed); scrollTo(0, scrollY + v * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
     const target = scrollY / VH; uNow += (target - uNow) * (REDUCED ? 1 : 1 - Math.exp(-dt * 5));   // smoothed, so wheel steps glide
     const st = stateAt(uNow), H = st.H;

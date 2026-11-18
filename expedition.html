@@ -36,6 +36,12 @@ a { color: inherit; }
 .chap button.on { background: var(--snow); color: var(--ink); }
 .play { border: 0; background: var(--red); color: #fff; font: 600 13.5px Inter; padding: 9px 16px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 8px 24px rgba(227,52,44,.35); }
 .play svg { width: 13px; height: 13px; }
+.mapb { border: 1px solid var(--line); background: var(--glass); color: var(--snow); font: 600 13px Inter; padding: 8px 14px; border-radius: 999px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; backdrop-filter: blur(10px); }
+.mapb svg { width: 15px; height: 15px; } .mapb[aria-pressed="true"] { background: var(--snow); color: var(--ink); }
+.maphint { left: 50%; bottom: 26px; transform: translateX(-50%); font: 500 12px "JetBrains Mono", monospace; color: var(--dim); letter-spacing: .06em; background: var(--glass); border: 1px solid var(--line); padding: 7px 14px; border-radius: 999px; backdrop-filter: blur(8px); }
+body.mapmode .title, body.mapmode .card, body.mapmode .rcam, body.mapmode .tele, body.mapmode .prof, body.mapmode .end, body.mapmode .play, body.mapmode .speed, body.mapmode .shade { display: none !important; }
+body:not(.mapmode) .maphint { display: none; }
+body.mapmode { overflow: hidden; } body.mapmode #gl { cursor: grab; } body.mapmode #gl:active { cursor: grabbing; }
 .bar { position: fixed; z-index: 6; left: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--red), var(--amber)); width: 0; }
 
 .title { left: 26px; bottom: 150px; max-width: 620px; transition: opacity .6s, transform .6s; }
@@ -131,6 +137,7 @@ a { color: inherit; }
 <div class="hud top">
   <a class="brand" href="index.html"><i></i>ROAM</a>
   <div class="chap" role="group" aria-label="Jump to a hike"><button data-go="zermatt">Zermatt</button><button data-go="seealpsee">Seealpsee</button></div>
+  <button class="mapb" id="mapmode" aria-pressed="false" title="Just the 3D route: orbit, zoom and tilt freely"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg><span>Map</span></button>
   <button class="play" id="play" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Play</span></button>
   <div class="speed" role="group" aria-label="Play speed"><button data-sp=".5">½×</button><button data-sp="1" class="on">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button></div>
 </div>
@@ -168,6 +175,7 @@ a { color: inherit; }
   <div class="rc-v"><video id="rc-cam" muted playsinline preload="auto"></video><video id="rc-risk" muted playsinline preload="auto" hidden></video></div>
 </div>
 <div class="hud tele" id="tele"><div><b id="v-km">0.00</b>km</div><div><b id="v-alt">–</b>m altitude</div><div><b id="v-grade">–</b>grade</div></div>
+<div class="hud maphint">DRAG TO ORBIT · SCROLL TO ZOOM · RIGHT-DRAG TO PAN</div>
 <div class="hud credit">Terrain: AWS Terrain Tiles · Imagery © swisstopo · ANYmal model © ANYbotics (BSD)</div>
 <div class="hud prof" id="prof"><svg id="prof-svg" aria-label="Elevation profile of the current hike; click to jump"></svg></div>
 
@@ -183,6 +191,7 @@ a { color: inherit; }
 <script>if (window.SITE && SITE.published) document.querySelector(".draft-bar")?.remove();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="static/js/expedition.js"></script>
 </body>
 </html>
