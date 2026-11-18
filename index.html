@@ -15,6 +15,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.css">
 <link rel="stylesheet" href="static/css/site.css">
 </head>
 <body>
@@ -205,7 +206,7 @@
           <div class="date">14–15 August 2024 · Valais</div>
           <h3>Zermatt</h3>
           <dl><div><dd>10.1<small>km</small></dd><dt>distance</dt></div><div><dd>1220<small>m</small></dd><dt>descent</dt></div><div><dd>~30<small>%</small></dd><dt>steepest</dt></div></dl>
-          <a class="hl-go" href="expedition.html">Fly the route in 3D →</a>
+          <button class="hl-go" data-hike-go="zermatt">See the route ↓</button>
         </div>
       </article>
       <article class="hl" data-hl="seealpsee">
@@ -214,9 +215,108 @@
           <div class="date">25 June 2024 · Appenzell</div>
           <h3>Seealpsee</h3>
           <dl><div><dd>2.38<small>km</small></dd><dt>loop</dt></div><div><dd>20<small>m</small></dd><dt>up and down</dt></div><div><dd>🐄<small></small></dd><dt>on the trail</dt></div></dl>
-          <a class="hl-go" href="expedition.html">Fly the route in 3D →</a>
+          <button class="hl-go" data-hike-go="seealpsee">See the route ↓</button>
         </div>
       </article>
+    </div>
+
+    <div class="hike" id="hike-zermatt">
+      <div class="hike-grid">
+        <div class="hike-meta">
+          <div class="date">14–15 August 2024 · Valais</div>
+          <h3>Zermatt</h3>
+          <p class="dim">From glacier views down to the village. The route covered gravel, rock, grass, lakesides and train tracks, with slopes of about 30% at the steepest.</p>
+        </div>
+        <div class="hike-media">
+          <div class="seg hike-view" role="group" aria-label="Zermatt view">
+            <button data-hv="map" aria-pressed="true">Route explorer</button>
+            <button data-hv="fly" aria-pressed="false">Flyover</button>
+            <button data-hv="fig" aria-pressed="false">Route photos</button>
+          </div>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/zermatt-route.json" data-vlm="static/data/zermatt-vlm.json" data-photos="static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/zermatt-behind.mp4", "poster": "static/video/zermatt-behind-poster.jpg", "timemap": "static/data/zermatt-behind-timemap.json", "start": 2.6, "yt": "zermattBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/zermatt-onboard.mp4", "poster": "static/video/zermatt-onboard-poster.jpg", "timemap": "static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
+            <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Zermatt route on swisstopo aerial imagery"></div>
+              <div class="rx-side"><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span><button class="rx-comp" hidden title="Swap the two cameras"><video muted playsinline preload="none"></video><span></span></button></div>
+                <p class="rx-pip-cap">Play the video and the robot moves along the map; the other camera plays in the corner (click it to swap). Click the route, a dot or the profile to jump there. Right-drag (or two fingers) to tilt.</p>
+                <div class="rx-vlm" hidden>
+                  <div class="rx-vlm-h"><b>What the robot saw</b><span class="rx-vlm-km"></span></div>
+                  <div class="rx-vlm-imgs"><div class="rx-vlm-cam" data-alt="Robot's front camera at this point"><img alt=""><img alt=""><small>camera</small></div><div class="rx-vlm-risk" data-alt="Risk image: blue is go, red is avoid"><img alt=""><img alt=""><small>risk <i></i></small></div></div>
+                  <div class="rx-vlm-body"><p class="rx-vlm-head"></p><p class="rx-vlm-txt"></p><div class="rx-vlm-labels"></div></div>
+                  <span class="rx-vlm-n"></span>
+                </div></div></div>
+            <div class="rx-tools">
+              <div class="seg rx-color" role="group" aria-label="Color the route by">
+                <button data-color="progress" aria-pressed="true">Progress</button>
+                <button data-color="grade" aria-pressed="false">Steepness</button>
+              </div>
+              <div class="rx-legend" hidden><span>flat</span><i></i><span>40%+</span></div>
+              <span class="rx-vids" role="group" aria-label="Video synced to the map"></span>
+              <button class="rx-icon rx-full" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            </div>
+            <div class="rx-bar">
+              <button class="rx-play" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Replay the hike</span></button>
+              <span class="rx-read mono"></span>
+            </div>
+            <svg class="rx-prof" role="img" aria-label="Elevation profile along the route; hover or drag to move the robot on the map"></svg>
+            <div class="rx-sel" hidden></div>
+            <span class="rx-src">Drag across the profile to measure a section. Robot's GNSS track · elevation: swisstopo swissALTI3D · maps © swisstopo</span>
+          </div>
+          <div class="flyover" data-hv-panel="fly" hidden>
+            <video muted loop playsinline preload="none" poster="static/video/zermatt-flyover-poster.jpg" aria-label="Google Earth flyover of the 10.1 km Zermatt route">
+              <source src="static/video/zermatt-flyover.mp4" type="video/mp4">
+            </video>
+            <span class="fly-cap">The full route, rendered in Google Earth</span>
+          </div>
+          <figure class="hike-fig" data-hv-panel="fig" hidden data-lb data-cap="Fig. 3A. Zermatt route with photos at each waypoint. Map imagery: Google Earth.">
+            <img src="static/img/fig3-zermatt.jpg" alt="Satellite map of the 10.1 km Zermatt route with photos of the robot at each waypoint" loading="lazy">
+          </figure>
+        </div>
+      </div>
+    </div>
+
+    <div class="hike" id="hike-seealpsee">
+      <div class="hike-grid">
+        <div class="hike-meta">
+          <div class="date">25 June 2024 · Appenzell</div>
+          <h3>Seealpsee</h3>
+          <p class="dim">A loop around a mountain lake, sharing the trail with cows, hikers and boulders.</p>
+        </div>
+        <div class="hike-media">
+          <div class="seg hike-view" role="group" aria-label="Seealpsee view">
+            <button data-hv="map" aria-pressed="true">Route explorer</button>
+            <button data-hv="fig" aria-pressed="false">Route photos</button>
+          </div>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/seealpsee-route.json" data-vlm="static/data/seealpsee-vlm.json" data-photos="static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/seealpsee-behind.mp4", "poster": "static/video/seealpsee-behind-poster.jpg", "timemap": "static/data/seealpsee-behind-timemap.json", "start": 3, "yt": "seealpseeBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/seealpsee-onboard.mp4", "poster": "static/video/seealpsee-onboard-poster.jpg", "timemap": "static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
+            <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Seealpsee route on swisstopo aerial imagery"></div>
+              <div class="rx-side"><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span><button class="rx-comp" hidden title="Swap the two cameras"><video muted playsinline preload="none"></video><span></span></button></div>
+                <p class="rx-pip-cap">Play the video and the robot moves along the map; the other camera plays in the corner (click it to swap). Click the route, a dot or the profile to jump there. Right-drag (or two fingers) to tilt.</p>
+                <div class="rx-vlm" hidden>
+                  <div class="rx-vlm-h"><b>What the robot saw</b><span class="rx-vlm-km"></span></div>
+                  <div class="rx-vlm-imgs"><div class="rx-vlm-cam" data-alt="Robot's front camera at this point"><img alt=""><img alt=""><small>camera</small></div><div class="rx-vlm-risk" data-alt="Risk image: blue is go, red is avoid"><img alt=""><img alt=""><small>risk <i></i></small></div></div>
+                  <div class="rx-vlm-body"><p class="rx-vlm-head"></p><p class="rx-vlm-txt"></p><div class="rx-vlm-labels"></div></div>
+                  <span class="rx-vlm-n"></span>
+                </div></div></div>
+            <div class="rx-tools">
+              <div class="seg rx-color" role="group" aria-label="Color the route by">
+                <button data-color="progress" aria-pressed="true">Progress</button>
+                <button data-color="grade" aria-pressed="false">Steepness</button>
+              </div>
+              <div class="rx-legend" hidden><span>flat</span><i></i><span>40%+</span></div>
+              <span class="rx-vids" role="group" aria-label="Video synced to the map"></span>
+              <button class="rx-icon rx-full" title="Fullscreen" aria-label="Fullscreen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+            </div>
+            <div class="rx-bar">
+              <button class="rx-play" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Replay the hike</span></button>
+              <span class="rx-read mono"></span>
+            </div>
+            <svg class="rx-prof" role="img" aria-label="Elevation profile along the route; hover or drag to move the robot on the map"></svg>
+            <div class="rx-sel" hidden></div>
+            <span class="rx-src">Drag across the profile to measure a section. Robot's GNSS track · elevation: swisstopo swissALTI3D · maps © swisstopo</span>
+          </div>
+          <figure class="hike-fig" data-hv-panel="fig" hidden data-lb data-cap="Fig. 3B. Seealpsee route with photos at each waypoint. Map imagery: Google Earth.">
+            <img src="static/img/fig3-seealpsee.jpg" alt="Satellite map of the 2.38 km Seealpsee loop with photos of the robot at each waypoint" loading="lazy">
+          </figure>
+        </div>
+      </div>
     </div>
 
     <a class="xp-teaser rv" href="expedition.html">
@@ -521,5 +621,7 @@
 <script src="static/js/config.js"></script>
 <script src="static/js/common.js"></script>
 <script src="static/js/main.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/maplibre-gl/5.24.0/maplibre-gl.min.js"></script>
+<script src="static/js/explorer.js"></script>
 </body>
 </html>

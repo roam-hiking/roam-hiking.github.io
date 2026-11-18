@@ -1,4 +1,4 @@
-// Shared by index.html and expeditions.html: lightbox, scroll reveal, nav, colour ramp.
+// Shared by index.html and expedition.html: lightbox, scroll reveal, nav, colour ramp.
 // ---------- Lightbox with prev/next over all zoomable images ----------
 const lb = document.getElementById("lb"), lbImg = lb.querySelector("img"), lbCap = lb.querySelector(".lbcap");
 const items = () => [...document.querySelectorAll("[data-lb]")].filter(el => !el.classList.contains("dim"));

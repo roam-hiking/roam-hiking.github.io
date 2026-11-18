@@ -1,4 +1,4 @@
-"""Logged VLM moments along each hike, for the route explorer on expeditions.html.
+"""Logged VLM moments along each hike, for the route explorers on the main page and the 3D Expedition.
 
 For every VLM answer in the recorded h5 files: the robot's RTK-GPS position at that time, the nearest
 point of the published route, the answer's first sentence and its label scores, the front camera frame and

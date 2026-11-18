@@ -1,4 +1,4 @@
-// expeditions.html: the two route explorers (MapLibre 3D map, elevation profile, synced videos).
+// index.html (Alpine hikes): the two route explorers (MapLibre 3D map, elevation profile, synced videos).
 // ---------- Hike media: route explorer / flyover / photos ----------
 function syncHikeMedia() {
   document.querySelectorAll(".hike").forEach(h => {

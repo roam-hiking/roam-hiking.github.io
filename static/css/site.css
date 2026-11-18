@@ -475,7 +475,8 @@ figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
   border: 0; background: transparent; color: var(--snow-dim); font: 600 14.5px Inter, sans-serif; padding: 9px 22px; border-radius: 999px; cursor: pointer; transition: all .3s;
 }
 .tabs button[aria-selected="true"] { background: var(--snow); color: var(--night); }
-/* Main page: teaser for the route explorer, which lives on expeditions.html */
+/* Main page: teaser for the 3D Expedition (expedition.html) */
+.hike + .xp-teaser { margin-top: 64px; }
 .xp-teaser { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: center; gap: 0; margin: 0 0 48px; text-decoration: none; color: inherit;
   background: var(--night-3); border: 1px solid rgba(var(--fgrgb),.08); border-radius: var(--radius); overflow: hidden; transition: border-color .3s; }
 .xp-teaser:hover { border-color: rgba(var(--fgrgb),.28); }
@@ -492,24 +493,6 @@ figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
   .rx-map .rx-base button { white-space: nowrap; padding: 5px 9px; font-size: 11px; background: rgba(11,15,13,.72); backdrop-filter: blur(6px); }
   .rx-map .rx-base button[aria-pressed="true"] { background: var(--snow); } }
 @media (max-width: 760px) { .xp-teaser { grid-template-columns: minmax(0, 1fr); } .xp-copy { padding: 18px; } .xp-copy h3 { font-size: 24px; } }
-/* expeditions.html */
-.xp-hero { position: relative; min-height: min(80vh, 660px); display: flex; align-items: flex-end; color: #fff; overflow: hidden; background: #0f1e26; }
-.xp-hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 40%; }
-.xp-hero .shade { position: absolute; inset: 0; background: linear-gradient(to top, rgba(8,14,18,.8) 0%, rgba(8,14,18,.38) 42%, rgba(8,14,18,0) 75%), linear-gradient(to right, rgba(8,14,18,.45), rgba(8,14,18,0) 60%); }
-.xp-hero .wrap { position: relative; width: 100%; padding-top: 110px; padding-bottom: 40px; }
-.xp-hero h1 { font-family: Fraunces, Georgia, serif; font-weight: 700; font-size: clamp(38px, 6vw, 68px); line-height: 1.02; margin: 8px 0 14px; }
-.xp-hero h1 em { color: #ff7a6e; }
-.xp-hero p { max-width: 640px; margin: 0 0 22px; font-size: 17px; line-height: 1.55; color: rgba(255,255,255,.86); }
-.xp-hero .kicker { color: #ff9a90; }
-.xp-back { display: inline-block; margin-bottom: 20px; color: rgba(255,255,255,.8); text-decoration: none; font-size: 14px; }
-.xp-back:hover { color: #fff; }
-.xp-jump { display: flex; flex-wrap: wrap; gap: 10px; }
-.xp-jump a { display: grid; padding: 10px 18px; border-radius: 14px; background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22); backdrop-filter: blur(8px); text-decoration: none; color: #fff; transition: background .2s; }
-.xp-jump a:hover { background: rgba(255,255,255,.22); }
-.xp-jump b { font: 500 20px Fraunces, Georgia, serif; }
-.xp-jump span { font-size: 12.5px; color: rgba(255,255,255,.75); }
-.xp-page { padding-top: 64px; }
-@media (max-width: 760px) { .xp-hero { min-height: 560px; } .xp-hero > img { object-position: 42% 40%; } .xp-hero p { font-size: 15.5px; } }
 .hike { scroll-margin-top: 84px; }
 .hike + .hike { margin-top: 72px; }
 .hls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 26px 0 40px; }
