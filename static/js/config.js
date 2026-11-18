@@ -4,14 +4,14 @@
 // ============================================================
 window.SITE = {
   youtube: { movie1: "xcqVpbgklD4", seealpsee: "wrbAq2HXE8E", zermattOnboard: "", zermattBehind: "", seealpseeBehind: "", seealpseeOnboard: "" },   // YouTube video IDs, e.g. "dQw4w9WgXcQ"
-  links: { paper: "static/paper/roam-arxiv-draft.pdf", supplementary: "" },   // local arXiv build for now; swap for the arXiv URL once it is up
-  published: false                                // true hides the embargo bar (also delete the noindex <meta> in <head>)
+  links: { paper: "https://doi.org/10.1126/scirobotics.aee1549", supplementary: "" },   // the paper at Science Robotics; swap for the arXiv URL once it is up if preferred
+  published: true                                 // true hides the embargo bar (the noindex <meta> is gone from both pages)
 };
 document.querySelectorAll("[data-yt-key]").forEach(el => el.dataset.youtube = SITE.youtube[el.dataset.ytKey] || "");
 document.querySelectorAll("[data-link]").forEach(a => {
   const url = SITE.links[a.dataset.link]; if (!url) return;
   a.href = url; a.classList.remove("disabled"); a.removeAttribute("aria-disabled"); a.target = "_blank"; a.rel = "noopener";
-  a.lastChild.textContent = a.dataset.link === "paper" ? "Paper (PDF)" : "Supplementary";
+  a.lastChild.textContent = a.dataset.link === "paper" ? (/\.pdf$/i.test(url) ? "Paper (PDF)" : "Paper") : "Supplementary";
 });
 // "Watch" opens Movie 1 on YouTube once its ID is set; until then it scrolls to the highlight
 const watch = document.querySelector("[data-watch]");
