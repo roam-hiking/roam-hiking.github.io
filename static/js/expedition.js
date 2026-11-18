@@ -239,9 +239,9 @@
     if (!H.frame) { const b = new THREE.Box3(); H.pts.forEach(q => b.expandByPoint(q)); H.frame = { c: b.getCenter(V()), r: b.getSize(V()).length() * .5 }; }
     const { c, r } = H.frame, s0 = H.at(0).p, a = Math.atan2(1.25, -.55) + t * .012, an = (H === Z ? -1.95 : -2.2) + .35, nr = H === Z ? 900 : 500;
     const ph = clamp(1.6 / camera.aspect, 1, 1.85);   // a portrait screen is narrower: back off until the route fits across
-    const far = V(c.x + Math.cos(a) * r * 2 * ph, c.y + r * 1.6 * ph, c.z + Math.sin(a) * r * 2 * ph), near = V(s0.x + Math.cos(an) * nr, s0.y + nr * .55, s0.z + Math.sin(an) * nr);
+    const far = V(c.x + Math.cos(a) * r * 2.15 * ph, c.y + r * 1.7 * ph, c.z + Math.sin(a) * r * 2.15 * ph), near = V(s0.x + Math.cos(an) * nr, s0.y + nr * .55, s0.z + Math.sin(an) * nr);
     // the title sits on the left: look a little left of the route's centre, so the route fills the right of the screen
-    const fx = c.x - far.x, fz = c.z - far.z, fl = Math.hypot(fx, fz) || 1, lc = c.clone().add(V(fz / fl, 0, -fx / fl).multiplyScalar(r * (camera.aspect > 1 ? .22 : 0) * (1 - k)));
+    const fx = c.x - far.x, fz = c.z - far.z, fl = Math.hypot(fx, fz) || 1, lc = c.clone().add(V(fz / fl, 0, -fx / fl).multiplyScalar(r * (camera.aspect > 1 ? .4 : 0) * (1 - k)));
     if (camera.aspect < 1 && H === S) lc.y += r * .45 * (1 - k);   // phone: Seealpsee's title is at the top, so the loop sits lower
     far.add(lc.clone().sub(c));
     tmpP.copy(far).lerp(near, k); tmpP.y += Math.sin(Math.PI * k) * r * .15; tmpL.copy(lc).lerp(s0, k);
