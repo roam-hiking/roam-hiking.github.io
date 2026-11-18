@@ -47,7 +47,22 @@ a { color: inherit; }
 .title p { margin: 0; font-size: 17px; color: rgba(255,255,255,.88); text-shadow: 0 1px 16px rgba(0,0,0,.6); max-width: 520px; }
 .title .hint { margin-top: 18px; font: 500 12px "JetBrains Mono", monospace; color: var(--dim); letter-spacing: .1em; }
 .title.off { opacity: 0; transform: translateY(16px); pointer-events: none; }
+.title.up { bottom: auto; top: 92px; }
 
+.speed { display: flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--glass); border: 1px solid var(--line); backdrop-filter: blur(10px); }
+.speed button { border: 0; background: transparent; color: var(--dim); font: 600 12px Inter; padding: 6px 9px; border-radius: 999px; cursor: pointer; }
+.speed button.on { background: var(--snow); color: var(--ink); }
+.rcam { left: 26px; bottom: 140px; width: min(360px, 30vw); background: var(--glass); border: 1px solid var(--line); border-radius: 16px; padding: 10px; backdrop-filter: blur(14px); transition: opacity .5s, transform .6s; box-shadow: 0 24px 50px -20px rgba(0,0,0,.6); }
+.rcam.off { opacity: 0; transform: translateY(14px); pointer-events: none; }
+.rc-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.rc-h b { font: 500 15px Fraunces, Georgia, serif; }
+.rc-t { display: flex; gap: 2px; padding: 2px; border-radius: 999px; background: rgba(255,255,255,.08); }
+.rc-t button { border: 0; background: transparent; color: var(--dim); font: 600 11px Inter; padding: 4px 9px; border-radius: 999px; cursor: pointer; }
+.rc-t button.on { background: var(--snow); color: var(--ink); }
+.rc-v { position: relative; aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden; background: #000; }
+.rc-v video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.rc-none { position: absolute; inset: 0; display: none; place-items: center; text-align: center; padding: 20px; font-size: 12px; color: var(--dim); background: rgba(11,17,23,.8); }
+.rcam.none .rc-none { display: grid; }
 .tele { left: 26px; bottom: 74px; display: flex; gap: 22px; font: 500 12px "JetBrains Mono", monospace; color: var(--dim); text-shadow: 0 1px 10px rgba(0,0,0,.6); }
 .tele b { display: block; font: 500 24px Fraunces, Georgia, serif; color: var(--snow); letter-spacing: 0; }
 .prof { left: 26px; right: 26px; bottom: 22px; height: 38px; }
@@ -100,6 +115,9 @@ a { color: inherit; }
   .card .labs, .card .say, .card .vid { display: none; }
   .pics { aspect-ratio: 2.2 / 1; }
   .credit { display: none; }
+  .speed { display: none; }
+  .rcam { left: 12px; right: auto; bottom: auto; top: 76px; width: 42vw; padding: 6px; } .rc-h b { display: none; } .rc-h { margin-bottom: 5px; }
+  .title.up { top: 76px; left: calc(42vw + 24px); right: 12px; } .title.up h2 { font-size: 26px; } .title.up p { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .card, .title, .end { transition: none; } }
 </style>
@@ -116,6 +134,7 @@ a { color: inherit; }
   <a class="brand" href="index.html"><i></i>ROAM</a>
   <div class="chap" role="group" aria-label="Jump to a hike"><button data-go="zermatt">Zermatt</button><button data-go="seealpsee">Seealpsee</button></div>
   <button class="play" id="play" aria-pressed="false"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg><span>Play</span></button>
+  <div class="speed" role="group" aria-label="Play speed"><button data-sp=".5">½×</button><button data-sp="1" class="on">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button></div>
 </div>
 
 <div class="hud title" id="t-intro">
@@ -124,12 +143,12 @@ a { color: inherit; }
   <p>A legged robot with a vision-language model's common sense walks the Swiss Alps. Scroll to follow it, or press Play.</p>
   <div class="hint">SCROLL ↓</div>
 </div>
-<div class="hud title off" id="t-zermatt">
+<div class="hud title up off" id="t-zermatt">
   <div class="k">14–15 August 2024 · Valais</div>
   <h2>Zermatt: <em>10.1 km</em> down</h2>
   <p>From Gornergrat at 3,089 m, under the Matterhorn, toward the village: gravel, rock, lakesides and the mountain railway.</p>
 </div>
-<div class="hud title off" id="t-seealpsee">
+<div class="hud title up off" id="t-seealpsee">
   <div class="k">25 June 2024 · Appenzell</div>
   <h2>Seealpsee: <em>past the cows</em></h2>
   <p>A 2.38 km loop around a mountain lake, sharing the trail with hikers, dogs and grazing cows.</p>
@@ -146,6 +165,10 @@ a { color: inherit; }
   <div class="vid"><video id="c-vid" muted playsinline preload="none"></video><small>behind the robot</small></div>
 </div>
 
+<div class="hud rcam off" id="rcam">
+  <div class="rc-h"><b>Robot's camera</b><div class="rc-t" role="group" aria-label="Show"><button data-rc="cam" class="on">Camera</button><button data-rc="risk">Risk</button></div></div>
+  <div class="rc-v"><video id="rc-cam" muted playsinline preload="auto"></video><video id="rc-risk" muted playsinline preload="auto" hidden></video><span class="rc-none">No onboard footage on this stretch</span></div>
+</div>
 <div class="hud tele" id="tele"><div><b id="v-km">0.00</b>km</div><div><b id="v-alt">–</b>m altitude</div><div><b id="v-grade">–</b>grade</div></div>
 <div class="hud credit">Terrain: AWS Terrain Tiles · Imagery © swisstopo · ANYmal model © ANYbotics (BSD)</div>
 <div class="hud prof" id="prof"><svg id="prof-svg" aria-label="Elevation profile of the current hike; click to jump"></svg></div>

@@ -1,0 +1,14 @@
+{
+ "hike": "zermatt",
+ "step_m": 4.0,
+ "fps": 30,
+ "s0": 0.0,
+ "frames": 1029,
+ "holes": [
+  [
+   616.0,
+   1164.0
+  ]
+ ],
+ "source": "hdr_camera_front frames paired with lmm_nav_sem by header stamp; RTK GPS; none within 30 s of an operator command"
+}

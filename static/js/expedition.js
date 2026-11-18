@@ -86,13 +86,19 @@
     const P = route.points, N = P.length;
     H.pts = P.map(p => H.world(p[0], p[1], 3.5)); H.dist = P.map(p => p[3]); H.total = H.dist[N - 1]; H.alt = P.map(p => p[2]);
     const curve = new THREE.CatmullRomCurve3(H.pts, false, "centripetal", .3);
-    const tube = new THREE.TubeGeometry(curve, Math.min(4000, N * 3), 1.3, 8, false);
+    const stampS = (geo, T, R) => {   // per-vertex route distance, so the shader compares metres with metres
+      const sd = new Float32Array((T + 1) * (R + 1)); let k = 0;
+      for (let i = 0; i <= T; i++) { const c = curve.getPointAt(i / T);
+        let best = k, bd = Infinity; for (let q = Math.max(0, k - 5); q < Math.min(N, k + 60); q++) { const d = H.pts[q].distanceToSquared(c); if (d < bd) { bd = d; best = q; } }
+        k = best; for (let r = 0; r <= R; r++) sd[i * (R + 1) + r] = H.dist[k]; }
+      geo.setAttribute("sd", new THREE.BufferAttribute(sd, 1)); return geo; };
+    const tube = stampS(new THREE.TubeGeometry(curve, Math.min(4000, N * 3), 1.3, 8, false), Math.min(4000, N * 3), 8);
     // the tube's u runs 0..1 along the curve; map it to metres along the route
     H.routeMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false,
       uniforms: { prog: { value: 0 }, time: { value: 0 }, total: { value: H.total } },
-      vertexShader: "varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
-      fragmentShader: `uniform float prog, time, total; varying vec2 vU;
-        void main(){ float m = vU.x * total, ahead = step(prog, vU.x);
+      vertexShader: "attribute float sd; varying vec2 vU; varying float vS; void main(){ vU = uv; vS = sd; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+      fragmentShader: `uniform float prog, time, total; varying vec2 vU; varying float vS;
+        void main(){ float m = vS, ahead = step(prog, vS);
           vec3 walked = vec3(1., .2, .16) * (1.25 + .35 * sin(m * .05 - time * 6.));
           float dash = .55 + .45 * smoothstep(.35, .65, fract(m / 26. - time * .6));
           vec3 col = mix(walked, vec3(1.) * dash * 1.05, ahead);
@@ -101,9 +107,9 @@
     const rt = new THREE.Mesh(tube, H.routeMat); rt.renderOrder = 2; scene.add(rt);
     // soft glow under the walked part
     H.glowMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { prog: { value: 0 } }, vertexShader: "varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
-      fragmentShader: "uniform float prog; varying vec2 vU; void main(){ float a = (1. - step(prog, vU.x)) * .22 * (1. - abs(vU.y - .5) * 2.); gl_FragColor = vec4(1., .3, .2, a); }" });
-    const glow = new THREE.Mesh(new THREE.TubeGeometry(curve, Math.min(3000, N * 2), 6, 8, false), H.glowMat); glow.renderOrder = 1; scene.add(glow);
+      uniforms: { prog: { value: 0 } }, vertexShader: "attribute float sd; varying vec2 vU; varying float vS; void main(){ vU = uv; vS = sd; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+      fragmentShader: "uniform float prog; varying vec2 vU; varying float vS; void main(){ float a = (1. - step(prog, vS)) * .22 * (1. - abs(vU.y - .5) * 2.); gl_FragColor = vec4(1., .3, .2, a); }" });
+    const glow = new THREE.Mesh(stampS(new THREE.TubeGeometry(curve, Math.min(3000, N * 2), 6, 8, false), Math.min(3000, N * 2), 8), H.glowMat); glow.renderOrder = 1; scene.add(glow);
     H.curve = curve;
     H.at = s => { // position and heading at s metres along the route
       let k = 0, a = 0, b = N - 1; while (b - a > 1) { const m = (a + b) >> 1; H.dist[m] <= s ? a = m : b = m; } k = a;
@@ -139,6 +145,7 @@
       H.videoAt = i => { for (let k = 1; k < T.length; k++) { const a = T[k - 1], b = T[k]; if (Math.abs(b.i - a.i) < 40 && Math.min(a.i, b.i) <= i && i <= Math.max(a.i, b.i)) return b.i === a.i ? a.t : a.t + (b.t - a.t) * (i - a.i) / (b.i - a.i); } return null; };
       H.video = `static/video/${name}-behind.mp4`;
     }
+    H.rc = await json(`static/data/${name}-robotcam.json`).catch(() => null); H.name = name;
     H.center = V(o.x, 0, o.z); H.meta = meta;
     return H;
   }
@@ -216,7 +223,9 @@
     tmpL.copy(p).addScaledVector(d, 120);
     if (st.m) {
       const k = Math.sin(Math.PI * clamp(st.mf, 0, 1)) ** .7, swing = (H.moments.indexOf(st.m) % 2 ? 1 : -1);
-      const close = p.clone().addScaledVector(side, swing * 70).addScaledVector(d, -55).add(V(0, 38, 0));
+      // orbit the robot through the stop: from behind its shoulder round to its front
+      const ang = swing * lerp(.9, 2.1, smooth(clamp(st.mf, 0, 1)));
+      const close = p.clone().addScaledVector(d, -Math.cos(ang) * 82).addScaledVector(side, Math.sin(ang) * 82).add(V(0, 36, 0));
       tmpP.lerp(close, k); tmpL.lerp(p.clone().add(V(0, 26, 0)).addScaledVector(side, -swing * 10), k);
     }
     clearGround(H, tmpP, 45);
@@ -270,18 +279,32 @@
   document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { stopPlay(); scrollTo({ top: (b.dataset.go === "zermatt" ? U.z0 : U.s0) * VH, behavior: "smooth" }); }));
 
   // ---------- Play: fly the journey by itself (the scroll position follows, so the user can take over any time) ----------
-  let playing = false, lastT = 0;
+  let playing = false, lastT = 0, speed = 1;
+  document.querySelectorAll("[data-sp]").forEach(b => b.addEventListener("click", () => { speed = +b.dataset.sp; document.querySelectorAll("[data-sp]").forEach(x => x.classList.toggle("on", x === b)); }));
   const playBtn = $("#play");
   function stopPlay() { playing = false; playBtn.setAttribute("aria-pressed", "false"); playBtn.querySelector("span").textContent = "Play"; }
   playBtn.addEventListener("click", () => { playing = !playing; playBtn.setAttribute("aria-pressed", playing); playBtn.querySelector("span").textContent = playing ? "Pause" : "Play";
     if (playing && scrollY >= U.end * VH - 5) scrollTo(0, 0); });
   ["wheel", "touchstart", "keydown"].forEach(ev => addEventListener(ev, () => playing && stopPlay(), { passive: true }));
 
+  // ---------- Robot's camera: one frame per few metres along the route, scrubbed to where the robot is ----------
+  const rcBox = $("#rcam"), rcV = { cam: $("#rc-cam"), risk: $("#rc-risk") }; let rcKind = "cam", rcFor = null;
+  document.querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => { rcKind = b.dataset.rc;
+    document.querySelectorAll("[data-rc]").forEach(x => x.classList.toggle("on", x === b)); rcV.cam.hidden = rcKind !== "cam"; rcV.risk.hidden = rcKind !== "risk"; }));
+  function robotCam(H, s, on) {
+    const rc = H.rc; rcBox.classList.toggle("off", !on || !rc); if (!on || !rc) return;
+    if (rcFor !== H) { rcFor = H; ["cam", "risk"].forEach(k => { rcV[k].src = `static/video/${H.name}-robotcam-${k}.mp4`; }); }
+    const k = (s - rc.s0) / rc.step_m, none = k < 0 || k > rc.frames - 1 || rc.holes.some(([a, b]) => s >= a && s < b);
+    rcBox.classList.toggle("none", none); if (none) return;
+    const v = rcV[rcKind], t = (Math.round(k) + .5) / rc.fps;
+    if (v.readyState >= 1 && !v.seeking && Math.abs(v.currentTime - t) > .4 / rc.fps) v.currentTime = t;
+  }
+
   // ---------- Frame loop ----------
   let uNow = 0, phase = 0, prevS = 0, prevH = null;
   function frame(now) {
     const dt = Math.min(.05, (now - (lastT || now)) / 1000); lastT = now; const t = now / 1000;
-    if (playing) { const st0 = stateAt(scrollY / VH); const speed = st0.m ? .55 : st0.phase === "hike" ? 1.05 : .7; scrollTo(0, scrollY + speed * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
+    if (playing) { const st0 = stateAt(scrollY / VH); const v = (st0.m ? .55 : st0.phase === "hike" ? 1.05 : .7) * (st0.m ? Math.sqrt(speed) : speed); scrollTo(0, scrollY + v * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
     const target = scrollY / VH; uNow += (target - uNow) * (REDUCED ? 1 : 1 - Math.exp(-dt * 5));   // smoothed, so wheel steps glide
     const st = stateAt(uNow), H = st.H;
     // robot on the route
@@ -299,7 +322,7 @@
     // the robot stays readable from far away, real size close up
     const dist = camera.position.distanceTo(robot.position), sc = clamp(dist * .034, 1, 40); robot.scale.setScalar(sc); halo.scale.setScalar(1.6);
     // route glow
-    [Z, S].forEach(X => { const pr = X === H ? (st.phase === "intro" ? 0 : st.s / X.total) : (X === Z && H === S ? 1 : 0);
+    [Z, S].forEach(X => { const pr = X === H ? (st.phase === "intro" ? -1 : st.s) : (X === Z && H === S ? X.total + 1 : -1);
       X.routeMat.uniforms.prog.value = pr; X.routeMat.uniforms.time.value = t; X.glowMat.uniforms.prog.value = pr; });
     // moments: beams brighten as the robot nears; the screen rises and wipes to the risk view while it is the current one
     [Z, S].forEach(X => X.moments.forEach(m => {
@@ -328,6 +351,7 @@
     $("#veil").style.opacity = st.phase === "gap" ? Math.sin(Math.PI * st.f) ** 3 : 0;
     $("#bar").style.width = clamp(uNow / U.end, 0, 1) * 100 + "%";
     const on = st.phase === "hike"; ["#tele", "#prof"].forEach(s => $(s).style.opacity = on ? 1 : 0);
+    robotCam(H, st.s, on);
     if (on) {
       if (profFor !== H) drawProfile(H);
       const k2 = here.k, grade = (() => { const a = H.at(Math.max(0, st.s - 30)), b = H.at(Math.min(H.total, st.s + 30)); return (b.alt - a.alt) / 60 * 100; })();
