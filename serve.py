@@ -40,8 +40,8 @@ class RangeHandler(SimpleHTTPRequestHandler):
         path = self.path.split("?")[0].split("#")[0]
         if path == "/__comments":
             return self.send_bytes(json.dumps(load_comments()).encode(), "application/json")
-        if path in ("/", "/index.html"):  # review mode is injected here, so index.html itself stays clean
-            with open(os.path.join(ROOT, "index.html"), "rb") as f:
+        if path in ("/", "/index.html", "/expeditions.html"):  # review mode is injected here, so the pages themselves stay clean
+            with open(os.path.join(ROOT, "expeditions.html" if path == "/expeditions.html" else "index.html"), "rb") as f:
                 html = f.read()
             html = html.replace(b"</body>", b'<script src="review/review.js"></script>\n</body>', 1)
             return self.send_bytes(html, "text/html; charset=utf-8")

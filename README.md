@@ -1,6 +1,6 @@
 # ROAM project page
 
-Static project page for *Bridging vision-language reasoning and learned control for legged navigation in the wild* (Science Robotics, aee1549). One `index.html` with no build step, plus media in `static/`.
+Static project page for *Bridging vision-language reasoning and learned control for legged navigation in the wild* (Science Robotics, aee1549). Two pages with no build step: `index.html` (the project page) and `expeditions.html` (the 3D route explorer for both hikes). They share `static/css/site.css` and `static/js/config.js` + `common.js`; each page then loads its own script (`main.js` or `explorer.js`). Only `expeditions.html` loads MapLibre, so the main page stays light. Media is in `static/`.
 
 **Status: embargoed draft.** Don't publish it until the paper is out.
 
@@ -16,11 +16,11 @@ Then open http://localhost:8790. Use `serve.py` rather than `python -m http.serv
 
 The local preview adds a yellow **Comment** button (bottom right). Tap it, tap the part of the page you mean, write a note and save. A numbered pin stays on that part, and the "N open" button lists every comment (show, mark done, delete).
 
-Comments are saved in `review-comments.json` next to `serve.py` (not tracked by git). The button comes from `review/review.js`, which `serve.py` adds to the page on the fly. `index.html` does not load it, so the published site has no comment button.
+Comments are saved in `review-comments.json` next to `serve.py` (not tracked by git). The button comes from `review/review.js`, which `serve.py` adds to the page on the fly. The pages do not load it, so the published site has no comment button.
 
 ## Launch checklist
 
-All fill-in values live in one `SITE` block near the end of `index.html`:
+All fill-in values live in one `SITE` block in `static/js/config.js` (both pages read it):
 
 ```js
 const SITE = {
@@ -57,7 +57,7 @@ Every file is under GitHub's 100 MB limit, and the site is about 210 MB.
 | Top slider grid (camera ↔ risk) | `good_image_N` pairs from the NEWEST processing of each run (older runs have misaligned overlays): hall/campus Dropbox `experiments/indoor-urban-nature/mission2` #1/#3 (Jan 2025), test site `rosbags/2024-arche-experiments/gpt_long_navigation/mission2` #0 (Feb 2025), lake/huts Dropbox `experiments/seealpsee/mission-labels2` #4/#7 (Dec 2024), forest `construction-signs/GPT-full` #12, Matterhorn/railway `zermatt/mission-2` #11/#32. Left image = whichever camera file the overlay was built from (raw for the newer runs, `_closest` for the older ones; pick by edge match). Files `*-v3.jpg`, 720×480. |
 | Section 01 core demo ("What the VLM sees") | Logged `good_image_<N>` sets from the missions, resized to 1200×800: Seealpsee `rosbags/seealpsee/mission-new` #10 (cows; camera and map both cropped to x 576–1920, y 170–1066 so the cows read clearly) and #15 (huts); Zermatt `rosbags/zermatt/mission-2` #32 (railway), #34 (chalet and Matterhorn), #38 (forest trail). Camera = `..._hdr_camera_front-image_raw-compressed-image.png`, map = `..._overlay_risk.png`. Quotes are shortened from each `..._responses_raw.txt` and the label values are copied from its JSON. No sign or snow scenes here; those are in sections 04 and 06. |
 | Section 02 (think / ground / walk) | Fig. 1 source frame `rosbags/zermatt/mission-nice-1/good_image_1_*` (15 Aug 2024) with its logged VLM response; renders from the Fig. 1 Illustrator links; the elevation-map image is a Movie 1 frame (1:14). On a phone the six steps show as one row (`.pipe`) built from the same data as the desktop cards. |
-| Hike highlight cards (section 03, above the maps) | Loops cut from the behind-the-robot timelapses, 640×360. Zermatt: `static/video/zermatt-behind.mp4` 505–580 s (last stretch of the railway, past the station, down the gravel road into the forest), played at 2× → `static/video/zermatt-descent.mp4` (38 s, 1.8 MB, `bitrate=380 key-int-max=30`). Seealpsee: `seealpsee-behind.mp4` 18–28 s → `seealpsee-highlight.mp4` (1 MB). Both cards always show; "See the route" scrolls to that hike's map. Both maps show one under the other (no tabs); each loads when it comes near the screen. The numbers are the ones from the paper (10.1 km, 1220 m descent, about 30% steepest; 2.38 km loop). |
+| Hike highlight cards (section 03 of the main page) | Loops cut from the behind-the-robot timelapses, 640×360. Zermatt: `static/video/zermatt-behind.mp4` 505–580 s (last stretch of the railway, past the station, down the gravel road into the forest), played at 2× → `static/video/zermatt-descent.mp4` (38 s, 1.8 MB, `bitrate=380 key-int-max=30`). Seealpsee: `seealpsee-behind.mp4` 18–28 s → `seealpsee-highlight.mp4` (1 MB). Both cards always show; "Explore the route in 3D" opens that hike on `expeditions.html`, where both maps show one under the other (no tabs) and each loads when it comes near the screen. The numbers are the ones from the paper (10.1 km, 1220 m descent, about 30% steepest; 2.38 km loop). |
 | Route explorer | Robot GNSS tracks (`zermatt/mission-2`, `seealpsee/mission-new`), elevation profile from swisstopo swissALTI3D. 3D map: MapLibre GL 5.6 with Esri World Imagery (default), swisstopo aerial/topo, AWS terrain tiles |
 | Zermatt flyover | `Zermatt_videos/output.mp4` (Google Earth) |
 | Photo pins | Zermatt: 8 pins that show the robot walking during the mission (1 geotagged team photo from `Zermatt_videos/Pictures`, 7 video frames). Photos of the robot standing or posed, or without the robot, are left out. |
@@ -67,3 +67,4 @@ Every file is under GitHub's 100 MB limit, and the site is about 210 MB.
 | Seealpsee pins | Fig. 3B panels (a)–(i), placed by fitting the figure's route line onto the GPS track (≈30 m), so positions are approximate. |
 
 Self-hosted video is limited to short clips. Long videos go on YouTube.
+| 3D-map teaser (section 03 of the main page) | `static/img/expeditions/{zermatt,seealpsee}-3d.jpg` (720×720): stills of the route explorer's own 3D map with the controls hidden, rendered by `review/teaser3d.py` (Playwright on system Chrome with the GPU, against `serve.py 8792`). Cameras: Zermatt center 7.738, 45.988, zoom 13.1, pitch 70, bearing −104 (route in front, Matterhorn behind); Seealpsee center 9.4035, 47.2683, zoom 15.2, pitch 64, bearing −116. Re-render them if the map style changes. |
