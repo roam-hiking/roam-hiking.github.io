@@ -18,7 +18,6 @@
 html, body { margin: 0; background: var(--ink); color: var(--snow); font: 15px/1.5 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
 body { overflow-x: hidden; }
 a { color: inherit; }
-.draft-bar { position: fixed; z-index: 60; top: 0; left: 0; right: 0; background: var(--amber); color: #241a00; text-align: center; font-size: 12.5px; font-weight: 600; padding: 4px 16px; }
 #gl { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; z-index: 0; }
 #track { position: relative; z-index: 1; pointer-events: none; }
 .shade { position: fixed; inset: 0; z-index: 2; pointer-events: none; background: linear-gradient(to bottom, rgba(11,17,23,.55), rgba(11,17,23,0) 18%, rgba(11,17,23,0) 62%, rgba(11,17,23,.7)); }   /* tall, empty: its scroll position drives the journey */
@@ -139,7 +138,6 @@ body.mapmode { overflow: hidden; } body.mapmode #gl { cursor: grab; } body.mapmo
 </style>
 </head>
 <body>
-<div class="draft-bar">Embargoed draft. Do not share until the paper is published.</div>
 <canvas id="gl" aria-label="3D view of the robot's hike"></canvas>
 <div class="shade"></div>
 <div class="bar" id="bar"></div>
@@ -206,7 +204,6 @@ body.mapmode { overflow: hidden; } body.mapmode #gl { cursor: grab; } body.mapmo
 <div id="track"></div>
 
 <script src="static/js/config.js"></script>
-<script>if (window.SITE && SITE.published) document.querySelector(".draft-bar")?.remove();</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>

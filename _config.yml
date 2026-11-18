@@ -1,20 +1,6 @@
-# GitHub Pages build. The 3D Expedition (expedition.html and its data) is not finished, so it stays out of the
-# published site for now (the files stay in the repo); so do the working folders. Remove entries to publish them.
+# GitHub Pages build: the working folders and notes stay out of the published site (the files stay in the repo).
 exclude:
-  - expedition.html
   - EXPEDITION.md
-  - static/js/expedition.js
-  - static/terrain
-  - static/models
-  - static/img/expeditions
-  - static/video/expedition-teaser.mp4
-  - static/video/expedition-teaser-poster.jpg
-  - static/video/zermatt-robotcam-cam.mp4
-  - static/video/zermatt-robotcam-risk.mp4
-  - static/video/seealpsee-robotcam-cam.mp4
-  - static/video/seealpsee-robotcam-risk.mp4
-  - static/data/zermatt-robotcam.json
-  - static/data/seealpsee-robotcam.json
   - review
   - tools
   - thumbs
