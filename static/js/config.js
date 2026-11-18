@@ -3,7 +3,7 @@
 //  Empty values keep the "soon" placeholders.
 // ============================================================
 window.SITE = {
-  youtube: { movie1: "", seealpsee: "", zermattOnboard: "", zermattBehind: "", seealpseeBehind: "", seealpseeOnboard: "" },   // YouTube video IDs, e.g. "dQw4w9WgXcQ"
+  youtube: { movie1: "xcqVpbgklD4", seealpsee: "wrbAq2HXE8E", zermattOnboard: "", zermattBehind: "", seealpseeBehind: "", seealpseeOnboard: "" },   // YouTube video IDs, e.g. "dQw4w9WgXcQ"
   links: { paper: "static/paper/roam-arxiv-draft.pdf", supplementary: "" },   // local arXiv build for now; swap for the arXiv URL once it is up
   published: false                                // true hides the embargo bar (also delete the noindex <meta> in <head>)
 };
