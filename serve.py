@@ -1,6 +1,6 @@
 """Local preview server with HTTP Range support, so videos can seek (python -m http.server cannot).
 
-    python3 serve.py [port]
+    python3 serve.py [port] [host]
 
 It also adds a review mode that the published site does not have: the page gets a "Comment"
 button, and comments are stored in review-comments.json next to this file.
@@ -118,5 +118,6 @@ class RangeHandler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8790
+    host = sys.argv[2] if len(sys.argv) > 2 else "127.0.0.1"   # e.g. this machine's Tailscale address, to check the page from your own devices
     root = os.path.dirname(os.path.abspath(__file__))
-    ThreadingHTTPServer(("127.0.0.1", port), partial(RangeHandler, directory=root)).serve_forever()
+    ThreadingHTTPServer((host, port), partial(RangeHandler, directory=root)).serve_forever()
