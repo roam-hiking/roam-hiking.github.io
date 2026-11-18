@@ -311,8 +311,8 @@
       if (show) m.load();
       const op = m.screen.material.uniforms.op; op.value = lerp(op.value, show ? (cur ? 1 : .85) : 0, .12); m.screen.visible = op.value > .02 && !!m.screen.material.uniforms.a.value;
       if (m.screen.visible) {
-        const dd = camera.position.distanceTo(X.pts[m.i]), sz = clamp(dd * (cur ? .16 : .1), 8, 260);
-        m.screen.scale.set(sz, sz, 1); m.screen.position.copy(X.pts[m.i]).add(V(0, (cur ? 70 : 60) + sz * .62, 0)); m.screen.quaternion.copy(camera.quaternion);
+        const dd = camera.position.distanceTo(X.pts[m.i]), sz = clamp(dd * (cur ? .12 : .1), 8, 260);
+        m.screen.scale.set(sz, sz, 1); m.screen.position.copy(X.pts[m.i]).add(V(0, (cur ? 34 : 52) + sz * .56, 0)); m.screen.quaternion.copy(camera.quaternion);
         const w = m.screen.material.uniforms.wipe; w.value = cur ? clamp((st.mf - .15) / .5, 0, 1) : Math.max(0, w.value - dt);
         if (!m.screen.material.uniforms.b.value) w.value = 0;
       }
