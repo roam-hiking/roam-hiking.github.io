@@ -19,17 +19,34 @@
   2717
  ],
  "source": "heights: AWS Terrain Tiles (terrarium); image: swisstopo SWISSIMAGE",
- "detail": {
-  "bbox": [
-   9.389649,
-   47.262341,
-   9.413485,
-   47.274882
-  ],
-  "zoom": 17,
-  "image": [
-   2221,
-   1723
-  ]
- }
+ "details": [
+  {
+   "file": "detail.jpg",
+   "bbox": [
+    9.389649,
+    47.262341,
+    9.401967,
+    47.274882
+   ],
+   "zoom": 18,
+   "image": [
+    2297,
+    3446
+   ]
+  },
+  {
+   "file": "detail1.jpg",
+   "bbox": [
+    9.401167,
+    47.262341,
+    9.413485,
+    47.274882
+   ],
+   "zoom": 18,
+   "image": [
+    2296,
+    3446
+   ]
+  }
+ ]
 }

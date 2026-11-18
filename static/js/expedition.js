@@ -39,8 +39,9 @@
 
   async function build(name) {
     const H = HIKES[name], o = OFFSET[name];
-    const [meta, route, vlm, him, map, tm, dmap] = await Promise.all([json(`static/terrain/${name}/meta.json`), json(`static/data/${name}-route.json`), json(`static/data/${name}-vlm.json`),
-      img(`static/terrain/${name}/height.png`), tex(`static/terrain/${name}/image.jpg`), json(`static/data/${name}-behind-timemap.json`).catch(() => null), tex(`static/terrain/${name}/detail.jpg`).catch(() => null)]);
+    const [meta, route, vlm, him, map, tm] = await Promise.all([json(`static/terrain/${name}/meta.json`), json(`static/data/${name}-route.json`), json(`static/data/${name}-vlm.json`),
+      img(`static/terrain/${name}/height.png`), tex(`static/terrain/${name}/image.jpg`), json(`static/data/${name}-behind-timemap.json`).catch(() => null)]);
+    const dmaps = await Promise.all((meta.details || []).slice(0, 2).map(d => tex(`static/terrain/${name}/${d.file}`).catch(() => null)));
     // heights from the terrarium-encoded grid
     const [gw, gh] = meta.grid, cv = document.createElement("canvas"); cv.width = gw; cv.height = gh;
     const cx = cv.getContext("2d"); cx.drawImage(him, 0, 0); const px = cx.getImageData(0, 0, gw, gh).data;
@@ -65,21 +66,27 @@
     g.setIndex(new THREE.BufferAttribute(idx, 1)); g.computeVertexNormals();
     map.encoding = THREE.sRGBEncoding; map.anisotropy = renderer.capabilities.getMaxAnisotropy(); map.minFilter = THREE.LinearMipmapLinearFilter;
     const mat = new THREE.MeshStandardMaterial({ map, roughness: 1, metalness: 0 });
-    // the sharp corridor image around the route, in the terrain's uv: x = west..east, box z/w = its top/bottom in north..south
-    const db = meta.detail && meta.detail.bbox, [dl, dtop] = db ? uv(db[3], db[0]) : [0, 0], [dr, dbot] = db ? uv(db[1], db[2]) : [0, 0];
-    if (dmap) { dmap.encoding = THREE.sRGBEncoding; dmap.anisotropy = map.anisotropy; }
+    // the sharp corridor images around the route (west and east halves), in the terrain's uv:
+    // x = west..east, box z/w = their top/bottom in north..south
+    const boxes = (meta.details || []).slice(0, 2).map(d => { const [l, t] = uv(d.bbox[3], d.bbox[0]), [r, b] = uv(d.bbox[1], d.bbox[2]); return new THREE.Vector4(l, r, t, b); });
+    while (boxes.length < 2) boxes.push(new THREE.Vector4(0, 0, 0, 0));
+    dmaps.forEach(t => { if (t) { t.encoding = THREE.sRGBEncoding; t.anisotropy = map.anisotropy; } });
     mat.onBeforeCompile = s => {
-      s.uniforms.dmap = { value: dmap }; s.uniforms.dbox = { value: new THREE.Vector4(dl, dr, dtop, dbot) }; s.uniforms.hasD = { value: dmap ? 1 : 0 };
-      s.fragmentShader = s.fragmentShader.replace("#include <map_pars_fragment>", "#include <map_pars_fragment>\nuniform sampler2D dmap; uniform vec4 dbox; uniform float hasD;")
+      s.uniforms.dm0 = { value: dmaps[0] || null }; s.uniforms.dm1 = { value: dmaps[1] || null }; s.uniforms.db0 = { value: boxes[0] }; s.uniforms.db1 = { value: boxes[1] };
+      s.uniforms.has = { value: new THREE.Vector2(dmaps[0] ? 1 : 0, dmaps[1] ? 1 : 0) };
+      s.fragmentShader = s.fragmentShader.replace("#include <map_pars_fragment>", "#include <map_pars_fragment>\nuniform sampler2D dm0, dm1; uniform vec4 db0, db1; uniform vec2 has;")
         .replace("#include <map_fragment>", `#include <map_fragment>
-        vec2 d2 = vec2((vUv.x - dbox.x) / (dbox.y - dbox.x), 1. - ((1. - vUv.y) - dbox.z) / (dbox.w - dbox.z));
-        float inD = hasD * smoothstep(0., .05, min(min(d2.x, 1. - d2.x), min(d2.y, 1. - d2.y)));
-        if (inD > 0.) diffuseColor.rgb = mix(diffuseColor.rgb, mapTexelToLinear(texture2D(dmap, d2)).rgb, inD);`);   // a touch more contrast and saturation, and an edge vignette into the fog colour
-      s.fragmentShader = s.fragmentShader.replace("#include <map_fragment>", `#include <map_fragment>
-        vec3 lum = vec3(dot(diffuseColor.rgb, vec3(.299,.587,.114))); diffuseColor.rgb = mix(lum, diffuseColor.rgb, 1.22); diffuseColor.rgb = (diffuseColor.rgb - .5) * 1.12 + .5; diffuseColor.rgb = max(diffuseColor.rgb, vec3(.035)) * .96 + .02;`)
+        vec2 a0 = vec2((vUv.x - db0.x) / (db0.y - db0.x), 1. - ((1. - vUv.y) - db0.z) / (db0.w - db0.z));
+        vec2 a1 = vec2((vUv.x - db1.x) / (db1.y - db1.x), 1. - ((1. - vUv.y) - db1.z) / (db1.w - db1.z));
+        float w0 = has.x * smoothstep(0., .04, min(min(a0.x, 1. - a0.x), min(a0.y, 1. - a0.y)));
+        float w1 = has.y * smoothstep(0., .04, min(min(a1.x, 1. - a1.x), min(a1.y, 1. - a1.y)));
+        if (w0 > 0.) diffuseColor.rgb = mix(diffuseColor.rgb, mapTexelToLinear(texture2D(dm0, a0)).rgb, w0);
+        if (w1 > 0.) diffuseColor.rgb = mix(diffuseColor.rgb, mapTexelToLinear(texture2D(dm1, a1)).rgb, w1);
+        vec3 lum = vec3(dot(diffuseColor.rgb, vec3(.299,.587,.114))); diffuseColor.rgb = mix(lum, diffuseColor.rgb, 1.22);
+        diffuseColor.rgb = (diffuseColor.rgb - .5) * 1.12 + .5; diffuseColor.rgb = max(diffuseColor.rgb, vec3(.035)) * .96 + .02;`)
         .replace("#include <fog_fragment>", `#include <fog_fragment>
         float e = min(min(vUv.x, 1. - vUv.x), min(vUv.y, 1. - vUv.y)); gl_FragColor.rgb = mix(fogColor, gl_FragColor.rgb, smoothstep(0., .07, e));`);
-    };
+    };   // detail images, then a touch more contrast and saturation, and an edge fade into the fog colour
     const terrain = new THREE.Mesh(g, mat); scene.add(terrain);
 
     // route: positions on the terrain, cumulative distance from the GPS track

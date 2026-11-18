@@ -53,15 +53,23 @@ def main(hike):
     hm = (lat1 - lat0) * 111320   # Web Mercator is conformal: the grid's aspect matches true metres over this small area
     meta = dict(hike=hike, bbox=c["bbox"], grid=[gw, gh], width_m=round(wm, 1), height_m=round(hm, 1), zmin=round(float(hg.min()), 1), zmax=round(float(hg.max()), 1),
                 image=list(img.size), source="heights: AWS Terrain Tiles (terrarium); image: swisstopo SWISSIMAGE")
-    # Sharp image of the corridor around the route (the camera comes close there): the finest zoom that fits 4096 px
+    # Sharp images of the corridor around the route (the camera comes close there): the finest zoom whose image fits
+    # 4096 px tall and two 4096 px images wide; split west/east when one is not enough.
     P = json.load(open(os.path.join(ROOT, f"static/data/{hike}-route.json")))["points"]
     db = (min(p[1] for p in P) - .006, min(p[0] for p in P) - .004, max(p[1] for p in P) + .006, max(p[0] for p in P) + .004)
-    z = max(z for z in range(14, 19) if (merc(db[2], db[1], z)[0] - merc(db[0], db[1], z)[0]) * 256 <= 4096 and (merc(db[0], db[1], z)[1] - merc(db[0], db[3], z)[1]) * 256 <= 4096)
-    det = mosaic("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg", z, db)
-    det.save(f"{out}/detail.jpg", quality=78, optimize=True, progressive=True)
-    meta["detail"] = dict(bbox=[round(x, 6) for x in db], zoom=z, image=list(det.size))
+    wpx = lambda z: (merc(db[2], db[1], z)[0] - merc(db[0], db[1], z)[0]) * 256
+    hpx = lambda z: (merc(db[0], db[1], z)[1] - merc(db[0], db[3], z)[1]) * 256
+    z = max(z for z in range(14, 19) if wpx(z) <= 2 * 4096 and hpx(z) <= 4096)
+    parts = 1 if wpx(z) <= 4096 else 2
+    meta["details"] = []
+    for q in range(parts):
+        x0 = db[0] + (db[2] - db[0]) * q / parts - (.0004 if q else 0); x1 = db[0] + (db[2] - db[0]) * (q + 1) / parts + (.0004 if q < parts - 1 else 0)
+        bb = (x0, db[1], x1, db[3]); det = mosaic("https://wmts.geo.admin.ch/1.0.0/ch.swisstopo.swissimage/default/current/3857/{z}/{x}/{y}.jpeg", z, bb)
+        fn = f"detail{q or ''}.jpg"; det.save(f"{out}/{fn}", quality=78, optimize=True, progressive=True)
+        meta["details"].append(dict(file=fn, bbox=[round(x, 6) for x in bb], zoom=z, image=list(det.size)))
+    meta.pop("detail", None)
     json.dump(meta, open(f"{out}/meta.json", "w"), indent=1)
-    print(hike, meta, os.path.getsize(f"{out}/image.jpg") // 1000, "kB image,", os.path.getsize(f"{out}/detail.jpg") // 1000, "kB detail")
+    print(hike, "details", [(d["file"], d["zoom"], d["image"]) for d in meta["details"]])
 
 if __name__ == "__main__":
     main(sys.argv[1])
