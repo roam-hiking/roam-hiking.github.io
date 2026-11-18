@@ -480,7 +480,7 @@ figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
   background: var(--night-3); border: 1px solid rgba(var(--fgrgb),.08); border-radius: var(--radius); overflow: hidden; transition: border-color .3s; }
 .xp-teaser:hover { border-color: rgba(var(--fgrgb),.28); }
 .xp-demo { position: relative; background: #000; align-self: stretch; display: grid; align-items: center; }
-.xp-demo video { width: 100%; aspect-ratio: 16 / 9; display: block; object-fit: cover; }
+.xp-demo video { width: 100%; aspect-ratio: 16 / 10; display: block; object-fit: cover; }
 .xp-rec { position: absolute; left: 10px; bottom: 10px; font: 600 11.5px Inter, sans-serif; color: #fff; background: rgba(0,0,0,.55); backdrop-filter: blur(6px); padding: 4px 10px; border-radius: 999px; }
 .xp-copy { padding: 24px 28px; }
 .xp-tag { font: 500 12px "JetBrains Mono", monospace; color: var(--glacier); letter-spacing: .04em; }

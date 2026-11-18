@@ -83,9 +83,19 @@ async function initExplorer(el) {
   // snap it first). Far jumps rise and come back down, like a short flight, so it reads as moving, not cutting.
   let tw = 0;
   const busy = () => tw !== 0 || map.isMoving();
+  // Keep the camera out of the mountainside: in steep valleys a close, tilted view can put it inside the terrain
+  // (the whole map then smears). Tilt down, then back off, until it is 80 m above the ground under it.
+  const clearCam = () => {
+    if (!map.getTerrain() || !map.transform.getCameraLngLat) return;
+    for (let k = 0; k < 14; k++) {
+      const g = map.queryTerrainElevation(map.transform.getCameraLngLat());
+      if (g == null || map.transform.getCameraAltitude() > g + 80) return;
+      const p = map.getPitch(); map.jumpTo(p > 24 ? { pitch: p - 6 } : { zoom: map.getZoom() - .3 });
+    }
+  };
   const cam = (o, duration = 0) => {
     cancelAnimationFrame(tw); tw = 0;
-    if (!duration || matchMedia("(prefers-reduced-motion: reduce)").matches) { map.jumpTo(o); return; }
+    if (!duration || matchMedia("(prefers-reduced-motion: reduce)").matches) { map.jumpTo(o); clearCam(); return; }
     const c0 = map.getCenter(), z0 = map.getZoom(), b0 = map.getBearing(), p0 = map.getPitch(), e0 = map.getCenterElevation ? map.getCenterElevation() : 0;
     const c1 = o.center ? maplibregl.LngLat.convert(o.center) : c0, z1 = o.zoom ?? z0, p1 = o.pitch ?? p0, e1 = o.elevation ?? e0;
     const db = (((o.bearing ?? b0) - b0) % 360 + 540) % 360 - 180;
@@ -94,6 +104,7 @@ async function initExplorer(el) {
     const step = now => { const t = Math.min(1, (now - t0) / T), k = ease(t);
       map.jumpTo({ center: [c0.lng + (c1.lng - c0.lng) * k, c0.lat + (c1.lat - c0.lat) * k], zoom: z0 + (z1 - z0) * k - hop * Math.sin(Math.PI * k),
                    bearing: b0 + db * k, pitch: p0 + (p1 - p0) * k, elevation: e0 + (e1 - e0) * k });
+      clearCam();
       tw = t < 1 ? requestAnimationFrame(step) : 0; };
     tw = requestAnimationFrame(step);
   };
@@ -330,7 +341,7 @@ async function initExplorer(el) {
         if (follow && !busy()) {
           const c = map.getCenter(), a = .12;   // ease toward the robot each frame
           let d = travelBearing(k) - camBear; d = ((d + 540) % 360) - 180; camBear += d * .04;
-          map.jumpTo({ center: [c.lng + (q[1] - c.lng) * a, c.lat + (q[0] - c.lat) * a], bearing: camBear, elevation: map.getTerrain() ? q[2] * EXAG : 0 });
+          map.jumpTo({ center: [c.lng + (q[1] - c.lng) * a, c.lat + (q[0] - c.lat) * a], bearing: camBear, elevation: map.getTerrain() ? q[2] * EXAG : 0 }); clearCam();
         }
       }
       glide = requestAnimationFrame(step);
