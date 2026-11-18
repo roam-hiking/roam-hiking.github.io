@@ -195,7 +195,7 @@
   // ---------- The journey: scroll units -> what happens ----------
   // Each hike: travel units (metres / stride) plus a dwell at every featured moment, where the camera swings in close.
   // The other moments are pass-bys: their card and screen come up while the robot walks past (PASS m either side).
-  const DWELL = 1.6, INTRO = 2.2, GAP = 2.4, OUTRO = 2.2, PASS = 110;
+  const DWELL = 1.6, INTRO = 3.4, GAP = 2.4, OUTRO = 2.2, PASS = 110;
   function plan(H) { const segs = []; let s0 = 0, u = 0;
     H.moments.filter(m => m.f !== 0).forEach(m => { const d = Math.max(0, m.s - s0); segs.push({ u0: u, u1: u + d / H.stride, s0, s1: m.s }); u += d / H.stride; segs.push({ u0: u, u1: u + DWELL, s0: m.s, s1: m.s, m }); u += DWELL; s0 = m.s; });
     segs.push({ u0: u, u1: u + (H.total - s0) / H.stride, s0, s1: H.total }); u += (H.total - s0) / H.stride; H.segs = segs; H.units = u; }
@@ -221,11 +221,25 @@
   }
 
   // ---------- Camera ----------
+  const introK = f => smooth(clamp((f - .3) / .7, 0, 1));   // intro: hold the whole-route view for the first 30%, then descend
   const camPos = V(0, 9000, 9000), camLook = V(), tmpP = V(), tmpL = V();
   function clearGround(H, p, min = 40) { const g = H.ground(p.x, p.z); if (p.y < g + min) p.y = g + min; return p; }
   function shot(st, t) {
     const H = st.H;
-    if (st.phase === "intro" || st.phase === "outro") {
+    if (st.phase === "intro") {
+      // open on the whole Zermatt route over the whole map (lit red, slowly turning), then fly down to the start while the
+      // red line draws back to it, so the walk starts where the line ends
+      if (!Z.frame) { const b = new THREE.Box3(); Z.pts.forEach(q => b.expandByPoint(q)); Z.frame = { c: b.getCenter(V()), r: b.getSize(V()).length() * .5 }; }
+      const { c, r } = Z.frame, k = introK(st.f), s0 = Z.at(0).p, a = Math.atan2(1.25, -.55) + t * .012, an = -1.95 + .35;
+      const ph = clamp(1.6 / camera.aspect, 1, 1.85);   // a portrait screen is narrower: back off until the route fits across
+      const far = V(c.x + Math.cos(a) * r * 2 * ph, c.y + r * 1.6 * ph, c.z + Math.sin(a) * r * 2 * ph), near = V(s0.x + Math.cos(an) * 900, s0.y + 500, s0.z + Math.sin(an) * 900);
+      // the title sits on the left: look a little left of the route's centre, so the route fills the right of the screen
+      const fx = c.x - far.x, fz = c.z - far.z, fl = Math.hypot(fx, fz) || 1, lc = c.clone().add(V(fz / fl, 0, -fx / fl).multiplyScalar(r * (camera.aspect > 1 ? .22 : 0) * (1 - k)));
+      far.add(lc.clone().sub(c));
+      tmpP.copy(far).lerp(near, k); tmpP.y += Math.sin(Math.PI * k) * r * .15; tmpL.copy(lc).lerp(s0, k);
+      return;
+    }
+    if (st.phase === "outro") {
       // slow orbit high above the whole area, looking at the route; the outro pulls back over Seealpsee
       const c = H === Z ? Z.at(Z.total * .35).p : S.at(S.total * .5).p;
       const f = st.phase === "intro" ? 1 - smooth(clamp(st.f, 0, 1)) : smooth(st.f);
@@ -378,13 +392,15 @@
     const dist = camera.position.distanceTo(robot.position), sc = clamp(dist * .034, 1, 40); robot.scale.setScalar(sc); halo.scale.setScalar(1.6);
     shadowMat.uniforms.k.value = .62 * clamp((4 - sc) / 2, 0, 1); footMat.uniforms.k.value = .55 * clamp((3 - sc) / 1.5, 0, 1); shadow.visible = sc < 4; feet.forEach(f => f.f.visible = sc < 3);   // only close up
     // route glow
-    [Z, S].forEach(X => { const pr = X === H ? (st.phase === "intro" ? -1 : st.s) : (X === Z && H === S ? X.total + 1 : -1);
-      X.routeMat.uniforms.prog.value = pr; X.routeMat.uniforms.time.value = t; X.glowMat.uniforms.prog.value = pr; });
+    [Z, S].forEach(X => { const pr = X === H ? (st.phase === "intro" ? X.total * (1 - introK(st.f)) : st.s) : (X === Z && H === S ? X.total + 1 : -1);
+      X.routeMat.uniforms.prog.value = pr; X.routeMat.uniforms.time.value = t; X.glowMat.uniforms.prog.value = pr;
+      X.routeMat.uniforms.widen.value = X === Z && st.phase === "intro" ? 1 - introK(st.f) : 0; });   // the whole route stays readable from far away
     // moments: beams brighten as the robot nears; the screen rises and wipes to the risk view while it is the current one
     [Z, S].forEach(X => X.moments.forEach(m => {
       const near = X === H ? clamp(1 - Math.abs(m.s - st.s) / 500, 0, 1) : 0, cur = st.m === m || st.p === m;
-      m.beam.material.uniforms.on.value = lerp(m.beam.material.uniforms.on.value, cur ? 1 : near * .5, .1); m.beam.material.uniforms.time.value = t;
-      m.beam.scale.y = lerp(m.beam.scale.y, cur ? 90 : 60 + near * 40, .1);
+      const land = X === Z && st.phase === "intro" ? 1 - introK(st.f) : 0;   // opening view: every moment a landmark, as in Map mode
+      m.beam.material.uniforms.on.value = lerp(m.beam.material.uniforms.on.value, Math.max(cur ? 1 : near * .5, land * .55), .1); m.beam.material.uniforms.time.value = t;
+      m.beam.scale.y = lerp(m.beam.scale.y, cur ? 90 : Math.max(60 + near * 40, land * 90), .1);
       const nxt = X === H ? X.moments.find(q => q.s > st.s + 1 && q.f !== 0) : null;
       const show = X === H && st.phase === "hike" && (cur || (m === nxt && m.s - st.s < 1200));
       if (show) m.load();
