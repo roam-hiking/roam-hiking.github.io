@@ -92,14 +92,19 @@ def cand(hike):
         m["id"] = c
         if os.path.exists(f"{out}/c{c:03d}-risk.jpg") and "--images" not in sys.argv: continue
         with h5py.File(os.path.join(BAGS, m["src"]), "r") as h:
-            ct = h["hdr_camera_front/image_raw/compressed/msg_t"][:]; j = int(np.clip(np.searchsorted(ct, m["t"]), 0, len(ct) - 1))
-            cam = Image.open(io.BytesIO(base64.b64decode(h["hdr_camera_front/image_raw/compressed/image"][j]))).convert("RGB").resize((W, H), Image.LANCZOS)
-            st = h["hdr_camera_front/lmm_nav_sem/msg_t"][:]; j = int(np.clip(np.searchsorted(st, m["t"]), 0, len(st) - 1))
+            # Pair by HEADER stamps, never by arrival (msg_t): the risk layer arrives ~0.4 s after the camera frame it was
+            # computed from, and its header stamp is that frame's stamp. Take the first risk layer after the answer,
+            # then the camera frame with exactly that stamp; no exact match -> no moment.
+            st = h["hdr_camera_front/lmm_nav_sem/time"][:]; j = int(np.clip(np.searchsorted(st, m["t"]), 0, len(st) - 1))
+            ct = h["hdr_camera_front/image_raw/compressed/time"][:]; ci = int(np.argmin(np.abs(ct - st[j])))
+            if abs(ct[ci] - st[j]) > 1e-3: print(f"  c{c:03d}: no camera frame with the risk layer's stamp, skipped"); m["bad"] = True; continue
+            cam = Image.open(io.BytesIO(base64.b64decode(h["hdr_camera_front/image_raw/compressed/image"][ci]))).convert("RGB").resize((W, H), Image.LANCZOS)
             risk = h["hdr_camera_front/lmm_nav_sem/image"][j][..., 0]
         if risk.shape != (H, W): risk = np.asarray(Image.fromarray(risk.astype(np.float32)).resize((W, H)))
         over = (np.asarray(cam, float) * .4 + coolwarm(risk) * .6).clip(0, 255).astype(np.uint8)
         cam.save(f"{out}/c{c:03d}-cam.jpg", quality=76, optimize=True, progressive=True)
         Image.fromarray(over).save(f"{out}/c{c:03d}-risk.jpg", quality=76, optimize=True, progressive=True)
+    kept = [m for m in kept if not m.get("bad")]
     json.dump(kept, open(f"{out}/cand.json", "w"), indent=0)
     # contact sheets: camera | risk per candidate, 4 per row, 24 per sheet
     from PIL import ImageDraw

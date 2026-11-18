@@ -1,5 +1,34 @@
 {
-  "_note": "Candidate ids from review/vlmcand/<hike>/sheet-*.jpg (tools/build_vlm_moments.py cand). Picked by eye: the risk image must look right, the scene should say something (people, animals, lake, buildings, the Matterhorn). Answers near an operator command are never candidates. Zermatt km 0-0.6 is out: the segmentation there barely marks anything.",
-  "zermatt": [0, 21, 26, 29, 33, 39, 50, 51, 58, 63, 70, 74, 89, 97, 102, 104, 106],
-  "seealpsee": [0, 12, 26, 31, 36, 50, 52, 55, 62, 77, 82, 87, 97, 108]
+  "_note": "Candidate ids from review/vlmcand/<hike>/sheet-*.jpg (tools/build_vlm_moments.py cand). Picked by eye: the risk image must look right, the scene should say something (people, animals, lake, buildings, the Matterhorn). Answers near an operator command are never candidates. Zermatt km 0-0.6 is out: the segmentation there barely marks anything. Camera and risk are paired by header stamp (the risk layer's stamp is its camera frame's stamp), never by arrival time.",
+  "zermatt": [
+    0,
+    21,
+    29,
+    33,
+    39,
+    50,
+    51,
+    58,
+    63,
+    70,
+    97,
+    102,
+    104,
+    106
+  ],
+  "seealpsee": [
+    0,
+    12,
+    26,
+    36,
+    50,
+    52,
+    55,
+    62,
+    77,
+    82,
+    87,
+    97,
+    108
+  ]
 }
