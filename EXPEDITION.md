@@ -47,23 +47,27 @@ Sources on the SSD (`/run/media/takahiro/takahiroSSD/nature_hiking/rosbags/`): f
 
 ## State right now
 
-- Seealpsee: whole loop; 9 moments; robot camera rebuilt without manual-driving footage.
-- **Zermatt: moments and robot camera only up to km 4.1.** The rest exists only as raw bags. Coverage by recording:
-  14 Aug 12:51 km 0-0.59 (h5), 13:15 ~km 0.6-1.0 (bag), 13:47 km 0.97-2.31 (h5, `map_o3d/`), 15 Aug 09:47
-  km 2.35-3.16 (h5), 10:06 km 3.20-4.09 (h5), 11:06 ~km 4.1-5.6 (bag), 11:59 km 5.59-5.95 (bag, **done**),
-  16 Aug 08:59 / 09:42 / 16:22 / 16:50 (bags, presumably km 6-10.1).
-- Extraction runs as the systemd user service **`roam-bags`** (`review/run_bags.sh`, one bag at a time, ~40 min
-  each, writes `review/bagcache/<bag>.h5` + `.done`; re-run skips finished bags; a reboot at 02:05 killed the first
-  attempt). Check: `systemctl --user status roam-bags`, `journalctl --user -u roam-bags`, `ls review/bagcache`.
-- When the bags are in: `build_vlm_moments.py cand zermatt` -> review sheets -> add second-half picks to
-  `tools/vlm_picks.json` -> `publish zermatt`; `build_robotcam.py zermatt` + `encode_robotcam.sh zermatt`; check
-  alignment on people; record a preview; re-cut the teaser.
+- Seealpsee: whole loop; 9 moments (all featured); robot camera rebuilt without manual-driving footage.
+- Zermatt (2026-11-18): **whole route, km 0-10.45.** All seven raw bags are extracted to `review/bagcache/`
+  (`review/run_bags.sh`; the SSD must sit on a USB 3 port: on USB 2 it reads 40 MB/s, ~40 min per bag, on USB 3
+  ~500 MB/s, ~3 min). 35 moments, 16 of them **featured** (full stop, orbiting camera); the other 19 are
+  **pass-bys** (card + floating screen while the robot walks past, camera leans in). Robot camera covers the whole
+  route except manual-driving stretches (biggest hole km 5.97-7.0).
+- Featured vs pass-by: `tools/vlm_picks.json` -> `featured.<hike>` (answer timestamps). A hike without a list has
+  every pick featured. `publish` writes `f: 1/0` per moment. Candidates always keep published picks (the 30 m
+  thinning used to drop one whenever a recording was added).
+- Still to do: record a Play preview and re-cut the teaser with the new second half.
 
 ## Known weaknesses / ideas
 
-- Zermatt ground still softer than Seealpsee up close (corridor imagery z17 ~0.8 m/px).
+- Zermatt ground still softer than Seealpsee up close (corridor imagery z17 ~0.8 m/px); idea: stream z18 tiles in a
+  patch around the robot.
+- Fixed 2026-11-18: stops framed the robot at the very bottom of the screen (aim point 26 m up) and sometimes faced a
+  slope a few metres away; the camera now orbits on the uphill side and aims 40% of the way from robot to screen.
+  The walked-route glow speckled near the camera (now fades out within ~400 m) and the route tube hid the robot's
+  body close up (now fades for a few metres around the robot). The robot has a soft contact shadow.
 - Transitions between hikes are a white haze fade; could be a real fly-over.
-- The robot is a scaled-up GLB with a simple trot; no shadows on the terrain.
+- The robot is a scaled-up GLB with a simple trot (contact shadow only close up).
 - Phone layout works but is cramped; weaker GPUs untested (60 fps on an RTX 3090, also with CPU 4x slower).
 - The teaser clip shows the embargo bar: re-cut after publication.
 

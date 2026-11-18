@@ -16,7 +16,7 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 # Zermatt segments that exist only as raw bags, extracted by tools/bag_to_h5.py (used once present)
 BAGCACHE = [p for p in (os.path.abspath(os.path.join(os.path.dirname(__file__), "../review/bagcache", f"{b}.h5")) for b in
             ("2024-08-14-13-15-40", "2024-08-15-11-06-44", "2024-08-15-11-59-14", "2024-08-16-08-59-51", "2024-08-16-09-42-21",
-             "2024-08-16-16-22-45", "2024-08-16-16-50-22")) if os.path.exists(p)]
+             "2024-08-16-16-22-45", "2024-08-16-16-50-22")) if os.path.exists(p + ".done")]   # only finished extracts
 BAGS = "/run/media/takahiro/takahiroSSD/nature_hiking/rosbags"
 FILES = {
     "zermatt": ["zermatt/2024-08-14-12-51-55-merged.h5", "zermatt/map_o3d/2024-08-14-13-47-27-merged.h5",

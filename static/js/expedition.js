@@ -111,12 +111,13 @@
           float dash = .55 + .45 * smoothstep(.35, .65, fract(m / 26. - time * .6));
           vec3 col = mix(walked, vec3(1.) * dash * 1.05, ahead);
           float edge = 1. - pow(abs(vU.y - .5) * 2., 6.);
-          gl_FragColor = vec4(col, mix(1., .82, ahead) * (.6 + .4 * edge)); }` });
+          float gap = prog > 0. ? smoothstep(3., 12., abs(vS - prog)) : 1.;   // the robot walks out of the line, not inside it
+          gl_FragColor = vec4(col, mix(1., .82, ahead) * (.6 + .4 * edge) * gap); }` });
     const rt = new THREE.Mesh(tube, H.routeMat); rt.renderOrder = 2; scene.add(rt);
     // soft glow under the walked part
     H.glowMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: { prog: { value: 0 } }, vertexShader: "attribute float sd; varying vec2 vU; varying float vS; void main(){ vU = uv; vS = sd; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
-      fragmentShader: "uniform float prog; varying vec2 vU; varying float vS; void main(){ float a = (1. - step(prog, vS)) * .22 * (1. - abs(vU.y - .5) * 2.); gl_FragColor = vec4(1., .3, .2, a); }" });
+      uniforms: { prog: { value: 0 } }, vertexShader: "attribute float sd; varying vec2 vU; varying float vS; varying float vD; void main(){ vU = uv; vS = sd; vec4 w = modelMatrix * vec4(position, 1.); vD = distance(cameraPosition, w.xyz); gl_Position = projectionMatrix * viewMatrix * w; }",
+      fragmentShader: "uniform float prog; varying vec2 vU; varying float vS; varying float vD; void main(){ float a = (1. - step(prog, vS)) * .22 * (1. - abs(vU.y - .5) * 2.) * smoothstep(180., 420., vD); gl_FragColor = vec4(1., .3, .2, a); }" });
     const glow = new THREE.Mesh(stampS(new THREE.TubeGeometry(curve, Math.min(3000, N * 2), 6, 8, false), Math.min(3000, N * 2), 8), H.glowMat); glow.renderOrder = 1; scene.add(glow);
     H.curve = curve;
     H.at = s => { // position and heading at s metres along the route
@@ -175,6 +176,16 @@
     vertexShader: "varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
     fragmentShader: "varying vec2 vU; void main(){ float r = length(vU - .5) * 2.; gl_FragColor = vec4(1., .3, .22, smoothstep(1., .2, r) * .55); }" }));
   halo.rotation.x = -Math.PI / 2; robot.add(halo);
+  // contact shadow: a soft dark ellipse under the body (and a smaller dark spot under each foot), so the robot stands on the ground
+  const shadowMat = new THREE.ShaderMaterial({ transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4,
+    vertexShader: "varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
+    fragmentShader: "uniform float k; varying vec2 vU; void main(){ float r = length(vU - .5) * 2.; gl_FragColor = vec4(0., .01, .02, (1. - smoothstep(0., 1., r)) * k); }",
+    uniforms: { k: { value: .62 } } });
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), shadowMat); shadow.rotation.x = -Math.PI / 2; shadow.scale.set(1.15, .75, 1); shadow.position.y = .03; shadow.renderOrder = 1; robot.add(shadow);
+  const footMat = shadowMat.clone(); footMat.uniforms.k.value = .55;
+  const feet = LEG4.map(l => { const f = new THREE.Mesh(new THREE.PlaneGeometry(.16, .16), footMat); f.rotation.x = -Math.PI / 2; f.renderOrder = 1; robot.add(f); return { l, f, node: gltf.getObjectByName(`J_${l}_shank_fixed_${l}_FOOT`) }; });
+  const fw = V();
+  const footShadows = () => feet.forEach(({ f, node }) => { if (!node) return; node.getWorldPosition(fw); robot.worldToLocal(fw); f.position.set(fw.x, .035, fw.z); });
   scene.add(robot);
 
   const Z = await build("zermatt");
@@ -182,10 +193,11 @@
   $("#load").classList.add("done");
 
   // ---------- The journey: scroll units -> what happens ----------
-  // Each hike: travel units (metres / stride) plus a dwell at every logged moment, where the camera swings in close.
-  const DWELL = 1.6, INTRO = 2.2, GAP = 2.4, OUTRO = 2.2;
+  // Each hike: travel units (metres / stride) plus a dwell at every featured moment, where the camera swings in close.
+  // The other moments are pass-bys: their card and screen come up while the robot walks past (PASS m either side).
+  const DWELL = 1.6, INTRO = 2.2, GAP = 2.4, OUTRO = 2.2, PASS = 110;
   function plan(H) { const segs = []; let s0 = 0, u = 0;
-    H.moments.forEach(m => { const d = Math.max(0, m.s - s0); segs.push({ u0: u, u1: u + d / H.stride, s0, s1: m.s }); u += d / H.stride; segs.push({ u0: u, u1: u + DWELL, s0: m.s, s1: m.s, m }); u += DWELL; s0 = m.s; });
+    H.moments.filter(m => m.f !== 0).forEach(m => { const d = Math.max(0, m.s - s0); segs.push({ u0: u, u1: u + d / H.stride, s0, s1: m.s }); u += d / H.stride; segs.push({ u0: u, u1: u + DWELL, s0: m.s, s1: m.s, m }); u += DWELL; s0 = m.s; });
     segs.push({ u0: u, u1: u + (H.total - s0) / H.stride, s0, s1: H.total }); u += (H.total - s0) / H.stride; H.segs = segs; H.units = u; }
   plan(Z); plan(S);
   const U = { z0: INTRO, z1: INTRO + Z.units, s0: INTRO + Z.units + GAP }; U.s1 = U.s0 + S.units; U.end = U.s1 + OUTRO;
@@ -202,8 +214,10 @@
   function walk(H, u) {
     const g = H.segs.find(x => u < x.u1) || H.segs[H.segs.length - 1], f = clamp((u - g.u0) / (g.u1 - g.u0 || 1), 0, 1);
     if (g.m) return { s: g.s0, m: g.m, mf: f };
-    // ease into and out of each moment so the walk slows down as it arrives
-    return { s: lerp(g.s0, g.s1, f < .5 ? 2 * f * f : 1 - (-2 * f + 2) ** 2 / 2), near: null };
+    // ease into and out of each featured moment so the walk slows down as it arrives
+    const s = lerp(g.s0, g.s1, f < .5 ? 2 * f * f : 1 - (-2 * f + 2) ** 2 / 2);
+    const p = H.moments.find(q => q.f === 0 && Math.abs(q.s - s) < PASS);   // walking past one: pf 0 -> 1 across it
+    return p ? { s, p, pf: (s - p.s + PASS) / (2 * PASS) } : { s };
   }
 
   // ---------- Camera ----------
@@ -226,15 +240,24 @@
       tmpP.set(P0.x - d.x * lerp(220, 600, k), P0.y + lerp(140, 2600, k), P0.z - d.z * lerp(220, 600, k)); tmpL.copy(P0).add(V(0, lerp(0, -400, k), 0)); return; }
     // chase: behind and above the robot, looking a little ahead; at a moment, swing round to the side and come in close
     const p = H.at(st.s).p, d = H.dir(st.s), side = V(-d.z, 0, d.x);
-    const back = 260, up = 150;
+    const pk = st.p ? Math.sin(Math.PI * clamp(st.pf, 0, 1)) ** 2 : 0;   // walking past a moment: lean in a little
+    const back = 260 - pk * 90, up = 150 - pk * 55;
     tmpP.copy(p).addScaledVector(d, -back).addScaledVector(side, 60).add(V(0, up, 0));
     tmpL.copy(p).addScaledVector(d, 120);
     if (st.m) {
-      const k = Math.sin(Math.PI * clamp(st.mf, 0, 1)) ** .7, swing = (H.moments.indexOf(st.m) % 2 ? 1 : -1);
+      const m = st.m, k = Math.sin(Math.PI * clamp(st.mf, 0, 1)) ** .7;
+      // orbit on the uphill side, so the camera looks out over the valley instead of into a slope a few metres away
+      if (m.swing === undefined) { const g = sd => H.ground(p.x + side.x * sd, p.z + side.z * sd); m.swing = g(70) + g(40) >= g(-70) + g(-40) ? 1 : -1; }
+      const swing = m.swing;
       // orbit the robot through the stop: from behind its shoulder round to its front
       const ang = swing * lerp(.9, 2.1, smooth(clamp(st.mf, 0, 1)));
       const close = p.clone().addScaledVector(d, -Math.cos(ang) * 82).addScaledVector(side, Math.sin(ang) * 82).add(V(0, 36, 0));
-      tmpP.lerp(close, k); tmpL.lerp(p.clone().add(V(0, 26, 0)).addScaledVector(side, -swing * 10), k);
+      const lift = Math.max(0, H.ground(close.x, close.z) + 30 - close.y); close.y += lift;
+      // aim between the robot and its floating screen (about 40 m up), 40% of the way up: robot in the lower third, screen above,
+      // also when the slope lifts the camera
+      const h = Math.hypot(close.x - p.x, close.z - p.z), ar = Math.atan2(p.y - close.y, h), as = Math.atan2(p.y + 40 - close.y, h);
+      const aimY = close.y + h * Math.tan(ar + .4 * (as - ar)) - p.y;
+      tmpP.lerp(close, k); tmpL.lerp(p.clone().add(V(0, aimY, 0)).addScaledVector(side, -swing * 10), k);
     }
     clearGround(H, tmpP, 45);
   }
@@ -276,7 +299,7 @@
     psvg.innerHTML = `<defs><clipPath id="pc"><rect id="pc-r" x="0" y="0" width="0" height="${h}"/></clipPath></defs>
       <path d="${d}L${w},${h}L0,${h}Z" fill="rgba(255,255,255,.08)"/><path d="${d}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
       <path d="${d}" fill="none" stroke="#ff6b5f" stroke-width="2.5" clip-path="url(#pc)"/>
-      ${H.moments.map(m => `<circle cx="${X(m.s)}" cy="${Y(zs[m.i])}" r="3" fill="#7fd1c7" stroke="#0b1117" stroke-width="1"/>`).join("")}
+      ${H.moments.map(m => `<circle cx="${X(m.s)}" cy="${Y(zs[m.i])}" r="${m.f === 0 ? 2 : 3.2}" fill="#7fd1c7" stroke="#0b1117" stroke-width="1"/>`).join("")}
       <circle id="pdot" r="5" fill="#e3342c" stroke="#fff" stroke-width="2"/>`;
     psvg.onclick = e => { const r = psvg.getBoundingClientRect(), s = (e.clientX - r.left) / r.width * H.total; jumpTo(H, s); };
   }
@@ -336,7 +359,7 @@
       document.querySelectorAll("[data-go]").forEach(b => b.classList.toggle("on", (b.dataset.go === "zermatt") === (mapH === Z)));
       renderer.render(scene, camera); requestAnimationFrame(frame); return;
     }
-    if (playing) { const st0 = stateAt(scrollY / VH); const v = (st0.m ? .55 : st0.phase === "hike" ? 1.05 : .7) * (st0.m ? Math.sqrt(speed) : speed); scrollTo(0, scrollY + v * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
+    if (playing) { const st0 = stateAt(scrollY / VH); const v = (st0.m ? .55 : st0.p ? .6 : st0.phase === "hike" ? 1.05 : .7) * (st0.m ? Math.sqrt(speed) : speed); scrollTo(0, scrollY + v * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
     const target = scrollY / VH; uNow += (target - uNow) * (REDUCED ? 1 : 1 - Math.exp(-dt * 5));   // smoothed, so wheel steps glide
     const st = stateAt(uNow), H = st.H;
     // robot on the route
@@ -344,7 +367,7 @@
     robot.position.copy(here.p).add(V(0, -3.5, 0)); robot.rotation.y = Math.atan2(-d.z, d.x);
     if (prevH === H) phase += Math.abs(st.s - prevS) * 2.4; prevS = st.s; prevH = H;
     if (st.m) phase += dt * 1.2;   // marking time at a moment
-    trot(phase);
+    trot(phase); footShadows();
     // camera
     shot(st, t); const k = REDUCED ? 1 : 1 - Math.exp(-dt * 3.2);
     camPos.lerp(tmpP, k); camLook.lerp(tmpL, k);
@@ -353,27 +376,28 @@
     sky.position.copy(camera.position);
     // the robot stays readable from far away, real size close up
     const dist = camera.position.distanceTo(robot.position), sc = clamp(dist * .034, 1, 40); robot.scale.setScalar(sc); halo.scale.setScalar(1.6);
+    shadowMat.uniforms.k.value = .62 * clamp((4 - sc) / 2, 0, 1); footMat.uniforms.k.value = .55 * clamp((3 - sc) / 1.5, 0, 1); shadow.visible = sc < 4; feet.forEach(f => f.f.visible = sc < 3);   // only close up
     // route glow
     [Z, S].forEach(X => { const pr = X === H ? (st.phase === "intro" ? -1 : st.s) : (X === Z && H === S ? X.total + 1 : -1);
       X.routeMat.uniforms.prog.value = pr; X.routeMat.uniforms.time.value = t; X.glowMat.uniforms.prog.value = pr; });
     // moments: beams brighten as the robot nears; the screen rises and wipes to the risk view while it is the current one
     [Z, S].forEach(X => X.moments.forEach(m => {
-      const near = X === H ? clamp(1 - Math.abs(m.s - st.s) / 500, 0, 1) : 0, cur = st.m === m;
+      const near = X === H ? clamp(1 - Math.abs(m.s - st.s) / 500, 0, 1) : 0, cur = st.m === m || st.p === m;
       m.beam.material.uniforms.on.value = lerp(m.beam.material.uniforms.on.value, cur ? 1 : near * .5, .1); m.beam.material.uniforms.time.value = t;
       m.beam.scale.y = lerp(m.beam.scale.y, cur ? 90 : 60 + near * 40, .1);
-      const nxt = X === H ? X.moments.find(q => q.s > st.s + 1) : null;
+      const nxt = X === H ? X.moments.find(q => q.s > st.s + 1 && q.f !== 0) : null;
       const show = X === H && st.phase === "hike" && (cur || (m === nxt && m.s - st.s < 1200));
       if (show) m.load();
       const op = m.screen.material.uniforms.op; op.value = lerp(op.value, show ? (cur ? 1 : .85) : 0, .12); m.screen.visible = op.value > .02 && !!m.screen.material.uniforms.a.value;
       if (m.screen.visible) {
         const dd = camera.position.distanceTo(X.pts[m.i]), sz = clamp(dd * (cur ? .12 : .1), 8, 260);
         m.screen.scale.set(sz, sz, 1); m.screen.position.copy(X.pts[m.i]).add(V(0, (cur ? 34 : 52) + sz * .56, 0)); m.screen.quaternion.copy(camera.quaternion);
-        const w = m.screen.material.uniforms.wipe; w.value = cur ? clamp((st.mf - .15) / .5, 0, 1) : Math.max(0, w.value - dt);
+        const w = m.screen.material.uniforms.wipe; w.value = cur ? clamp(((st.m ? st.mf : st.pf) - .15) / .5, 0, 1) : Math.max(0, w.value - dt);
         if (!m.screen.material.uniforms.b.value) w.value = 0;
       }
     }));
     // HUD
-    showMoment(H, st.phase === "hike" ? st.m || null : null);
+    showMoment(H, st.phase === "hike" ? st.m || st.p || null : null);
     if (shown) pics.style.setProperty("--wipe", (100 - clamp((now - wipeT - 500) / 1400, 0, 1) * 50) + "%");
     $("#t-intro").classList.toggle("off", !(st.phase === "intro" && st.f < .75));
     $("#t-zermatt").classList.toggle("off", !(H === Z && st.phase === "hike" && st.s < 650 && !st.m));
@@ -395,5 +419,5 @@
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
-  window.__xp = { U, VH, Z, S, stateAt, camera };
+  window.__xp = { U, VH, Z, S, stateAt, camera, robot, halo, shadow, scene };
 })().catch(e => { console.error("expedition failed:", e); const l = document.querySelector("#load"); if (l) l.textContent = "Could not load the 3D view: " + (e && e.message || e); });

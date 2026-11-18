@@ -19,7 +19,7 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 # Zermatt segments that exist only as raw bags, extracted by tools/bag_to_h5.py (used once present)
 BAGCACHE = [p for p in (os.path.abspath(os.path.join(os.path.dirname(__file__), "../review/bagcache", f"{b}.h5")) for b in
             ("2024-08-14-13-15-40", "2024-08-15-11-06-44", "2024-08-15-11-59-14", "2024-08-16-08-59-51", "2024-08-16-09-42-21",
-             "2024-08-16-16-22-45", "2024-08-16-16-50-22")) if os.path.exists(p)]
+             "2024-08-16-16-22-45", "2024-08-16-16-50-22")) if os.path.exists(p + ".done")]   # only finished extracts
 BAGS = "/run/media/takahiro/takahiroSSD/nature_hiking/rosbags"
 HIKES = {
     # every full recording (with camera, risk layer and VLM answers); 14 Aug 13:15 and 15 Aug 11:06 / 11:59 exist only as stripped command_hdf5
@@ -98,9 +98,15 @@ def cand(hike):
                 if lab: found.append(dict(t=float(t), i=i, km=round(R[i, 3] / 1000, 3), text=summary(text), labels=lab, src=rel, k=k))
         print(f"{rel}: {len(found) - n0} on route, {skipped} skipped near operator commands")
     found.sort(key=lambda m: (m["i"], m["t"]))
+    # thin to one per `gap` m, but published picks always stay candidates (the greedy thinning would otherwise drop
+    # them whenever a recording is added) and the others keep `gap` m away from them
+    picked = {round(t, 1) for t in json.load(open(os.path.join(ROOT, "tools/vlm_picks.json"))).get(hike, [])}
+    pd = [R[m["i"], 3] for m in found if round(m["t"], 1) in picked]
     kept = []
     for m in found:
-        if not kept or R[m["i"], 3] - R[kept[-1]["i"], 3] >= cfg["gap"]: kept.append(m)
+        d = R[m["i"], 3]
+        if round(m["t"], 1) in picked: kept.append(m)
+        elif (not kept or d - R[kept[-1]["i"], 3] >= cfg["gap"]) and all(abs(d - x) >= cfg["gap"] for x in pd): kept.append(m)
     out = os.path.join(ROOT, f"review/vlmcand/{hike}"); os.makedirs(out, exist_ok=True)
     for c, m in enumerate(kept):
         m["id"] = c
@@ -135,7 +141,8 @@ def cand(hike):
 
 def publish(hike):
     out = os.path.join(ROOT, f"review/vlmcand/{hike}"); kept = {m["id"]: m for m in json.load(open(f"{out}/cand.json"))}
-    picks = json.load(open(os.path.join(ROOT, "tools/vlm_picks.json")))[hike]   # answer timestamps
+    allp = json.load(open(os.path.join(ROOT, "tools/vlm_picks.json"))); picks = allp[hike]   # answer timestamps
+    feat = allp.get("featured", {}).get(hike); feat = None if feat is None else {round(t, 1) for t in feat}
     byt = {round(m["t"], 1): m["id"] for m in kept.values()}
     missing = [t for t in picks if round(t, 1) not in byt]
     if missing: print("picks no longer candidates (manual driving nearby?):", missing)
@@ -147,7 +154,7 @@ def publish(hike):
         for kind in ("cam", "risk"): shutil.copy(f"{out}/c{m['id']:03d}-{kind}.jpg", f"{dst}/{n:03d}-{kind}.jpg")
         m["n"] = n
     data = dict(hike=hike, source="lmm_nav_ros/response + RTK GPS + hdr_camera_front from the recorded h5 files; hand-picked (tools/vlm_picks.json), none during or near manual driving",
-                moments=[dict(n=m["n"], i=m["i"], km=m["km"], t=round(m["t"], 1), text=m["text"], labels=m["labels"]) for m in ms])
+                moments=[dict(n=m["n"], i=m["i"], km=m["km"], t=round(m["t"], 1), f=int(feat is None or round(m["t"], 1) in feat), text=m["text"], labels=m["labels"]) for m in ms])
     json.dump(data, open(os.path.join(ROOT, f"static/data/{hike}-vlm.json"), "w"), separators=(",", ":"))
     print(hike, len(ms), "moments published")
 
