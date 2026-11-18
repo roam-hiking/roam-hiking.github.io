@@ -65,11 +65,12 @@ async function initExplorer(el) {
   map.addSource("sel", { type: "geojson", data: lineFC([]) });
   map.addSource("steep", { type: "geojson", data: { type: "FeatureCollection", features: ll.slice(1).map((q, i) => ({ ...lineFC([ll[i], q]), properties: { c: gradeColor(grade[i]) } })) } });
   const lw = w => ["interpolate", ["linear"], ["zoom"], 11, w * .8, 16, w * 1.6];
-  map.addLayer({ id: "route-casing", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#0b0f0d", "line-width": lw(10), "line-opacity": .55, "line-blur": 1 } });
-  map.addLayer({ id: "route-base", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#ffd23f", "line-width": lw(5) } });
-  map.addLayer({ id: "route-steep", type: "line", source: "steep", layout: { "line-cap": "round", visibility: "none" }, paint: { "line-color": ["get", "c"], "line-width": lw(5) } });
-  map.addLayer({ id: "route-done", type: "line", source: "done", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#ff3b30", "line-width": lw(6) } });
-  map.addLayer({ id: "route-sel", type: "line", source: "sel", layout: { "line-cap": "round" }, paint: { "line-color": "#fff", "line-width": lw(12), "line-opacity": .45 } });
+  // White trail on a soft ink shadow; the walked part in ANYmal red (the page accent)
+  map.addLayer({ id: "route-casing", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#0f1e26", "line-width": lw(8), "line-opacity": .45, "line-blur": 2 } });
+  map.addLayer({ id: "route-base", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#ffffff", "line-width": lw(3.5) } });
+  map.addLayer({ id: "route-steep", type: "line", source: "steep", layout: { "line-cap": "round", visibility: "none" }, paint: { "line-color": ["get", "c"], "line-width": lw(4) } });
+  map.addLayer({ id: "route-done", type: "line", source: "done", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#d9332b", "line-width": lw(4.5) } });
+  map.addLayer({ id: "route-sel", type: "line", source: "sel", layout: { "line-cap": "round" }, paint: { "line-color": "#7fd1c7", "line-width": lw(12), "line-opacity": .5 } });
   map.addLayer({ id: "route-hit", type: "line", source: "route", paint: { "line-color": "#000", "line-width": 22, "line-opacity": 0 } });
   const domMarker = (html, lat, lon, opts = {}) => { const d = document.createElement("div"); d.innerHTML = html; return new maplibregl.Marker({ element: d.firstElementChild, ...opts }).setLngLat([lon, lat]).addTo(map); };
   domMarker(`<span class="rx-end">Start</span>`, ...ll[0], { anchor: "bottom", offset: [0, -10] });
