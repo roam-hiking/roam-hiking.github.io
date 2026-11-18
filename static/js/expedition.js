@@ -28,7 +28,7 @@
   addEventListener("resize", resize); resize();
 
   // ---------- Loading ----------
-  const json = u => fetch(u).then(r => r.json());
+  const json = u => fetch(u, { cache: "no-cache" }).then(r => r.json());   // revalidate: the data changes with every republish
   const tex = u => new Promise((ok, no) => new THREE.TextureLoader().load(u, ok, undefined, no));
   const img = u => new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = u; });
   const HIKES = {
@@ -128,7 +128,9 @@
     H.dir = s => { const a = H.at(Math.max(0, s - 40)).p, b = H.at(Math.min(H.total, s + 40)).p; return b.sub(a).setY(0).normalize(); };
 
     // logged moments: a beam of light at each, a floating screen that wipes from camera to risk view
-    H.moments = vlm.moments.map(m => ({ ...m, s: H.dist[m.i], cam: `static/img/vlm/${name}/${String(m.n).padStart(3, "0")}-cam.jpg`, risk: `static/img/vlm/${name}/${String(m.n).padStart(3, "0")}-risk.jpg` }));
+    H.moments = vlm.moments.map(m => ({ ...m, s: H.dist[m.i], cam: `static/img/vlm/${name}/${String(m.n).padStart(3, "0")}-cam.jpg?t=${m.t}`, risk: `static/img/vlm/${name}/${String(m.n).padStart(3, "0")}-risk.jpg?t=${m.t}` }));
+    // ?t=: the files are numbered by position, so a republish with moments added or removed renames them; the answer's
+    // timestamp in the URL keeps a cached image of another moment from showing up next to this one
     const beamG = new THREE.CylinderGeometry(.55, .55, 1, 10, 1, true); beamG.translate(0, .5, 0);
     const beamM = () => new THREE.ShaderMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, uniforms: { on: { value: 0 }, time: { value: 0 } },
       vertexShader: "varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
