@@ -22,7 +22,9 @@
   const sunDir = V(-.5, .55, -.65).normalize();
   const sunL = new THREE.DirectionalLight("#fff3e0", 2.1); sunL.position.copy(sunDir).multiplyScalar(10000); scene.add(sunL, sunL.target);
   scene.add(new THREE.HemisphereLight("#cfe3ff", "#5b5040", .55));
-  function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < 760 ? 55 : 42; camera.updateProjectionMatrix(); }
+  function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.fov = w < 760 ? 55 : 42;
+    // phones: the card covers the lower half, so frame the robot higher up
+    w < 760 ? camera.setViewOffset(w, h, 0, h * .2, w, h) : camera.clearViewOffset(); camera.updateProjectionMatrix(); }
   addEventListener("resize", resize); resize();
 
   // ---------- Loading ----------
