@@ -55,7 +55,7 @@ document.querySelectorAll(".loco-train video").forEach(v => new IntersectionObse
   if (e.isIntersecting) { if (v.preload === "none") v.preload = "auto"; v.play().catch(() => {}); } else v.pause(); }, { threshold: .35 }).observe(v));
 
 // ---------- Hike highlight cards: play while on screen; the button scrolls to that hike's map ----------
-document.querySelectorAll(".hl video").forEach(v => {
+document.querySelectorAll(".hl video, .xp-demo video").forEach(v => {
     new IntersectionObserver(([e]) => { if (e.isIntersecting) v.play().catch(() => {}); else v.pause(); }, { threshold: .25 }).observe(v);
     v.addEventListener("click", () => { if (v.paused) v.play().catch(() => {}); });  // if the phone blocks autoplay, a tap starts it
     v.addEventListener("error", () => { if (!v._retried) { v._retried = true; v.load(); } });
