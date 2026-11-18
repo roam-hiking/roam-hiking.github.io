@@ -61,8 +61,6 @@ a { color: inherit; }
 .rc-t button.on { background: var(--snow); color: var(--ink); }
 .rc-v { position: relative; aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden; background: #000; }
 .rc-v video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.rc-none { position: absolute; inset: 0; display: none; place-items: center; text-align: center; padding: 20px; font-size: 12px; color: var(--dim); background: rgba(11,17,23,.8); }
-.rcam.none .rc-none { display: grid; }
 .tele { left: 26px; bottom: 74px; display: flex; gap: 22px; font: 500 12px "JetBrains Mono", monospace; color: var(--dim); text-shadow: 0 1px 10px rgba(0,0,0,.6); }
 .tele b { display: block; font: 500 24px Fraunces, Georgia, serif; color: var(--snow); letter-spacing: 0; }
 .prof { left: 26px; right: 26px; bottom: 22px; height: 38px; }
@@ -167,7 +165,7 @@ a { color: inherit; }
 
 <div class="hud rcam off" id="rcam">
   <div class="rc-h"><b>Robot's camera</b><div class="rc-t" role="group" aria-label="Show"><button data-rc="cam" class="on">Camera</button><button data-rc="risk">Risk</button></div></div>
-  <div class="rc-v"><video id="rc-cam" muted playsinline preload="auto"></video><video id="rc-risk" muted playsinline preload="auto" hidden></video><span class="rc-none">No onboard footage on this stretch</span></div>
+  <div class="rc-v"><video id="rc-cam" muted playsinline preload="auto"></video><video id="rc-risk" muted playsinline preload="auto" hidden></video></div>
 </div>
 <div class="hud tele" id="tele"><div><b id="v-km">0.00</b>km</div><div><b id="v-alt">–</b>m altitude</div><div><b id="v-grade">–</b>grade</div></div>
 <div class="hud credit">Terrain: AWS Terrain Tiles · Imagery © swisstopo · ANYmal model © ANYbotics (BSD)</div>

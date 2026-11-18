@@ -302,7 +302,7 @@
     const rc = H.rc; rcBox.classList.toggle("off", !on || !rc); if (!on || !rc) return;
     if (rcFor !== H) { rcFor = H; ["cam", "risk"].forEach(k => { rcV[k].src = `static/video/${H.name}-robotcam-${k}.mp4`; }); }
     const k = (s - rc.s0) / rc.step_m, none = k < 0 || k > rc.frames - 1 || rc.holes.some(([a, b]) => s >= a && s < b);
-    rcBox.classList.toggle("none", none); if (none) return;
+    if (none) { rcBox.classList.add("off"); return; }   // no footage on this stretch: the window just fades away
     const v = rcV[rcKind], t = (Math.round(k) + .5) / rc.fps;
     if (v.readyState >= 1 && !v.seeking && Math.abs(v.currentTime - t) > .4 / rc.fps) v.currentTime = t;
   }
