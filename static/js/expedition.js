@@ -136,8 +136,15 @@
       vertexShader: "varying vec2 vU; void main(){ vU = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.); }",
       fragmentShader: "uniform float on, time; varying vec2 vU; void main(){ float a = pow(1. - vU.y, 2.2) * (.18 + .72 * on) * (.8 + .2 * sin(time * 3. + vU.y * 20.)); gl_FragColor = vec4(mix(vec3(.5,.82,.78), vec3(.75,1.,.95), on), a); }" });
     const loader = new THREE.TextureLoader();
-    H.moments.forEach(m => {
+    // a numbered badge per moment (the card's "N of M"), shown on the whole-route views and in Map mode
+    const badge = (n, feat) => { const c = document.createElement("canvas"); c.width = c.height = 128; const x = c.getContext("2d");
+      x.beginPath(); x.arc(64, 64, 54, 0, 7); x.fillStyle = feat ? "#e3342c" : "rgba(11,17,23,.86)"; x.fill(); x.lineWidth = 9; x.strokeStyle = feat ? "#fff" : "#7fd1c7"; x.stroke();
+      x.fillStyle = "#fff"; x.font = `700 ${n > 9 ? 56 : 64}px Inter, system-ui, sans-serif`; x.textAlign = "center"; x.textBaseline = "middle"; x.fillText(String(n), 64, 68);
+      const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; t.anisotropy = 4; return t; };
+    H.moments.forEach((m, q) => {
       const base = H.pts[m.i];
+      m.tag = new THREE.Sprite(new THREE.SpriteMaterial({ map: badge(q + 1, m.f !== 0), transparent: true, depthTest: false, depthWrite: false, sizeAttenuation: false, opacity: 0 }));
+      m.tag.renderOrder = 6; m.tag.visible = false; m.tag.position.copy(base); scene.add(m.tag);
       m.beam = new THREE.Mesh(beamG, beamM()); m.beam.position.copy(base); m.beam.scale.set(1, 120, 1); scene.add(m.beam);
       m.screen = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1), new THREE.ShaderMaterial({ transparent: true, depthWrite: false, fog: false,
         uniforms: { a: { value: null }, b: { value: null }, wipe: { value: 0 }, op: { value: 0 } },
@@ -202,14 +209,15 @@
     H.moments.filter(m => m.f !== 0).forEach(m => { const d = Math.max(0, m.s - s0); segs.push({ u0: u, u1: u + d / H.stride, s0, s1: m.s }); u += d / H.stride; segs.push({ u0: u, u1: u + DWELL, s0: m.s, s1: m.s, m }); u += DWELL; s0 = m.s; });
     segs.push({ u0: u, u1: u + (H.total - s0) / H.stride, s0, s1: H.total }); u += (H.total - s0) / H.stride; H.segs = segs; H.units = u; }
   plan(Z); plan(S);
-  const U = { z0: INTRO, z1: INTRO + Z.units, s0: INTRO + Z.units + GAP }; U.s1 = U.s0 + S.units; U.end = U.s1 + OUTRO;
+  const U = { z0: INTRO, z1: INTRO + Z.units, si: INTRO + Z.units + GAP }; U.s0 = U.si + INTRO; U.s1 = U.s0 + S.units; U.end = U.s1 + OUTRO;
   const VH = innerHeight * .55;   // pixels of scroll per unit
   $("#track").style.height = (U.end * VH + innerHeight) + "px";
 
   function stateAt(u) {
     if (u < U.z0) return { phase: "intro", f: u / INTRO, H: Z, s: 0 };
     if (u < U.z1) return { phase: "hike", H: Z, ...walk(Z, u - U.z0) };
-    if (u < U.s0) { const f = (u - U.z1) / GAP; return { phase: "gap", f, H: f < .5 ? Z : S, s: f < .5 ? Z.total : 0 }; }
+    if (u < U.si) { const f = (u - U.z1) / GAP; return { phase: "gap", f, H: f < .5 ? Z : S, s: f < .5 ? Z.total : 0 }; }
+    if (u < U.s0) return { phase: "intro", f: (u - U.si) / INTRO, H: S, s: 0 };
     if (u < U.s1) return { phase: "hike", H: S, ...walk(S, u - U.s0) };
     return { phase: "outro", f: clamp((u - U.s1) / OUTRO, 0, 1), H: S, s: S.total };
   }
@@ -225,22 +233,23 @@
   // ---------- Camera ----------
   const introK = f => smooth(clamp((f - .3) / .7, 0, 1));   // intro: hold the whole-route view for the first 30%, then descend
   const camPos = V(0, 9000, 9000), camLook = V(), tmpP = V(), tmpL = V();
+  // Each hike opens on its whole route over the whole map (lit red, numbered, slowly turning), then flies down to the start
+  // while the red line draws back to it, so the walk starts where the line ends. k: 0 = whole route, 1 = at the start.
+  function overview(H, k, t) {
+    if (!H.frame) { const b = new THREE.Box3(); H.pts.forEach(q => b.expandByPoint(q)); H.frame = { c: b.getCenter(V()), r: b.getSize(V()).length() * .5 }; }
+    const { c, r } = H.frame, s0 = H.at(0).p, a = Math.atan2(1.25, -.55) + t * .012, an = (H === Z ? -1.95 : -2.2) + .35, nr = H === Z ? 900 : 500;
+    const ph = clamp(1.6 / camera.aspect, 1, 1.85);   // a portrait screen is narrower: back off until the route fits across
+    const far = V(c.x + Math.cos(a) * r * 2 * ph, c.y + r * 1.6 * ph, c.z + Math.sin(a) * r * 2 * ph), near = V(s0.x + Math.cos(an) * nr, s0.y + nr * .55, s0.z + Math.sin(an) * nr);
+    // the title sits on the left: look a little left of the route's centre, so the route fills the right of the screen
+    const fx = c.x - far.x, fz = c.z - far.z, fl = Math.hypot(fx, fz) || 1, lc = c.clone().add(V(fz / fl, 0, -fx / fl).multiplyScalar(r * (camera.aspect > 1 ? .22 : 0) * (1 - k)));
+    if (camera.aspect < 1 && H === S) lc.y += r * .45 * (1 - k);   // phone: Seealpsee's title is at the top, so the loop sits lower
+    far.add(lc.clone().sub(c));
+    tmpP.copy(far).lerp(near, k); tmpP.y += Math.sin(Math.PI * k) * r * .15; tmpL.copy(lc).lerp(s0, k);
+  }
   function clearGround(H, p, min = 40) { const g = H.ground(p.x, p.z); if (p.y < g + min) p.y = g + min; return p; }
   function shot(st, t) {
     const H = st.H;
-    if (st.phase === "intro") {
-      // open on the whole Zermatt route over the whole map (lit red, slowly turning), then fly down to the start while the
-      // red line draws back to it, so the walk starts where the line ends
-      if (!Z.frame) { const b = new THREE.Box3(); Z.pts.forEach(q => b.expandByPoint(q)); Z.frame = { c: b.getCenter(V()), r: b.getSize(V()).length() * .5 }; }
-      const { c, r } = Z.frame, k = introK(st.f), s0 = Z.at(0).p, a = Math.atan2(1.25, -.55) + t * .012, an = -1.95 + .35;
-      const ph = clamp(1.6 / camera.aspect, 1, 1.85);   // a portrait screen is narrower: back off until the route fits across
-      const far = V(c.x + Math.cos(a) * r * 2 * ph, c.y + r * 1.6 * ph, c.z + Math.sin(a) * r * 2 * ph), near = V(s0.x + Math.cos(an) * 900, s0.y + 500, s0.z + Math.sin(an) * 900);
-      // the title sits on the left: look a little left of the route's centre, so the route fills the right of the screen
-      const fx = c.x - far.x, fz = c.z - far.z, fl = Math.hypot(fx, fz) || 1, lc = c.clone().add(V(fz / fl, 0, -fx / fl).multiplyScalar(r * (camera.aspect > 1 ? .22 : 0) * (1 - k)));
-      far.add(lc.clone().sub(c));
-      tmpP.copy(far).lerp(near, k); tmpP.y += Math.sin(Math.PI * k) * r * .15; tmpL.copy(lc).lerp(s0, k);
-      return;
-    }
+    if (st.phase === "intro") { overview(H, introK(st.f), t); return; }
     if (st.phase === "outro") {
       // slow orbit high above the whole area, looking at the route; the outro pulls back over Seealpsee
       const c = H === Z ? Z.at(Z.total * .35).p : S.at(S.total * .5).p;
@@ -250,7 +259,9 @@
       tmpP.set(c.x + Math.cos(ang) * R, c.y + up, c.z + Math.sin(ang) * R); tmpL.copy(c);
       return;
     }
-    if (st.phase === "gap") { const a = Z.at(Z.total).p, b = S.at(0).p, f = st.f;   // climb out of Zermatt, come down over Seealpsee
+    if (st.phase === "gap" && st.f >= .5) {   // come down through the haze onto Seealpsee's whole-route view
+      overview(S, 0, t); const k = 1 - smooth((st.f - .5) * 2); tmpP.y += k * 2400; tmpL.y -= k * 300; return; }
+    if (st.phase === "gap") { const a = Z.at(Z.total).p, b = S.at(0).p, f = st.f;   // climb out of Zermatt
       const from = f < .5, P0 = from ? a : b, k = from ? smooth(f * 2) : 1 - smooth((f - .5) * 2);
       const d = from ? Z.dir(Z.total) : S.dir(0);
       tmpP.set(P0.x - d.x * lerp(220, 600, k), P0.y + lerp(140, 2600, k), P0.z - d.z * lerp(220, 600, k)); tmpL.copy(P0).add(V(0, lerp(0, -400, k), 0)); return; }
@@ -323,7 +334,7 @@
     const g = H.segs.find(x => !x.m && s <= x.s1) || H.segs[H.segs.length - 1], f = g.s1 > g.s0 ? (s - g.s0) / (g.s1 - g.s0) : 0;
     const u = (H === Z ? U.z0 : U.s0) + g.u0 + f * (g.u1 - g.u0); stopPlay(); scrollTo({ top: u * VH, behavior: "smooth" });
   }
-  document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { if (mapMode) { mapH = b.dataset.go === "zermatt" ? Z : S; frameRoute(mapH); return; } stopPlay(); scrollTo({ top: (b.dataset.go === "zermatt" ? U.z0 : U.s0) * VH, behavior: "smooth" }); }));
+  document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => { if (mapMode) { mapH = b.dataset.go === "zermatt" ? Z : S; frameRoute(mapH); return; } stopPlay(); scrollTo({ top: (b.dataset.go === "zermatt" ? 0 : U.si) * VH, behavior: "smooth" }); }));
 
   // ---------- Play: fly the journey by itself (the scroll position follows, so the user can take over any time) ----------
   let playing = false, lastT = 0, speed = 1;
@@ -364,6 +375,18 @@
   $("#mapmode").addEventListener("click", () => setMap(!mapMode));
   addEventListener("keydown", e => { if (e.key === "Escape" && mapMode) setMap(false); });
 
+  // numbered badge above a moment's beam: o = how much (0..1)
+  function tagShow(m, o, X) { m.tagO = o; if (o > 0 || m.tag.visible) { m.tag.position.copy(X.pts[m.i]); m.tag.position.y += m.beam.scale.y + 6; } }
+  // then: no two badges on top of each other (featured ones and lower numbers win), and fade towards the target
+  const tagP = V();
+  function tagsApply() {
+    const sz = innerWidth < 760 ? .04 : .03, minPx = sz * innerHeight * 1.05, kept = [];
+    [Z, S].forEach(X => [...X.moments].sort((a, b) => (b.f !== 0) - (a.f !== 0)).forEach(m => {
+      let o = m.tagO || 0;
+      if (o > .01) { tagP.copy(m.tag.position).project(camera); const x = (tagP.x + 1) * innerWidth / 2, y = (1 - tagP.y) * innerHeight / 2;
+        if (tagP.z > 1 || kept.some(q => Math.hypot(q[0] - x, q[1] - y) < minPx)) o = 0; else kept.push([x, y]); }
+      const mt = m.tag.material; mt.opacity = lerp(mt.opacity, o, .15); m.tag.visible = mt.opacity > .02; m.tag.scale.set(sz, sz, 1); }));
+  }
   // ---------- Frame loop ----------
   let uNow = 0, phase = 0, prevS = 0, prevH = null;
   function frame(now) {
@@ -371,9 +394,9 @@
     if (mapMode) {   // whole route lit, beams as landmarks, no story
       orbit.update(); sky.position.copy(camera.position);
       [Z, S].forEach(X => { X.routeMat.uniforms.prog.value = X === mapH ? X.total + 1 : -1; X.routeMat.uniforms.time.value = t; X.routeMat.uniforms.widen.value = 1; X.glowMat.uniforms.prog.value = X === mapH ? X.total + 1 : -1;
-        X.moments.forEach(m => { m.screen.visible = false; m.beam.material.uniforms.on.value = .55; m.beam.material.uniforms.time.value = t; m.beam.scale.y = 90; }); });
+        X.moments.forEach(m => { tagShow(m, X === mapH ? 1 : 0, X); m.screen.visible = false; m.beam.material.uniforms.on.value = .55; m.beam.material.uniforms.time.value = t; m.beam.scale.y = 90; }); });
       document.querySelectorAll("[data-go]").forEach(b => b.classList.toggle("on", (b.dataset.go === "zermatt") === (mapH === Z)));
-      renderer.render(scene, camera); requestAnimationFrame(frame); return;
+      tagsApply(); renderer.render(scene, camera); requestAnimationFrame(frame); return;
     }
     if (playing) { const st0 = stateAt(scrollY / VH); const v = (st0.m ? .55 : st0.p ? .6 : st0.phase === "hike" ? 1.05 : .7) * (st0.m ? Math.sqrt(speed) : speed); scrollTo(0, scrollY + v * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
     const target = scrollY / VH; uNow += (target - uNow) * (REDUCED ? 1 : 1 - Math.exp(-dt * 5));   // smoothed, so wheel steps glide
@@ -394,13 +417,16 @@
     const dist = camera.position.distanceTo(robot.position), sc = clamp(dist * .034, 1, 40); robot.scale.setScalar(sc); halo.scale.setScalar(1.6);
     shadowMat.uniforms.k.value = .62 * clamp((4 - sc) / 2, 0, 1); footMat.uniforms.k.value = .55 * clamp((3 - sc) / 1.5, 0, 1); shadow.visible = sc < 4; feet.forEach(f => f.f.visible = sc < 3);   // only close up
     // route glow
-    [Z, S].forEach(X => { const pr = X === H ? (st.phase === "intro" ? X.total * (1 - introK(st.f)) : st.s) : (X === Z && H === S ? X.total + 1 : -1);
+    // whole-route view (a hike's overview, and the way down onto Seealpsee's): which hike, and how far down to its start
+    const ov = st.phase === "intro" ? { H, k: introK(st.f) } : st.phase === "gap" && st.f >= .5 ? { H: S, k: 0 } : null;
+    [Z, S].forEach(X => { const pr = ov && X === ov.H ? X.total * (1 - ov.k) : X === H ? st.s : (X === Z && H === S ? X.total + 1 : -1);
       X.routeMat.uniforms.prog.value = pr; X.routeMat.uniforms.time.value = t; X.glowMat.uniforms.prog.value = pr;
-      X.routeMat.uniforms.widen.value = X === Z && st.phase === "intro" ? 1 - introK(st.f) : 0; });   // the whole route stays readable from far away
+      X.routeMat.uniforms.widen.value = ov && X === ov.H ? 1 - ov.k : 0; });   // the whole route stays readable from far away
     // moments: beams brighten as the robot nears; the screen rises and wipes to the risk view while it is the current one
     [Z, S].forEach(X => X.moments.forEach(m => {
       const near = X === H ? clamp(1 - Math.abs(m.s - st.s) / 500, 0, 1) : 0, cur = st.m === m || st.p === m;
-      const land = X === Z && st.phase === "intro" ? 1 - introK(st.f) : 0;   // opening view: every moment a landmark, as in Map mode
+      const land = ov && X === ov.H ? 1 - ov.k : 0;   // whole-route view: every moment a numbered landmark, as in Map mode
+      tagShow(m, land, X);
       m.beam.material.uniforms.on.value = lerp(m.beam.material.uniforms.on.value, Math.max(cur ? 1 : near * .5, land * .55), .1); m.beam.material.uniforms.time.value = t;
       m.beam.scale.y = lerp(m.beam.scale.y, cur ? 90 : Math.max(60 + near * 40, land * 90), .1);
       const nxt = X === H ? X.moments.find(q => q.s > st.s + 1 && q.f !== 0) : null;
@@ -417,9 +443,9 @@
     // HUD
     showMoment(H, st.phase === "hike" ? st.m || st.p || null : null);
     if (shown) pics.style.setProperty("--wipe", (100 - clamp((now - wipeT - 500) / 1400, 0, 1) * 50) + "%");
-    $("#t-intro").classList.toggle("off", !(st.phase === "intro" && st.f < .75));
+    $("#t-intro").classList.toggle("off", !(st.phase === "intro" && H === Z && st.f < .75));
     $("#t-zermatt").classList.toggle("off", !(H === Z && st.phase === "hike" && st.s < 650 && !st.m));
-    $("#t-seealpsee").classList.toggle("off", !(H === S && st.phase === "hike" && st.s < 250 && !st.m));
+    $("#t-seealpsee").classList.toggle("off", !(H === S && st.phase === "intro" && st.f < .75));
     $("#end").classList.toggle("off", !(st.phase === "outro" && st.f > .35));
     document.querySelectorAll("[data-go]").forEach(b => b.classList.toggle("on", (b.dataset.go === "zermatt") === (H === Z)));
     $("#veil").style.opacity = st.phase === "gap" ? Math.sin(Math.PI * st.f) ** 3 : 0;
@@ -433,7 +459,7 @@
       const w = psvg.clientWidth || 800, x = st.s / H.total * w, zs = H.alt, lo = Math.min(...zs), hi = Math.max(...zs), y = 38 - 4 - (zs[k2] - lo) / (hi - lo || 1) * 28;
       const r = psvg.querySelector("#pc-r"), dot = psvg.querySelector("#pdot"); if (r) r.setAttribute("width", x); if (dot) { dot.setAttribute("cx", x); dot.setAttribute("cy", y); }
     }
-    renderer.render(scene, camera);
+    tagsApply(); renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

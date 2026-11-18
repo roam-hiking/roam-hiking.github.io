@@ -26,6 +26,7 @@ a { color: inherit; }
 /* HUD */
 .hud { position: fixed; z-index: 5; pointer-events: none; }
 .hud * { pointer-events: auto; }
+.hud.off, .hud.off * { pointer-events: none !important; }   /* a faded-out panel (e.g. the end card over the robot camera) must not catch clicks */
 .top { top: 26px; left: 0; right: 0; display: flex; align-items: center; gap: 18px; padding: 0 26px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 700 14px Inter; letter-spacing: .14em; }
 .brand i { width: 10px; height: 10px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 4px rgba(227,52,44,.25); }

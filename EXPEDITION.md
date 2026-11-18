@@ -56,6 +56,10 @@ Sources on the SSD (`/run/media/takahiro/takahiroSSD/nature_hiking/rosbags/`): f
 - Featured vs pass-by: `tools/vlm_picks.json` -> `featured.<hike>` (answer timestamps). A hike without a list has
   every pick featured. `publish` writes `f: 1/0` per moment. Candidates always keep published picks (the 30 m
   thinning used to drop one whenever a recording was added).
+- Journey: each hike opens on its whole route over the whole map (route lit red and widened, numbered badges on the
+  moment beams = the card's "N of M"; red badge = featured stop, dark = pass-by), then flies down to the start while
+  the red line draws back. Seealpsee's overview comes right after the haze. Badges declutter on screen (featured and
+  lower numbers win) and also show in Map mode. `overview()` in expedition.js; journey units `U.si` = Seealpsee overview.
 - Still to do: record a Play preview and re-cut the teaser with the new second half.
 
 ## Known weaknesses / ideas
