@@ -46,6 +46,7 @@ async function initExplorer(el) {
   });
   map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-left");
   el._map = map;
+  new ResizeObserver(() => map.resize()).observe(map.getContainer());   // the map stretches with the column beside it
   await new Promise(r => map.once("load", r));
   el.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");   // credits collapsed behind the (i) button
   // Base imagery switch
@@ -78,8 +79,24 @@ async function initExplorer(el) {
   const pin = domMarker('<div class="rx-pin"></div>', ...ll[0]);
   const pinEl = pin.getElement(); pinEl.style.zIndex = 5;
   // Camera that looks along the route, from its start toward its end
-  // easeTo ignores `elevation`, so set the ground height with jumpTo first, then animate the rest
-  const cam = ({ elevation, ...o }, duration = 0) => { if (elevation !== undefined) map.jumpTo({ elevation }); duration ? map.easeTo({ ...o, duration }) : map.jumpTo(o); };
+  // One smooth move of center, zoom, bearing, pitch and ground height together (easeTo would ignore the height and
+  // snap it first). Far jumps rise and come back down, like a short flight, so it reads as moving, not cutting.
+  let tw = 0;
+  const busy = () => tw !== 0 || map.isMoving();
+  const cam = (o, duration = 0) => {
+    cancelAnimationFrame(tw); tw = 0;
+    if (!duration || matchMedia("(prefers-reduced-motion: reduce)").matches) { map.jumpTo(o); return; }
+    const c0 = map.getCenter(), z0 = map.getZoom(), b0 = map.getBearing(), p0 = map.getPitch(), e0 = map.getCenterElevation ? map.getCenterElevation() : 0;
+    const c1 = o.center ? maplibregl.LngLat.convert(o.center) : c0, z1 = o.zoom ?? z0, p1 = o.pitch ?? p0, e1 = o.elevation ?? e0;
+    const db = (((o.bearing ?? b0) - b0) % 360 + 540) % 360 - 180;
+    const hop = Math.min(2, Math.max(0, Math.log2(c0.distanceTo(c1) / 700) * .8)), T = duration * (1 + hop * .4), t0 = performance.now();
+    const ease = t => t < .5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+    const step = now => { const t = Math.min(1, (now - t0) / T), k = ease(t);
+      map.jumpTo({ center: [c0.lng + (c1.lng - c0.lng) * k, c0.lat + (c1.lat - c0.lat) * k], zoom: z0 + (z1 - z0) * k - hop * Math.sin(Math.PI * k),
+                   bearing: b0 + db * k, pitch: p0 + (p1 - p0) * k, elevation: e0 + (e1 - e0) * k });
+      tw = t < 1 ? requestAnimationFrame(step) : 0; };
+    tw = requestAnimationFrame(step);
+  };
   const EXAG = 1.25, zMid = P.reduce((a, p) => a + p[2], 0) / N;
   const bounds = ll.reduce((b, q) => b.extend([q[1], q[0]]), new maplibregl.LngLatBounds([ll[0][1], ll[0][0]], [ll[0][1], ll[0][0]]));
   const heading = Math.atan2((ll[N - 1][1] - ll[0][1]) * Math.cos(ll[0][0] * Math.PI / 180), ll[N - 1][0] - ll[0][0]) * 180 / Math.PI;
@@ -108,6 +125,49 @@ async function initExplorer(el) {
     ["route-base", "route-done"].forEach(id => map.setLayoutProperty(id, "visibility", g ? "none" : "visible"));
     draw();
   }));
+
+  // Logged VLM answers along the route: what the robot saw there and how it scored it
+  let vlm = [], vlmCur = -1;
+  const vlmBox = el.querySelector(".rx-vlm");
+  if (el.dataset.vlm && vlmBox) {
+    try { vlm = (await (await fetch(el.dataset.vlm)).json()).moments; } catch (e) { vlm = []; }
+    const dir = el.dataset.vlm.replace(/data\/(\w+)-vlm\.json$/, "img/vlm/$1/");
+    vlm.forEach(m => { const n = String(m.n).padStart(3, "0"); m.cam = `${dir}${n}-cam.jpg`; m.risk = `${dir}${n}-risk.jpg`; });
+    map.addSource("vlm", { type: "geojson", data: { type: "FeatureCollection", features: vlm.map((m, k) => ({ type: "Feature", id: k, properties: {}, geometry: { type: "Point", coordinates: [ll[m.i][1], ll[m.i][0]] } })) } });
+    const on = ["boolean", ["feature-state", "on"], false];
+    map.addLayer({ id: "vlm-dots", type: "circle", source: "vlm", paint: { "circle-radius": ["case", on, 8, ["interpolate", ["linear"], ["zoom"], 11, 3, 15, 5]], "circle-color": ["case", on, "#7fd1c7", "#1f7f8c"],
+      "circle-stroke-color": "#ffffff", "circle-stroke-width": ["case", on, 3, 1.5], "circle-pitch-alignment": "map" } }, "route-hit");
+    map.on("click", "vlm-dots", e => { stop(); setIdx(vlm[e.features[0].id].i, true); });
+    map.on("mouseenter", "vlm-dots", () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", "vlm-dots", () => map.getCanvas().style.cursor = "");
+    vlmBox.hidden = !vlm.length;
+    vlmBox.querySelector(".rx-vlm-n").textContent = `${vlm.length} logged answers on this route`;
+  }
+  // Crossfade: the new picture loads behind the current one, then fades in over it
+  const xfade = (slot, src) => { const [a, b] = slot.querySelectorAll("img"), front = a.classList.contains("on") ? a : b, back = front === a ? b : a;
+    if (front.getAttribute("src") === src) return;
+    back.onload = () => { back.classList.add("on"); front.classList.remove("on"); }; back.src = src; back.alt = slot.dataset.alt; };
+  const nice = s => s.replace(/_/g, " ");
+  function showVlm(i) {
+    if (!vlm.length) return;
+    let k = 0; for (let j = 0; j < vlm.length && vlm[j].i <= i; j++) k = j;
+    if (k === vlmCur) return;
+    if (vlmCur >= 0) map.setFeatureState({ source: "vlm", id: vlmCur }, { on: false });
+    vlmCur = k; map.setFeatureState({ source: "vlm", id: k }, { on: true });
+    const m = vlm[k];
+    xfade(vlmBox.querySelector(".rx-vlm-cam"), m.cam); xfade(vlmBox.querySelector(".rx-vlm-risk"), m.risk);
+    const body = vlmBox.querySelector(".rx-vlm-body"); body.classList.add("fade");
+    clearTimeout(body._t); body._t = setTimeout(() => {
+      vlmBox.querySelector(".rx-vlm-km").textContent = `km ${m.km.toFixed(2)} · answer ${k + 1} of ${vlm.length}`;
+      // Headline from the answer's own scores: what it avoids (risk 0.8+) and what it keeps to (preferred)
+      const avoid = m.labels.filter(l => l[1] >= .8).map(l => nice(l[0])), keep = m.labels.filter(l => l[3] >= .8).map(l => nice(l[0]));
+      vlmBox.querySelector(".rx-vlm-head").innerHTML = (avoid.length ? `<span class="no">Avoids</span> ${avoid.slice(0, 3).join(", ")}` : "")
+        + (avoid.length && keep.length ? " · " : "") + (keep.length ? `<span class="go">keeps to</span> ${keep.slice(0, 2).join(", ")}` : "");
+      vlmBox.querySelector(".rx-vlm-txt").textContent = m.text;
+      vlmBox.querySelector(".rx-vlm-labels").innerHTML = [...m.labels].sort((a, b) => a[1] - b[1]).map(([l, r, st]) =>
+        `<div class="rx-vl"><span class="l" title="${nice(l)}">${nice(l)}${st < .5 ? ' <i title="not steppable">no step</i>' : ""}</span><span class="bar"><b style="width:${Math.max(4, r * 100)}%;background:${coolwarm(r)}"></b></span><span class="v">${r.toFixed(1)}</span></div>`).join("");
+      body.classList.remove("fade");
+    }, 160);
+  }
 
   // Photo pins
   let photos = [];
@@ -150,7 +210,8 @@ async function initExplorer(el) {
     const c = P[idx];
     const coverRect = (pipOn && covers.length ? covers : []).map(c => `<rect class="cover" x="${X(P[c[0]][3])}" y="${m.t}" width="${Math.max(2, X(P[c[1]][3]) - X(P[c[0]][3]))}" height="${H - m.t - m.b}"/>`).join("");
     const brush = sel ? `<rect class="brush" x="${X(P[Math.min(...sel)][3])}" y="${m.t}" width="${Math.abs(X(P[sel[1]][3]) - X(P[sel[0]][3]))}" height="${H - m.t - m.b}"/>` : "";
-    const ticks = photos.map(ph => `<rect class="ptick" x="${X(P[ph.i][3]) - 1}" y="${H - m.b - 6}" width="2" height="6"/>`).join("");
+    const ticks = photos.map(ph => `<rect class="ptick" x="${X(P[ph.i][3]) - 1}" y="${H - m.b - 6}" width="2" height="6"/>`).join("")
+      + vlm.map((v, k) => `<rect class="vtick${k === vlmCur ? " on" : ""}" x="${X(P[v.i][3]) - .75}" y="${m.t}" width="1.5" height="${k === vlmCur ? 8 : 5}"/>`).join("");
     svg.innerHTML = `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7fd1c7" stop-opacity=".35"/><stop offset="1" stop-color="#7fd1c7" stop-opacity="0"/></linearGradient></defs>
       <g class="grid">${g}</g>${coverRect}<path d="${area}" fill="url(#${gid})"/>${line}${dpath}${brush}${ticks}
       <g class="ax">${ax}</g><line class="cross" x1="${X(c[3])}" x2="${X(c[3])}" y1="${m.t}" y2="${H - m.b}"/><circle class="dot" cx="${X(c[3])}" cy="${Y(c[2])}" r="5"/>`;
@@ -159,9 +220,10 @@ async function initExplorer(el) {
   function setIdx(i, follow, fromVideo) {
     idx = Math.max(0, Math.min(N - 1, i));
     pin.setLngLat([ll[idx][1], ll[idx][0]]); map.getSource("done").setData(lineFC(ll.slice(0, idx + 1)));
-    if (follow && !inView(ll[idx]) && !map.isMoving()) cam({ center: [ll[idx][1], ll[idx][0]], elevation: map.getTerrain() ? P[idx][2] * EXAG : 0 }, 700);
+    if (follow && !inView(ll[idx]) && !busy()) cam({ center: [ll[idx][1], ll[idx][0]], elevation: map.getTerrain() ? P[idx][2] * EXAG : 0 }, 700);
     el.querySelector(".rx-read").innerHTML = `<b>${(P[idx][3] / 1000).toFixed(2)} km</b> · <b>${Math.round(P[idx][2])} m</b> · grade <b>${Math.round(grade[idx])}%</b>`;
     if (!fromVideo) seekVideoTo(idx);
+    showVlm(idx); syncCompanion(idx, !!(vid && !vid.paused()));
     draw();
   }
   // Section stats (Tobler's hiking function for a walking-time estimate)
@@ -194,7 +256,7 @@ async function initExplorer(el) {
   // Replay: with a video, play it from here (or from the start) and let the map follow the footage;
   // without one, walk the marker along the route in ~18 s
   const btn = el.querySelector(".rx-play"); let raf = 0;
-  function syncBtn() { const on = !!raf || !!(vid && !vid.paused()); btn.setAttribute("aria-pressed", on); btn.querySelector("span").textContent = on ? "Pause" : "Replay the hike"; }
+  function syncBtn() { const on = !!raf || !!(vid && !vid.paused()); if (vid && vid.paused()) syncCompanion(idx, false); btn.setAttribute("aria-pressed", on); btn.querySelector("span").textContent = on ? "Pause" : "Replay the hike"; }
   function stop() { cancelAnimationFrame(raf); raf = 0; syncBtn(); }
   btn.addEventListener("click", () => {
     if (raf) return stop();
@@ -251,7 +313,7 @@ async function initExplorer(el) {
     if (on && vid && !vid.paused()) startGlide(true);
   }
   // Pressing on the map hands the camera back to the viewer (the per-frame follow would cancel their drag otherwise)
-  map.getCanvasContainer().addEventListener("pointerdown", () => { if (follow && vid && !vid.paused()) setFollow(false); });
+  map.getCanvasContainer().addEventListener("pointerdown", () => { cancelAnimationFrame(tw); tw = 0; if (follow && vid && !vid.paused()) setFollow(false); });
   function startGlide(closeUp) {
     cancelAnimationFrame(glide); camBear = map.getBearing();
     if (closeUp && follow && map.getZoom() < 14.8) {
@@ -265,7 +327,7 @@ async function initExplorer(el) {
       if (k !== null) {
         const q = at(k); pin.setLngLat([q[1], q[0]]);
         if (Math.round(k) !== idx) setIdx(Math.round(k), false, true);
-        if (follow && !map.isEasing?.() && !map.isMoving()) {
+        if (follow && !busy()) {
           const c = map.getCenter(), a = .12;   // ease toward the robot each frame
           let d = travelBearing(k) - camBear; d = ((d + 540) % 360) - 180; camBear += d * .04;
           map.jumpTo({ center: [c.lng + (q[1] - c.lng) * a, c.lat + (q[0] - c.lat) * a], bearing: camBear, elevation: map.getTerrain() ? q[2] * EXAG : 0 });
@@ -336,8 +398,38 @@ async function initExplorer(el) {
     vid = ytId ? ytPlayer(ytId, play || was, Math.max(here ?? 0, src.start || 0), src.rate) : localPlayer(src.src, src.poster, src.start, src.rate);
     if (!ytId && here !== null) vid.seek(here);
     if (play || was) { stop(); vid.play(); }
-    draw();
+    setCompanion(); draw();
   }
+  // The other camera plays alongside, small, at the same place on the route; clicking it swaps the two
+  var comp = pip && pip.querySelector(".rx-comp"), compV = comp && comp.querySelector("video"), other = null;   // var: setIdx can run before this line
+  function setCompanion() {
+    if (!comp) return;
+    other = timed.find(o => o !== active && !(window.SITE && SITE.youtube && SITE.youtube[o.yt])) || null;
+    comp.hidden = !other || !vid || vid.kind !== "local";
+    if (comp.hidden) return;
+    if (compV.dataset.src !== other.src) { compV.dataset.src = other.src; compV.src = other.src; compV.poster = other.poster; }
+    comp.querySelector("span").textContent = other.label;
+    syncCompanion(idx, !vid.paused());
+  }
+  // Video time of `o` at route index i, between two of its anchors (null where that camera has no footage)
+  function timeOn(o, i) {
+    for (let k = 1; k < o.tm.length; k++) { const a = o.tm[k - 1], b = o.tm[k];
+      if (Math.abs(b.i - a.i) < 40 && Math.min(a.i, b.i) <= i && i <= Math.max(a.i, b.i)) return b.i === a.i ? a.t : a.t + (b.t - a.t) * (i - a.i) / (b.i - a.i); }
+    return null;
+  }
+  function syncCompanion(i, playing) {
+    if (!comp || comp.hidden || !other) return;
+    const target = timeOn(other, i);
+    comp.classList.toggle("off", target === null);
+    if (target === null) { compV.pause(); return; }
+    const drift = compV.currentTime - target;
+    if (!playing || Math.abs(drift) > 2.5) { if (Math.abs(drift) > .3) compV.currentTime = target; }
+    // small drift: nudge the speed instead of seeking, so it does not stutter
+    compV.playbackRate = Math.max(.25, other.rate * (playing ? 1 - Math.max(-.3, Math.min(.3, drift / 4)) : 1));
+    if (playing && compV.paused) compV.play().catch(() => {});
+    if (!playing && !compV.paused) compV.pause();
+  }
+  comp && comp.addEventListener("click", e => { e.stopPropagation(); if (other) choose(other, !!(vid && !vid.paused())); });
   const first = sources.find(o => o.tm);
   if (first) choose(first, false); else pip && (pip.parentElement.hidden = true);
   addEventListener("resize", draw);

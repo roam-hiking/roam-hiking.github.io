@@ -64,10 +64,16 @@
             <button data-hv="fly" aria-pressed="false">Flyover</button>
             <button data-hv="fig" aria-pressed="false">Route photos</button>
           </div>
-          <div class="explorer" data-hv-panel="map" data-route="static/data/zermatt-route.json" data-photos="static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/zermatt-behind.mp4", "poster": "static/video/zermatt-behind-poster.jpg", "timemap": "static/data/zermatt-behind-timemap.json", "start": 2.6, "yt": "zermattBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/zermatt-onboard.mp4", "poster": "static/video/zermatt-onboard-poster.jpg", "timemap": "static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/zermatt-route.json" data-vlm="static/data/zermatt-vlm.json" data-photos="static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/zermatt-behind.mp4", "poster": "static/video/zermatt-behind-poster.jpg", "timemap": "static/data/zermatt-behind-timemap.json", "start": 2.6, "yt": "zermattBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/zermatt-onboard.mp4", "poster": "static/video/zermatt-onboard-poster.jpg", "timemap": "static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
             <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Zermatt route on swisstopo aerial imagery"></div>
-              <div><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span></div>
-                <p class="rx-pip-cap">Play the video and the robot moves along the map. Click the route or the profile to jump the video there. Zoom in for photos; right-drag (or two fingers) to tilt.</p></div></div>
+              <div class="rx-side"><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span><button class="rx-comp" hidden title="Swap the two cameras"><video muted playsinline preload="none"></video><span></span></button></div>
+                <p class="rx-pip-cap">Play the video and the robot moves along the map; the other camera plays in the corner (click it to swap). Click the route, a dot or the profile to jump there. Right-drag (or two fingers) to tilt.</p>
+                <div class="rx-vlm" hidden>
+                  <div class="rx-vlm-h"><b>What the robot saw</b><span class="rx-vlm-km"></span></div>
+                  <div class="rx-vlm-imgs"><div class="rx-vlm-cam" data-alt="Robot's front camera at this point"><img alt=""><img alt=""><small>camera</small></div><div class="rx-vlm-risk" data-alt="Risk image: blue is go, red is avoid"><img alt=""><img alt=""><small>risk <i></i></small></div></div>
+                  <div class="rx-vlm-body"><p class="rx-vlm-head"></p><p class="rx-vlm-txt"></p><div class="rx-vlm-labels"></div></div>
+                  <span class="rx-vlm-n"></span>
+                </div></div></div>
             <div class="rx-tools">
               <div class="seg rx-color" role="group" aria-label="Color the route by">
                 <button data-color="progress" aria-pressed="true">Progress</button>
@@ -110,10 +116,16 @@
             <button data-hv="map" aria-pressed="true">Route explorer</button>
             <button data-hv="fig" aria-pressed="false">Route photos</button>
           </div>
-          <div class="explorer" data-hv-panel="map" data-route="static/data/seealpsee-route.json" data-photos="static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/seealpsee-behind.mp4", "poster": "static/video/seealpsee-behind-poster.jpg", "timemap": "static/data/seealpsee-behind-timemap.json", "start": 3, "yt": "seealpseeBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/seealpsee-onboard.mp4", "poster": "static/video/seealpsee-onboard-poster.jpg", "timemap": "static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
+          <div class="explorer" data-hv-panel="map" data-route="static/data/seealpsee-route.json" data-vlm="static/data/seealpsee-vlm.json" data-photos="static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "Behind the robot", "src": "static/video/seealpsee-behind.mp4", "poster": "static/video/seealpsee-behind-poster.jpg", "timemap": "static/data/seealpsee-behind-timemap.json", "start": 3, "yt": "seealpseeBehind"}, {"key": "onboard", "label": "Robot’s camera", "src": "static/video/seealpsee-onboard.mp4", "poster": "static/video/seealpsee-onboard-poster.jpg", "timemap": "static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
             <div class="rx-stage"><div class="rx-map" role="img" aria-label="Map of the robot's Seealpsee route on swisstopo aerial imagery"></div>
-              <div><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span></div>
-                <p class="rx-pip-cap">Play the video and the robot moves along the map. Click the route or the profile to jump the video there. Zoom in for photos; right-drag (or two fingers) to tilt.</p></div></div>
+              <div class="rx-side"><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span><button class="rx-comp" hidden title="Swap the two cameras"><video muted playsinline preload="none"></video><span></span></button></div>
+                <p class="rx-pip-cap">Play the video and the robot moves along the map; the other camera plays in the corner (click it to swap). Click the route, a dot or the profile to jump there. Right-drag (or two fingers) to tilt.</p>
+                <div class="rx-vlm" hidden>
+                  <div class="rx-vlm-h"><b>What the robot saw</b><span class="rx-vlm-km"></span></div>
+                  <div class="rx-vlm-imgs"><div class="rx-vlm-cam" data-alt="Robot's front camera at this point"><img alt=""><img alt=""><small>camera</small></div><div class="rx-vlm-risk" data-alt="Risk image: blue is go, red is avoid"><img alt=""><img alt=""><small>risk <i></i></small></div></div>
+                  <div class="rx-vlm-body"><p class="rx-vlm-head"></p><p class="rx-vlm-txt"></p><div class="rx-vlm-labels"></div></div>
+                  <span class="rx-vlm-n"></span>
+                </div></div></div>
             <div class="rx-tools">
               <div class="seg rx-color" role="group" aria-label="Color the route by">
                 <button data-color="progress" aria-pressed="true">Progress</button>

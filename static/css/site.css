@@ -578,6 +578,8 @@ figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
 .rx-src { font-size: 11.5px; color: var(--snow-dim); }
 .explorer [hidden] { display: none !important; }
 .rx-stage { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+/* Desktop: the map grows with the video + robot's-view column next to it */
+@media (min-width: 761px) { .rx-stage { align-items: stretch; } .rx-stage > .rx-map { height: auto; min-height: 400px; } }
 .explorer:fullscreen { background: var(--night); padding: 18px; overflow: auto; }
 .explorer:fullscreen .rx-map { height: calc(100vh - 290px); }
 .rx-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
@@ -594,6 +596,43 @@ figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
 .rx-pip-cap { font-size: 12.5px; color: var(--snow-dim); margin-top: 8px; line-height: 1.45; }
 .rx-pip video, .rx-pip .rx-yt, .rx-pip iframe { width: 100%; display: block; aspect-ratio: 16/9; height: auto; border: 0; }
 .rx-pip-note { position: absolute; right: 8px; top: 8px; font: 600 11px Inter, sans-serif; background: rgba(0,0,0,.6); padding: 3px 8px; border-radius: 999px; }
+.rx-side { display: grid; gap: 10px; min-width: 0; }
+.rx-side .rx-pip-cap { margin: 0; }
+/* The other camera, small in the corner of the main one; click to swap */
+.rx-comp { position: absolute; left: 8px; top: 8px; width: 36%; padding: 0; border: 2px solid rgba(255,255,255,.9); border-radius: 10px; overflow: hidden; background: #000; cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0,0,0,.45); transition: opacity .4s, transform .25s; }
+.rx-comp:hover { transform: scale(1.03); }
+.rx-pip .rx-comp video { aspect-ratio: 16/9; width: 100%; display: block; }
+.rx-comp span { position: absolute; left: 6px; bottom: 5px; font: 600 10.5px Inter, sans-serif; color: #fff; background: rgba(0,0,0,.55); padding: 2px 7px; border-radius: 999px; }
+.rx-comp.off { opacity: .35; }
+.rx-comp.off::after { content: "no footage here"; position: absolute; inset: 0; display: grid; place-items: center; font: 600 11px Inter, sans-serif; color: #fff; }
+/* What the robot saw: the logged VLM answer nearest behind the robot, crossfading as it moves on */
+.rx-vlm { background: var(--night-3); border: 1px solid rgba(var(--fgrgb),.1); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; }
+.rx-vlm-h { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.rx-vlm-h b { font: 500 17px Fraunces, Georgia, serif; }
+.rx-vlm-km { font: 500 11.5px "JetBrains Mono", monospace; color: var(--glacier); }
+.rx-vlm-imgs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.rx-vlm-imgs > div { position: relative; aspect-ratio: 3/2; border-radius: 8px; overflow: hidden; background: #0f1e26; }
+.rx-vlm-imgs img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .7s var(--ease); }
+.rx-vlm-imgs img.on { opacity: 1; }
+.rx-vlm-imgs small { position: absolute; left: 6px; bottom: 5px; display: inline-flex; align-items: center; gap: 6px; font: 600 10.5px Inter, sans-serif; color: #fff; background: rgba(0,0,0,.55); padding: 2px 7px; border-radius: 999px; }
+.rx-vlm-imgs small i { width: 34px; height: 5px; border-radius: 3px; background: linear-gradient(90deg, #3a4cc0, #dddcdb, #b30326); }
+.rx-vlm-body { display: grid; gap: 8px; transition: opacity .3s; }
+.rx-vlm-body.fade { opacity: 0; }
+.rx-vlm-head { margin: 0; font: 600 15px/1.35 Inter, sans-serif; color: var(--snow); }
+.rx-vlm-head .no { color: var(--red); } .rx-vlm-head .go { color: var(--glacier); }
+.rx-vlm-txt { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--snow-dim); min-height: 3.75em; }
+.rx-vlm-labels { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; }
+.rx-vl { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 24px; align-items: center; gap: 7px; font-size: 12px; }
+.rx-vl .l { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--snow-dim); }
+.rx-vl .l i { font-style: normal; font-size: 10px; color: var(--red); }
+.rx-vl .bar { height: 6px; border-radius: 3px; background: rgba(var(--fgrgb),.08); overflow: hidden; }
+.rx-vl .bar b { display: block; height: 100%; border-radius: 3px; transition: width .5s var(--ease); }
+.rx-vl .v { font: 500 11px "JetBrains Mono", monospace; text-align: right; color: var(--snow-dim); }
+.rx-vlm-n { font-size: 11px; color: var(--snow-dim); }
+.rx-prof .vtick { fill: var(--glacier); opacity: .7; }
+.rx-prof .vtick.on { opacity: 1; }
+@media (max-width: 760px) { .rx-vlm-labels { grid-template-columns: minmax(0, 1fr); } }
 .rx-photo { width: 30px; height: 30px; border-radius: 50%; border: 2px solid #fff; background-size: cover; background-position: center; box-shadow: 0 4px 14px rgba(0,0,0,.55); cursor: pointer; transition: transform .2s; }
 .rx-photo:hover { transform: scale(1.15); }
 .pop img { width: 100%; height: 170px; object-fit: cover; display: block; cursor: zoom-in; }
