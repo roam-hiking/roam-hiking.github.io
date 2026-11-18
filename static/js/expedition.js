@@ -289,6 +289,15 @@
     clearGround(H, tmpP, 45);
   }
 
+  // ---------- Videos: few decoders, freed when not on screen ----------
+  // On a GPU with a small BAR1 aperture (256 MB, e.g. an RTX 3090 with Resizable BAR off, on Wayland) every decoding video
+  // holds mapped frames; too many at once can lock the whole desktop. So: one video per panel, released (src removed)
+  // a few seconds after its panel fades out, and loaded again when the panel comes back.
+  const release = v => { if (!v.getAttribute("src")) return; v.pause(); v.removeAttribute("src"); v.load(); };
+  const idle = new Map();   // video -> time it was last needed
+  const need = v => idle.set(v, performance.now());
+  const reap = now => idle.forEach((t, v) => { if (now - t > 3000) { release(v); idle.delete(v); } });
+
   // ---------- HUD ----------
   const card = $("#card"), pics = $("#pics"), vid = $("#c-vid");
   let shown = null, wipeT = 0;
@@ -312,7 +321,7 @@
     }, 250);
     // the behind-the-robot footage from this point
     const t = H.videoAt && H.videoAt(m.i);
-    if (t != null) { const src = H.video; if (!vid.src.endsWith(src)) { vid.preload = "auto"; vid.poster = src.replace(".mp4", "-poster.jpg"); vid.src = src; } const go = () => { vid.currentTime = t; vid.play().catch(() => {}); };
+    if (t != null) { const src = H.video; need(vid); if (!vid.src.endsWith(src)) { vid.preload = "auto"; vid.poster = src.replace(".mp4", "-poster.jpg"); vid.src = src; } const go = () => { vid.currentTime = t; vid.play().catch(() => {}); };
       vid.readyState >= 1 ? go() : vid.addEventListener("loadedmetadata", go, { once: true }); vid.parentElement.hidden = false; }
     else { vid.pause(); vid.parentElement.hidden = true; }
   }
@@ -346,16 +355,19 @@
   ["wheel", "touchstart", "keydown"].forEach(ev => addEventListener(ev, () => playing && stopPlay(), { passive: true }));
 
   // ---------- Robot's camera: one frame per few metres along the route, scrubbed to where the robot is ----------
-  const rcBox = $("#rcam"), rcV = { cam: $("#rc-cam"), risk: $("#rc-risk") }; let rcKind = "cam", rcFor = null;
+  // one video element; Camera / Risk swap its source (a second, hidden decoder would hold GPU memory for nothing)
+  const rcBox = $("#rcam"), rcv = $("#rc-cam"); let rcKind = "cam", lastSeek = 0;
   document.querySelectorAll("[data-rc]").forEach(b => b.addEventListener("click", () => { rcKind = b.dataset.rc;
-    document.querySelectorAll("[data-rc]").forEach(x => x.classList.toggle("on", x === b)); rcV.cam.hidden = rcKind !== "cam"; rcV.risk.hidden = rcKind !== "risk"; }));
+    document.querySelectorAll("[data-rc]").forEach(x => x.classList.toggle("on", x === b)); }));
   function robotCam(H, s, on) {
     const rc = H.rc; rcBox.classList.toggle("off", !on || !rc); if (!on || !rc) return;
-    if (rcFor !== H) { rcFor = H; ["cam", "risk"].forEach(k => { rcV[k].src = `static/video/${H.name}-robotcam-${k}.mp4`; }); }
     const k = (s - rc.s0) / rc.step_m, none = k < 0 || k > rc.frames - 1 || rc.holes.some(([a, b]) => s >= a && s < b);
     if (none) { rcBox.classList.add("off"); return; }   // no footage on this stretch: the window just fades away
-    const v = rcV[rcKind], t = (Math.round(k) + .5) / rc.fps;
-    if (v.readyState >= 1 && !v.seeking && Math.abs(v.currentTime - t) > .4 / rc.fps) v.currentTime = t;
+    need(rcv);
+    const src = `static/video/${H.name}-robotcam-${rcKind}.mp4`, t = (Math.round(k) + .5) / rc.fps;
+    if (!rcv.src.endsWith(src)) { rcv.src = src; rcv.addEventListener("loadedmetadata", () => { rcv.currentTime = t; }, { once: true }); return; }
+    const now = performance.now();   // seek at most ~15 times a second, one at a time
+    if (rcv.readyState >= 1 && !rcv.seeking && now - lastSeek > 66 && Math.abs(rcv.currentTime - t) > .4 / rc.fps) { rcv.currentTime = t; lastSeek = now; }
   }
 
   // ---------- Map mode: just the 3D route of one hike, free orbit ----------
@@ -396,7 +408,7 @@
       [Z, S].forEach(X => { X.routeMat.uniforms.prog.value = X === mapH ? X.total + 1 : -1; X.routeMat.uniforms.time.value = t; X.routeMat.uniforms.widen.value = 1; X.glowMat.uniforms.prog.value = X === mapH ? X.total + 1 : -1;
         X.moments.forEach(m => { tagShow(m, X === mapH ? 1 : 0, X); m.screen.visible = false; m.beam.material.uniforms.on.value = .55; m.beam.material.uniforms.time.value = t; m.beam.scale.y = 90; }); });
       document.querySelectorAll("[data-go]").forEach(b => b.classList.toggle("on", (b.dataset.go === "zermatt") === (mapH === Z)));
-      tagsApply(); renderer.render(scene, camera); requestAnimationFrame(frame); return;
+      reap(now); tagsApply(); renderer.render(scene, camera); requestAnimationFrame(frame); return;
     }
     if (playing) { const st0 = stateAt(scrollY / VH); const v = (st0.m ? .55 : st0.p ? .6 : st0.phase === "hike" ? 1.05 : .7) * (st0.m ? Math.sqrt(speed) : speed); scrollTo(0, scrollY + v * VH * dt); if (scrollY >= U.end * VH - 2) stopPlay(); }
     const target = scrollY / VH; uNow += (target - uNow) * (REDUCED ? 1 : 1 - Math.exp(-dt * 5));   // smoothed, so wheel steps glide
@@ -442,6 +454,7 @@
     }));
     // HUD
     showMoment(H, st.phase === "hike" ? st.m || st.p || null : null);
+    if (shown && vid.getAttribute("src")) need(vid);   // keep the behind-the-robot clip while its card is up
     if (shown) pics.style.setProperty("--wipe", (100 - clamp((now - wipeT - 500) / 1400, 0, 1) * 50) + "%");
     $("#t-intro").classList.toggle("off", !(st.phase === "intro" && H === Z && st.f < .75));
     $("#t-zermatt").classList.toggle("off", !(H === Z && st.phase === "hike" && st.s < 650 && !st.m));
@@ -459,7 +472,7 @@
       const w = psvg.clientWidth || 800, x = st.s / H.total * w, zs = H.alt, lo = Math.min(...zs), hi = Math.max(...zs), y = 38 - 4 - (zs[k2] - lo) / (hi - lo || 1) * 28;
       const r = psvg.querySelector("#pc-r"), dot = psvg.querySelector("#pdot"); if (r) r.setAttribute("width", x); if (dot) { dot.setAttribute("cx", x); dot.setAttribute("cy", y); }
     }
-    tagsApply(); renderer.render(scene, camera);
+    reap(now); tagsApply(); renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
