@@ -487,6 +487,10 @@ figcaption { font-size: 14.5px; color: var(--ink-dim); margin-top: 12px; }
 .xp-copy h3 { font-family: Fraunces, Georgia, serif; font-size: 28px; margin: 6px 0 10px; }
 .xp-copy p { margin: 0 0 18px; color: var(--snow-dim); font-size: 15px; line-height: 1.55; }
 .xp-go { display: inline-block; background: var(--red); color: #fff; border-radius: 999px; padding: 9px 18px; font: 600 14px Inter, sans-serif; }
+/* Phones: the map's imagery / 3D / Follow buttons in up to two rows clear of the zoom buttons, labels on one line */
+@media (max-width: 760px) { .rx-map .rx-base { left: 48px; right: 8px; flex-wrap: wrap; justify-content: flex-end; background: none; backdrop-filter: none; padding: 0; gap: 4px; }
+  .rx-map .rx-base button { white-space: nowrap; padding: 5px 9px; font-size: 11px; background: rgba(11,15,13,.72); backdrop-filter: blur(6px); }
+  .rx-map .rx-base button[aria-pressed="true"] { background: var(--snow); } }
 @media (max-width: 760px) { .xp-teaser { grid-template-columns: minmax(0, 1fr); } .xp-shots { min-height: 0; aspect-ratio: 2 / 1; } .xp-copy { padding: 18px; } .xp-copy h3 { font-size: 24px; } }
 /* expeditions.html */
 .xp-page { padding-top: 120px; min-height: 100vh; }
