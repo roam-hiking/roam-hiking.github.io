@@ -1,0 +1,35 @@
+{
+ "hike": "zermatt",
+ "bbox": [
+  7.635,
+  45.963,
+  7.805,
+  46.025
+ ],
+ "grid": [
+  640,
+  336
+ ],
+ "width_m": 13147.4,
+ "height_m": 6901.8,
+ "zmin": 1595.8,
+ "zmax": 4352.1,
+ "image": [
+  3962,
+  2080
+ ],
+ "source": "heights: AWS Terrain Tiles (terrarium); image: swisstopo SWISSIMAGE",
+ "detail": {
+  "bbox": [
+   7.724911,
+   45.978882,
+   7.788216,
+   46.00884
+  ],
+  "zoom": 16,
+  "image": [
+   2950,
+   2010
+  ]
+ }
+}

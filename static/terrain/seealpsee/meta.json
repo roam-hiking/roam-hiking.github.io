@@ -1,0 +1,35 @@
+{
+ "hike": "seealpsee",
+ "bbox": [
+  9.335,
+  47.243,
+  9.435,
+  47.288
+ ],
+ "grid": [
+  640,
+  425
+ ],
+ "width_m": 7554.2,
+ "height_m": 5009.4,
+ "zmin": 858.3,
+ "zmax": 2430.4,
+ "image": [
+  4096,
+  2717
+ ],
+ "source": "heights: AWS Terrain Tiles (terrarium); image: swisstopo SWISSIMAGE",
+ "detail": {
+  "bbox": [
+   9.389649,
+   47.262341,
+   9.413485,
+   47.274882
+  ],
+  "zoom": 17,
+  "image": [
+   2221,
+   1723
+  ]
+ }
+}
