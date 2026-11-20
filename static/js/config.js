@@ -4,7 +4,7 @@
 // ============================================================
 window.SITE = {
   youtube: { movie1: "xcqVpbgklD4", seealpsee: "wrbAq2HXE8E", zermattOnboard: "", zermattBehind: "", seealpseeBehind: "", seealpseeOnboard: "" },   // YouTube video IDs, e.g. "dQw4w9WgXcQ"
-  links: { paper: "static/paper/roam-paper.pdf", arxiv: "", supplementary: "" },   // authors' version (same build as the arXiv upload); swap for the arXiv URL once it is up
+  links: { paper: "static/paper/roam-paper.pdf", arxiv: "https://arxiv.org/abs/2611.25215", supplementary: "" },   // authors' version (same build as the arXiv upload); swap for the arXiv URL once it is up
   published: true                                 // true hides the embargo bar (the noindex <meta> is gone from both pages)
 };
 document.querySelectorAll("[data-yt-key]").forEach(el => el.dataset.youtube = SITE.youtube[el.dataset.ytKey] || "");
