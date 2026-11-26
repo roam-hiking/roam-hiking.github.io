@@ -147,7 +147,7 @@ async function initExplorer(el) {
     vlm.forEach(m => { const n = String(m.n).padStart(3, "0"); m.cam = `${dir}${n}-cam.jpg`; m.risk = `${dir}${n}-risk.jpg`; });
     map.addSource("vlm", { type: "geojson", data: { type: "FeatureCollection", features: vlm.map((m, k) => ({ type: "Feature", id: k, properties: {}, geometry: { type: "Point", coordinates: [ll[m.i][1], ll[m.i][0]] } })) } });
     const on = ["boolean", ["feature-state", "on"], false];
-    map.addLayer({ id: "vlm-dots", type: "circle", source: "vlm", paint: { "circle-radius": ["case", on, 8, ["interpolate", ["linear"], ["zoom"], 11, 3, 15, 5]], "circle-color": ["case", on, "#7fd1c7", "#1f7f8c"],
+    map.addLayer({ id: "vlm-dots", type: "circle", source: "vlm", paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, ["case", on, 8, 3], 15, ["case", on, 8, 5]], "circle-color": ["case", on, "#7fd1c7", "#1f7f8c"],
       "circle-stroke-color": "#ffffff", "circle-stroke-width": ["case", on, 3, 1.5], "circle-pitch-alignment": "map" } }, "route-hit");
     map.on("click", "vlm-dots", e => { stop(); setIdx(vlm[e.features[0].id].i, true); });
     map.on("mouseenter", "vlm-dots", () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", "vlm-dots", () => map.getCanvas().style.cursor = "");

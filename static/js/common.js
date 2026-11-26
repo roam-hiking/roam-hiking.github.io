@@ -5,19 +5,19 @@ const items = () => [...document.querySelectorAll("[data-lb]")].filter(el => !el
 let cur = 0;
 const srcOf = el => el.dataset.src || el.querySelector("img").src;
 const capOf = el => el.dataset.cap || (el.nextElementSibling && el.nextElementSibling.tagName === "FIGCAPTION" ? el.nextElementSibling.textContent : el.querySelector("img").alt);
-function show(i) { const list = items(); cur = (i + list.length) % list.length; const el = list[cur]; lbImg.src = srcOf(el); lbImg.alt = el.querySelector("img").alt; lbCap.textContent = capOf(el); }
+function lbShow(i) { const list = items(); cur = (i + list.length) % list.length; const el = list[cur]; lbImg.src = srcOf(el); lbImg.alt = el.querySelector("img").alt; lbCap.textContent = capOf(el); }
 document.addEventListener("click", e => {
   const el = e.target.closest("[data-lb]");
-  if (el && !lb.contains(el)) { show(items().indexOf(el)); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
+  if (el && !lb.contains(el)) { lbShow(items().indexOf(el)); lb.classList.add("open"); document.body.style.overflow = "hidden"; }
 });
 const close = () => { lb.classList.remove("open"); document.body.style.overflow = ""; };
 lb.querySelector(".x").onclick = close;
-lb.querySelector(".prev").onclick = e => { e.stopPropagation(); show(cur - 1); };
-lb.querySelector(".next").onclick = e => { e.stopPropagation(); show(cur + 1); };
+lb.querySelector(".prev").onclick = e => { e.stopPropagation(); lbShow(cur - 1); };
+lb.querySelector(".next").onclick = e => { e.stopPropagation(); lbShow(cur + 1); };
 lb.addEventListener("click", e => { if (e.target === lb) close(); });
 document.addEventListener("keydown", e => {
   if (!lb.classList.contains("open")) return;
-  if (e.key === "Escape") close(); if (e.key === "ArrowLeft") show(cur - 1); if (e.key === "ArrowRight") show(cur + 1);
+  if (e.key === "Escape") close(); if (e.key === "ArrowLeft") lbShow(cur - 1); if (e.key === "ArrowRight") lbShow(cur + 1);
 });
 
 // ---------- Reveal on scroll ----------
