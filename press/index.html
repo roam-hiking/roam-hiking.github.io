@@ -56,6 +56,11 @@ h2 { font-family:Fraunces,Georgia,serif; font-weight:700; font-size:clamp(24px,3
 ul.links { padding-left:20px; } ul.links li { margin:4px 0; }
 .dim { color:var(--dim); }
 .ja { font-feature-settings:"palt"; }
+section { scroll-margin-top:56px; }
+.tabs { display:inline-flex; gap:4px; padding:4px; background:#fff; border:1px solid var(--rule); border-radius:12px; margin-bottom:18px; }
+.tabs button { font:600 14px Inter,system-ui,sans-serif; border:0; background:none; color:var(--dim); padding:8px 16px; border-radius:9px; cursor:pointer; }
+.tabs button[aria-selected="true"] { background:var(--ink); color:#fff; }
+
 footer { margin-top:60px; padding:26px 0 40px; border-top:1px solid var(--rule); font-size:14px; color:var(--dim); }
 </style>
 </head>
@@ -75,14 +80,18 @@ footer { margin-top:60px; padding:26px 0 40px; border-top:1px solid var(--rule);
 </div></nav>
 
 <section id="summary"><div class="wrap narrow">
-  <div class="kicker">Summary</div>
+  <div class="tabs" role="tablist" aria-label="Language">
+    <button role="tab" id="tab-en" aria-controls="pane-en" aria-selected="true">English</button>
+    <button role="tab" id="tab-ja" aria-controls="pane-ja" aria-selected="false">日本語</button>
+  </div>
+  <div class="pane" id="pane-en" role="tabpanel" aria-labelledby="tab-en">
   <p style="margin-top:0">ROAM gives a four-legged robot the judgment of a vision-language model. The model looks through the robot's camera, says what is safe and what is risky, and reads warning signs; controllers learned in simulation turn that into where to walk and where to put each foot. In the Swiss Alps, the ANYmal robot hiked 10.1 km and 1,220 m down from Gornergrat to Furi near Zermatt with two interventions, and walked a 2.4 km loop around Seealpsee among cows and hikers.</p>
   <p class="dim" style="font-size:15px">T. Miki et al., "Bridging vision-language reasoning and learned control for legged navigation in the wild," <i>Science Robotics</i> (2026). <a href="https://doi.org/10.1126/scirobotics.aee1549" target="_blank" rel="noopener">doi:10.1126/scirobotics.aee1549</a> · <a href="https://arxiv.org/abs/2611.25215" target="_blank" rel="noopener">arXiv</a> · <a href="../">Project page</a> · <a href="https://www.youtube.com/watch?v=xcqVpbgklD4" target="_blank" rel="noopener">Video</a><br>Contact: Takahiro Miki, <a href="mailto:takahiro.miki1992@gmail.com">takahiro.miki1992@gmail.com</a></p>
-</div></section>
-
-<section id="ja" class="ja" style="padding-top:28px"><div class="wrap narrow">
-  <div class="kicker">概要</div>
+  </div>
+  <div class="pane ja" id="pane-ja" role="tabpanel" aria-labelledby="tab-ja" lang="ja" hidden>
   <p style="margin-top:0">ETHチューリッヒ Robotic Systems Lab の三木崇弘らは、四脚ロボットに視覚言語モデル（VLM）の「常識」を持たせ、アルプスの登山道を自律で歩かせる技術「ROAM」を開発し、Science Robotics 誌に発表しました。VLMがカメラ画像を見て「何が安全で、何が危ないか、看板に何と書いてあるか」を判断し、シミュレーションで学習した制御が歩く場所と足の置き場所を決めます。ツェルマットではゴルナーグラートからフーリまで10.1 km・標高差1,220 mを下り（人の介入は工事区間での2回のみ）、アッペンツェルのゼーアルプ湖では牛やハイカーと同じ道を2.4 km歩きました。</p>
+  <p class="dim" style="font-size:15px">論文：T. Miki ほか「Bridging vision-language reasoning and learned control for legged navigation in the wild」<i>Science Robotics</i>（2026）。<a href="https://doi.org/10.1126/scirobotics.aee1549" target="_blank" rel="noopener">doi:10.1126/scirobotics.aee1549</a> · <a href="https://arxiv.org/abs/2611.25215" target="_blank" rel="noopener">arXiv</a> · <a href="../ja/">プロジェクトページ</a> · <a href="https://www.youtube.com/watch?v=xcqVpbgklD4" target="_blank" rel="noopener">動画</a><br>連絡先：三木崇弘 <a href="mailto:takahiro.miki1992@gmail.com">takahiro.miki1992@gmail.com</a>（日本語・英語で対応できます）</p>
+  </div>
 </div></section>
 
 <section id="photos"><div class="wrap">
@@ -158,6 +167,14 @@ document.querySelectorAll("[data-copy]").forEach(b => b.onclick = () => {
   navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent.trim());
   b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1500);
 });
+
+const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
+function pick(lang) {
+  tabs.forEach(t => { const on = t.id === "tab-" + lang; t.setAttribute("aria-selected", on); document.getElementById(t.getAttribute("aria-controls")).hidden = !on; });
+}
+tabs.forEach(t => t.addEventListener("click", () => { const l = t.id.slice(4); pick(l); history.replaceState(null, "", l === "ja" ? "#ja" : "#summary"); }));
+const fromHash = () => { if (location.hash === "#ja") { pick("ja"); document.getElementById("summary").scrollIntoView(); } };
+addEventListener("hashchange", fromHash); fromHash();
 </script>
 </body>
 </html>
