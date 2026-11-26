@@ -35,6 +35,7 @@ async function initExplorer(el) {
   const lineFC = pts => ({ type: "Feature", geometry: { type: "LineString", coordinates: pts.map(q => [q[1], q[0]]) } });
   const map = new maplibregl.Map({
     container: el.querySelector(".rx-map"), attributionControl: { compact: true }, cooperativeGestures: true, maxPitch: 75,
+    ...(window.I18N_MAPLIBRE ? { locale: I18N_MAPLIBRE } : {}),   // map control tooltips and hints on /ja/
     style: { version: 8, sources: {
         sat: tiles("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", "Imagery © Esri, Maxar, Earthstar Geographics"),
         swiss: tiles(wmts("ch.swisstopo.swissimage", "jpeg"), "© swisstopo", 20),
@@ -51,7 +52,7 @@ async function initExplorer(el) {
   el.querySelector(".maplibregl-ctrl-attrib")?.classList.remove("maplibregl-compact-show");   // credits collapsed behind the (i) button
   // Base imagery switch
   const baseBar = document.createElement("div"); baseBar.className = "rx-base";
-  baseBar.innerHTML = [["sat", "Satellite"], ["swiss", "Swiss aerial"], ["topo", "Topo map"]].map(([k, n], i) => `<button data-base="${k}" aria-pressed="${!i}">${n}</button>`).join("") + '<button data-tilt aria-pressed="true">3D</button><button data-follow aria-pressed="true" title="Keep the camera on the robot while the video plays">Follow</button>';
+  baseBar.innerHTML = [["sat", "Satellite"], ["swiss", "Swiss aerial"], ["topo", "Topo map"]].map(([k, n], i) => `<button data-base="${k}" aria-pressed="${!i}">${T(n)}</button>`).join("") + `<button data-tilt aria-pressed="true">3D</button><button data-follow aria-pressed="true" title="${T("Keep the camera on the robot while the video plays")}">${T("Follow")}</button>`;
   el.querySelector(".rx-map").append(baseBar);
   baseBar.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return;
     if (b.hasAttribute("data-follow")) { setFollow(b.getAttribute("aria-pressed") !== "true"); return; }
@@ -74,8 +75,8 @@ async function initExplorer(el) {
   map.addLayer({ id: "route-sel", type: "line", source: "sel", layout: { "line-cap": "round" }, paint: { "line-color": "#7fd1c7", "line-width": lw(12), "line-opacity": .5 } });
   map.addLayer({ id: "route-hit", type: "line", source: "route", paint: { "line-color": "#000", "line-width": 22, "line-opacity": 0 } });
   const domMarker = (html, lat, lon, opts = {}) => { const d = document.createElement("div"); d.innerHTML = html; return new maplibregl.Marker({ element: d.firstElementChild, ...opts }).setLngLat([lon, lat]).addTo(map); };
-  domMarker(`<span class="rx-end">Start</span>`, ...ll[0], { anchor: "bottom", offset: [0, -10] });
-  domMarker(`<span class="rx-end">Finish</span>`, ...ll[N - 1], { anchor: "bottom", offset: [0, -10] });
+  domMarker(`<span class="rx-end">${T("Start")}</span>`, ...ll[0], { anchor: "bottom", offset: [0, -10] });
+  domMarker(`<span class="rx-end">${T("Finish")}</span>`, ...ll[N - 1], { anchor: "bottom", offset: [0, -10] });
   const pin = domMarker('<div class="rx-pin"></div>', ...ll[0]);
   const pinEl = pin.getElement(); pinEl.style.zIndex = 5;
   // Camera that looks along the route, from its start toward its end
@@ -146,18 +147,18 @@ async function initExplorer(el) {
     vlm.forEach(m => { const n = String(m.n).padStart(3, "0"); m.cam = `${dir}${n}-cam.jpg`; m.risk = `${dir}${n}-risk.jpg`; });
     map.addSource("vlm", { type: "geojson", data: { type: "FeatureCollection", features: vlm.map((m, k) => ({ type: "Feature", id: k, properties: {}, geometry: { type: "Point", coordinates: [ll[m.i][1], ll[m.i][0]] } })) } });
     const on = ["boolean", ["feature-state", "on"], false];
-    map.addLayer({ id: "vlm-dots", type: "circle", source: "vlm", paint: { "circle-radius": ["case", on, 8, ["interpolate", ["linear"], ["zoom"], 11, 3, 15, 5]], "circle-color": ["case", on, "#7fd1c7", "#1f7f8c"],
+    map.addLayer({ id: "vlm-dots", type: "circle", source: "vlm", paint: { "circle-radius": ["interpolate", ["linear"], ["zoom"], 11, ["case", on, 8, 3], 15, ["case", on, 8, 5]], "circle-color": ["case", on, "#7fd1c7", "#1f7f8c"],
       "circle-stroke-color": "#ffffff", "circle-stroke-width": ["case", on, 3, 1.5], "circle-pitch-alignment": "map" } }, "route-hit");
     map.on("click", "vlm-dots", e => { stop(); setIdx(vlm[e.features[0].id].i, true); });
     map.on("mouseenter", "vlm-dots", () => map.getCanvas().style.cursor = "pointer"); map.on("mouseleave", "vlm-dots", () => map.getCanvas().style.cursor = "");
     vlmBox.hidden = !vlm.length;
-    vlmBox.querySelector(".rx-vlm-n").textContent = `${vlm.length} logged answers on this route`;
+    vlmBox.querySelector(".rx-vlm-n").textContent = T("{0} logged answers on this route", vlm.length);
   }
   // Crossfade: the new picture loads behind the current one, then fades in over it
   const xfade = (slot, src) => { const [a, b] = slot.querySelectorAll("img"), front = a.classList.contains("on") ? a : b, back = front === a ? b : a;
     if (front.getAttribute("src") === src) return;
     back.onload = () => { back.classList.add("on"); front.classList.remove("on"); }; back.src = src; back.alt = slot.dataset.alt; };
-  const nice = s => s.replace(/_/g, " ");
+  const nice = s => s.replace(/_/g, " "), lbl = s => window.I18N_LABELS ? LB(s) : nice(s);   // display name (Japanese on /ja/)
   function showVlm(i) {
     if (!vlm.length) return;
     let k = 0; for (let j = 0; j < vlm.length && vlm[j].i <= i; j++) k = j;
@@ -168,14 +169,14 @@ async function initExplorer(el) {
     xfade(vlmBox.querySelector(".rx-vlm-cam"), m.cam); xfade(vlmBox.querySelector(".rx-vlm-risk"), m.risk);
     const body = vlmBox.querySelector(".rx-vlm-body"); body.classList.add("fade");
     clearTimeout(body._t); body._t = setTimeout(() => {
-      vlmBox.querySelector(".rx-vlm-km").textContent = `km ${m.km.toFixed(2)} · answer ${k + 1} of ${vlm.length}`;
+      vlmBox.querySelector(".rx-vlm-km").textContent = T("km {0} · answer {1} of {2}", m.km.toFixed(2), k + 1, vlm.length);
       // Headline from the answer's own scores: what it avoids (risk 0.8+) and what it keeps to (preferred)
-      const avoid = m.labels.filter(l => l[1] >= .8).map(l => nice(l[0])), keep = m.labels.filter(l => l[3] >= .8).map(l => nice(l[0]));
-      vlmBox.querySelector(".rx-vlm-head").innerHTML = (avoid.length ? `<span class="no">Avoids</span> ${avoid.slice(0, 3).join(", ")}` : "")
-        + (avoid.length && keep.length ? " · " : "") + (keep.length ? `<span class="go">keeps to</span> ${keep.slice(0, 2).join(", ")}` : "");
-      vlmBox.querySelector(".rx-vlm-txt").textContent = m.text;
+      const avoid = m.labels.filter(l => l[1] >= .8).map(l => lbl(l[0])), keep = m.labels.filter(l => l[3] >= .8).map(l => lbl(l[0]));
+      vlmBox.querySelector(".rx-vlm-head").innerHTML = (avoid.length ? `<span class="no">${T("Avoids")}</span> ${avoid.slice(0, 3).join(T(", "))}` : "")
+        + (avoid.length && keep.length ? " · " : "") + (keep.length ? `<span class="go">${T("keeps to")}</span> ${keep.slice(0, 2).join(T(", "))}` : "");
+      vlmBox.querySelector(".rx-vlm-txt").textContent = T(m.text);
       vlmBox.querySelector(".rx-vlm-labels").innerHTML = [...m.labels].sort((a, b) => a[1] - b[1]).map(([l, r, st]) =>
-        `<div class="rx-vl"><span class="l" title="${nice(l)}">${nice(l)}${st < .5 ? ' <i title="not steppable">no step</i>' : ""}</span><span class="bar"><b style="width:${Math.max(4, r * 100)}%;background:${coolwarm(r)}"></b></span><span class="v">${r.toFixed(1)}</span></div>`).join("");
+        `<div class="rx-vl"><span class="l" title="${nice(l)}">${lbl(l)}${st < .5 ? ` <i title="${T("not steppable")}">${T("no step")}</i>` : ""}</span><span class="bar"><b style="width:${Math.max(4, r * 100)}%;background:${coolwarm(r)}"></b></span><span class="v">${r.toFixed(1)}</span></div>`).join("");
       body.classList.remove("fade");
     }, 160);
   }
@@ -189,8 +190,9 @@ async function initExplorer(el) {
     map.on("zoomend", pinVis);
     photos.forEach(ph => {
       ph.i = nearest({ lat: ph.lat, lng: ph.lon });
-      const m = domMarker(`<div class="rx-photo" style="background-image:url(static/img/pins/${ph.id}_t.jpg)"></div>`, ph.lat, ph.lon);
-      const pop = new maplibregl.Popup({ offset: 18, maxWidth: "260px", className: "rx-popup" }).setHTML(`<div class="pop"><img src="static/img/pins/${ph.id}.jpg" alt="${ph.caption}" data-full="static/img/pins/${ph.id}.jpg"><div>${ph.caption}<small>km ${ph.km.toFixed(1)}${ph.approx ? " (approx.)" : ""} · ${ph.by === "Fig. 3B" ? "from Fig. 3B" : ph.by.includes("video") ? "frame from the " + ph.by : "photo: " + ph.by}</small></div></div>`);
+      const m = domMarker(`<div class="rx-photo" style="background-image:url(${ROOT}static/img/pins/${ph.id}_t.jpg)"></div>`, ph.lat, ph.lon);
+      const cap = T(ph.caption);
+      const pop = new maplibregl.Popup({ offset: 18, maxWidth: "260px", className: "rx-popup" }).setHTML(`<div class="pop"><img src="${ROOT}static/img/pins/${ph.id}.jpg" alt="${cap}" data-full="${ROOT}static/img/pins/${ph.id}.jpg"><div>${cap}<small>km ${ph.km.toFixed(1)}${ph.approx ? T(" (approx.)") : ""} · ${ph.by === "Fig. 3B" ? T("from Fig. 3B") : ph.by.includes("video") ? T("frame from the {0}", T(ph.by)) : T("photo: {0}", ph.by)}</small></div></div>`);
       m.setPopup(pop);
       pop.on("open", () => { const img = pop.getElement().querySelector("img[data-full]"); if (img) img.onclick = () => { lbImg.src = img.dataset.full; lbImg.alt = img.alt; lbCap.textContent = img.alt; lb.classList.add("open"); }; });
       m.getElement().addEventListener("click", () => { stop(); setIdx(ph.i, false); });
@@ -232,7 +234,7 @@ async function initExplorer(el) {
     idx = Math.max(0, Math.min(N - 1, i));
     pin.setLngLat([ll[idx][1], ll[idx][0]]); map.getSource("done").setData(lineFC(ll.slice(0, idx + 1)));
     if (follow && !inView(ll[idx]) && !busy()) cam({ center: [ll[idx][1], ll[idx][0]], elevation: map.getTerrain() ? P[idx][2] * EXAG : 0 }, 700);
-    el.querySelector(".rx-read").innerHTML = `<b>${(P[idx][3] / 1000).toFixed(2)} km</b> · <b>${Math.round(P[idx][2])} m</b> · grade <b>${Math.round(grade[idx])}%</b>`;
+    el.querySelector(".rx-read").innerHTML = `<b>${(P[idx][3] / 1000).toFixed(2)} km</b> · <b>${Math.round(P[idx][2])} m</b> · ${T("grade")} <b>${Math.round(grade[idx])}%</b>`;
     if (!fromVideo) seekVideoTo(idx);
     showVlm(idx); syncCompanion(idx, !!(vid && !vid.paused()));
     draw();
@@ -247,9 +249,9 @@ async function initExplorer(el) {
       if (dd > 0) hrs += dd / 1000 / (6 * Math.exp(-3.5 * Math.abs(dz / dd + .05))); }
     map.getSource("sel").setData(lineFC(ll.slice(a, b + 1)));
     box.hidden = false;
-    box.innerHTML = `<div><span>Distance</span><b>${((P[b][3] - P[a][3]) / 1000).toFixed(2)} km</b></div><div><span>Ascent</span><b>${Math.round(up)} m</b></div>
-      <div><span>Descent</span><b>${Math.round(dn)} m</b></div><div><span>Steepest</span><b>${Math.round(mx)}%</b></div><div><span>Hiker time</span><b>${Math.floor(hrs)} h ${Math.round(hrs % 1 * 60)} min</b></div>
-      <div class="x">Walking time for a person, from Tobler's hiking function. Ascent and descent are read from the terrain model along the robot's GPS track.</div>`;
+    box.innerHTML = `<div><span>${T("Distance")}</span><b>${((P[b][3] - P[a][3]) / 1000).toFixed(2)} km</b></div><div><span>${T("Ascent")}</span><b>${Math.round(up)} m</b></div>
+      <div><span>${T("Descent")}</span><b>${Math.round(dn)} m</b></div><div><span>${T("Steepest")}</span><b>${Math.round(mx)}%</b></div><div><span>${T("Hiker time")}</span><b>${T("{0} h {1} min", Math.floor(hrs), Math.round(hrs % 1 * 60))}</b></div>
+      <div class="x">${T("Walking time for a person, from Tobler's hiking function. Ascent and descent are read from the terrain model along the robot's GPS track.")}</div>`;
   }
   const toIdx = e => { const r = svg.getBoundingClientRect(), x = e.clientX - r.left;
     const d = (x - m.l) / (r.width - m.l - m.r) * total; let k = 0; while (k < N - 1 && P[k][3] < d) k++; return k; };
@@ -267,7 +269,7 @@ async function initExplorer(el) {
   // Replay: with a video, play it from here (or from the start) and let the map follow the footage;
   // without one, walk the marker along the route in ~18 s
   const btn = el.querySelector(".rx-play"); let raf = 0;
-  function syncBtn() { const on = !!raf || !!(vid && !vid.paused()); if (vid && vid.paused()) syncCompanion(idx, false); btn.setAttribute("aria-pressed", on); btn.querySelector("span").textContent = on ? "Pause" : "Replay the hike"; }
+  function syncBtn() { const on = !!raf || !!(vid && !vid.paused()); if (vid && vid.paused()) syncCompanion(idx, false); btn.setAttribute("aria-pressed", on); btn.querySelector("span").textContent = T(on ? "Pause" : "Replay the hike"); }
   function stop() { cancelAnimationFrame(raf); raf = 0; syncBtn(); }
   btn.addEventListener("click", () => {
     if (raf) return stop();
@@ -276,7 +278,7 @@ async function initExplorer(el) {
       if (idx >= N - 1 || idx === 0) vid.seek(active.start || 0); else { const r = tm.reduce((b, x) => Math.abs(x.i - idx) < Math.abs(b.i - idx) ? x : b, tm[0]); vid.seek(r.t); }
       vid.play(); return setTimeout(syncBtn, 300);
     }
-    btn.setAttribute("aria-pressed", true); btn.querySelector("span").textContent = "Pause";
+    btn.setAttribute("aria-pressed", true); btn.querySelector("span").textContent = T("Pause");
     let start = null; const from = idx >= N - 1 ? 0 : idx, dur = 18000 * (1 - from / N);
     if (from === 0) cam({ center: [ll[0][1], ll[0][0]], elevation: map.getTerrain() ? P[0][2] * EXAG : 0, zoom: Math.max(map.getZoom(), 14.5), bearing: heading }, 1000);
     const tick = t => { start ??= t; const k = Math.min(1, (t - start) / dur); setIdx(Math.round(from + k * (N - 1 - from)), true);
@@ -298,7 +300,7 @@ async function initExplorer(el) {
     if (!vid || !tm || !pipOn || !vid.paused()) return;
     let best = null, bd = Infinity; tm.forEach(r => { const d = Math.abs(r.i - i); if (d < bd) { bd = d; best = r; } });
     if (best && bd < 15) { vid.seek(best.t); noteEl.textContent = noteEl.dataset.base; }
-    else noteEl.textContent = "No footage at this point";
+    else noteEl.textContent = T("No footage at this point");
   }
   // Video time -> fractional route index (between two GPS points), or null where the footage jumps
   function routePos(t) {
@@ -385,7 +387,7 @@ async function initExplorer(el) {
       src.approx = !!j.approx; src.matched = !!j.matched; src.speed = j.speed || 10; src.covers = [];
       src.tm.forEach((r, k) => { if (!k || Math.abs(r.i - src.tm[k - 1].i) > 40) src.covers.push([r.i, r.i]); else { const c = src.covers[src.covers.length - 1]; c[0] = Math.min(c[0], r.i); c[1] = Math.max(c[1], r.i); } });
       const btn = document.createElement("button"); btn.className = "rx-icon"; btn.setAttribute("aria-pressed", "false"); btn.innerHTML = camIcon + `<span>${src.label}</span>`;
-      btn.title = `Play “${src.label}” synced with the map`;
+      btn.title = T("Play “{0}” synced with the map", src.label);
       el.querySelector(".rx-vids").append(btn); src.btn = btn;
       btn.addEventListener("click", () => choose(src, true));
     } catch (e) { /* source without timemap: skip */ }
@@ -402,7 +404,7 @@ async function initExplorer(el) {
     if (vid) { vid.destroy(); vid = null; }
     sources.forEach(o => o.btn && o.btn.setAttribute("aria-pressed", o === src));
     active = src; tm = src.tm; covers = src.covers; pipOn = true;
-    noteEl.dataset.base = noteEl.textContent = src.approx ? `${src.label} · position approximate` : src.matched ? `${src.label} · image-matched to GPS` : `${src.label} · ${Math.round(src.speed * src.rate)}× · GPS-synced`;
+    noteEl.dataset.base = noteEl.textContent = src.approx ? T("{0} · position approximate", src.label) : src.matched ? T("{0} · image-matched to GPS", src.label) : T("{0} · {1}× · GPS-synced", src.label, Math.round(src.speed * src.rate));
     // Switching cameras keeps the place on the route
     const here = idx > 0 && idx < N - 1 ? timeAt(src.tm, idx) : null;
     const ytId = (window.SITE && SITE.youtube && SITE.youtube[src.yt]) || "";
