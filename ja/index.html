@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ROAM：視覚言語モデルの推論と学習した制御で、脚ロボットが野外を歩く</title>
-<meta name="description" content="ROAM は視覚言語モデル（VLM）の常識と強化学習の歩行制御を組み合わせ、四脚ロボットがアルプスの登山道や街なかを何キロも自律で歩けるようにするシステムです。">
+<title>ROAM：視覚言語モデルの推論と強化学習制御で、四脚ロボットが野外を歩く</title>
+<meta name="description" content="ROAM は視覚言語モデル（VLM）の常識と強化学習による歩行制御を組み合わせ、四脚ロボットがアルプスの登山道や街なかを数キロにわたって自律移動できるようにするシステムです。">
 <meta property="og:title" content="ROAM：四脚ロボットが VLM の常識でアルプスを歩く">
-<meta property="og:description" content="視覚言語モデルの推論と、強化学習で身につけた制御をつなぐ。野外を歩く脚ロボットのナビゲーション。">
+<meta property="og:description" content="視覚言語モデルの推論と強化学習による制御をつなぐ、実環境での脚式ロボット自律移動。">
 <meta property="og:locale" content="ja_JP">
 <meta property="og:image" content="https://roam-hiking.github.io/static/img/hero.jpg">
 <meta name="theme-color" content="#f5f8f9">
@@ -62,8 +62,8 @@
       <span class="line"><span>for legged navigation</span></span>
       <span class="line"><span>in the wild</span></span>
     </h1>
-    <p class="ja-gloss">視覚言語モデルの推論と、学習した制御をつなぐ ― 野外を歩く脚ロボットのナビゲーション</p>
-    <p class="sub">VLM が「何が見えていて、どれだけ危ないか」を言葉にし、ロボットはそれをもとに歩く場所を決めます。アルプスの山道でも、街なかでも。</p>
+    <p class="ja-gloss">視覚言語モデルの推論と学習ベースの制御をつなぐ ― 実環境における脚式ロボットの自律移動</p>
+    <p class="sub">VLM が周囲の状況と危険度を言葉で判断し、ロボットはその情報をもとに、アルプスの登山道から街なかまで安全な歩く場所を選びます。</p>
   </div>
   <a class="scroll-cue" href="#people">スクロール</a>
 </header>
@@ -93,7 +93,7 @@
     </div>
     <details class="abstract rv d2">
       <summary>概要（アブストラクト）</summary>
-      <p>さまざまな実環境での自律ナビゲーションは、ロボティクスに残る最大の難題のひとつです。多様な地形をこなす頑健な低レベルの運動制御と、周囲の手がかりを読み解く高レベルの推論の両方が必要になるからです。本研究では、四脚ロボットがアルプスや市街地の複雑な環境でキロメートル規模のナビゲーションを行えるシステム ROAM（Robust Open-world Autonomous Mobility）を提案します。ROAM は、インターネット規模のデータで事前学習された視覚言語モデル（VLM）の世界知識と、シミュレーション上の強化学習（RL）で獲得した頑健な歩行・局所計画のポリシーを組み合わせます。VLM は常識的な推論とシーンの意味理解を担い、リスクを見積もり、標識を読み、ナビゲーションのコストを伴う意味ラベルを出力します。オープンボキャブラリのセグメンテーションモジュールがこれらのラベルを密なリアルタイムのリスクマップに変換し、俊敏な歩行と局所ナビゲーションを担う2つの学習済み RL ポリシーへの入力とします。こうして高レベルの VLM の推論と低レベルの物理的な制御を効果的に結びつけます。実環境での実験では、多種多様な複雑な環境を自律的に移動できることを示しました。ロボットは最小限の介入でキロメートル単位のハイキングを完走し、標識を読んで危険を避け、周囲を評価して安全に足を置ける場所を見つけます。本研究は、非整備環境でシステムを確実に運用するための一歩です。一方で、VLM の信頼性や空間推論にはまだ課題が残ることも浮き彫りになりました。基盤モデルは野外ナビゲーションに欠かせない要素ではあるものの、まだそれだけで完全な解決策にはならないことを示しています。</p>
+      <p>多様な実環境における自律ナビゲーションは、ロボティクスに残された最大の難題のひとつです。複雑な地形を走破する頑健な低レベルの運動制御と、周囲の手がかりを読み解く高レベルの推論の両方が求められるためです。本研究では、四脚ロボットがアルプスや市街地などの複雑な環境でキロメートル規模の自律移動を行えるシステム ROAM（Robust Open-world Autonomous Mobility）を提案します。ROAM は、インターネット規模のデータで事前学習された視覚言語モデル（VLM）の世界知識と、シミュレーション上の強化学習（RL）で獲得した頑健な歩行・局所計画ポリシーを組み合わせます。VLM は常識的な推論とシーンの意味理解を担い、リスクを見積もり、標識を読み取り、ナビゲーションコストを紐づけた意味ラベルを出力します。オープンボキャブラリのセグメンテーションモジュールがこれらのラベルを密なリアルタイムのリスクマップへと変換し、俊敏な歩行と局所ナビゲーションを担う2つの学習済み RL ポリシーに入力します。こうして、高レベルの VLM による推論と低レベルの物理制御を効果的に結びつけます。実環境での実験では、多種多様な複雑環境を自律的に移動できることを実証しました。ロボットは最小限の人的介入でキロメートル規模のハイキングを完走し、標識を読んで危険を回避しながら、周囲を評価して安全に足を置ける場所を見つけます。本研究は非整備環境でシステムを確実に運用するための重要な一歩である一方、VLM の信頼性や空間推論にはなお課題が残ることも明らかになりました。基盤モデルは野外ナビゲーションに不可欠な要素であるものの、それ単体で完結する解決策にはまだ至っていないことを示しています。</p>
     </details>
   </div>
 </div>
@@ -105,12 +105,11 @@
     <!-- Scroll play: the highlight is pinned and scrubbed by the scroll position. -->
     <div class="scrub">
       <div class="scrub-pin">
-        <div class="scrub-h"><b>どうやって動いているの？</b><span class="scrub-hint">スクロールで再生 ↓</span></div>
+        <div class="scrub-h"><b>ROAM はどう動くのか</b><span class="scrub-hint">スクロールで再生 ↓</span></div>
         <div class="scrub-title" aria-live="polite"><span class="n"></span><span class="t"></span></div>
         <div class="movie yt" data-yt-key="movie1" data-youtube="" data-title="ROAM Movie 1" data-poster="../static/video/movie1-poster.jpg" data-label="Movie 1 を見る · 5:36" data-loop="../static/video/movie1-how.mp4" data-loop-small="../static/video/movie1-how-360.mp4" data-loop-poster="../static/video/movie1-method-poster.jpg"></div>
         <div class="scrub-bar"></div>
       </div>
-    </div>
     </div>
   </div>
 </section>
@@ -118,11 +117,11 @@
 <!-- ============ Risk image at a glance ============ -->
 <section class="dark2" id="glance" style="padding:26px 0 8px">
   <div class="wrap">
-    <div class="glance-h rv"><b>VLM の答えが<em>リスク画像</em>になる</b><span>ロボットに歩く場所を教える画像です。どの写真もドラッグできます。<span class="cw-legend">進む <i></i> 避ける</span></span></div>
+    <div class="glance-h rv"><b>VLM の判断が<em>リスク画像</em>になる</b><span>ロボットに歩く場所を伝える画像です。どの写真もドラッグで比較できます。<span class="cw-legend">進む <i></i> 避ける</span></span></div>
     <ol class="heat-how rv" aria-label="リスク画像のつくり方">
-      <li><b>1 · VLM が名前をつける</b><span>それぞれに 0〜1 のリスクも付けます：<code>gravel_path 0</code> <code>grass 0.5</code> <code>cow 1</code></span></li>
-      <li><b>2 · セグメンテーションで見つける</b><span>カメラ画像の中から、画素単位で</span></li>
-      <li><b>3 · 画素ごとにリスクが決まる</b><span><span class="cw-legend">0 進む <i></i> 1 避ける</span></span></li>
+      <li><b>1 · VLM が対象を認識してリスクを評価</b><span>見えているものごとに 0〜1 のリスク値を割り当てます：<code>gravel_path 0</code> <code>grass 0.5</code> <code>cow 1</code></span></li>
+      <li><b>2 · セグメンテーションで領域を特定</b><span>カメラ画像の中からピクセル単位で位置を抽出します</span></li>
+      <li><b>3 · リスク画像を生成</b><span><span class="cw-legend">0 進む <i></i> 1 避ける</span></span></li>
     </ol>
     <div class="glance rv d1">
       <div class="cmp" style="--x:50%"><img src="../static/img/glance/hall-risk-v3.jpg" alt="リスク画像（屋内ホール）：青は進む、赤は避ける" loading="lazy"><img class="top" src="../static/img/glance/hall-cam-v3.jpg" alt="ロボットの前方カメラ（屋内ホール）" loading="lazy"><span class="tagl">屋内ホール</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="カメラ画像とリスク画像を切り替えるスライダー（屋内ホール）"></div>
@@ -134,7 +133,7 @@
       <div class="cmp" style="--x:50%"><img src="../static/img/glance/matterhorn-risk-v3.jpg" alt="リスク画像（ツェルマット）：青は進む、赤は避ける" loading="lazy"><img class="top" src="../static/img/glance/matterhorn-cam-v3.jpg" alt="ロボットの前方カメラ（ツェルマット）" loading="lazy"><span class="tagl">ツェルマット</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="カメラ画像とリスク画像を切り替えるスライダー（ツェルマット）"></div>
       <div class="cmp" style="--x:50%"><img src="../static/img/glance/rail-risk-v3.jpg" alt="リスク画像（登山鉄道）：青は進む、赤は避ける" loading="lazy"><img class="top" src="../static/img/glance/rail-cam-v3.jpg" alt="ロボットの前方カメラ（登山鉄道）" loading="lazy"><span class="tagl">登山鉄道</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="カメラ画像とリスク画像を切り替えるスライダー（登山鉄道）"></div>
     </div>
-    <div class="glance-sub rv">標識があると答えが変わる</div>
+    <div class="glance-sub rv">標識によって変わるリスク判断</div>
     <div class="glance">
       <div class="cmp" style="--x:50%"><img src="../static/img/glance/nosign-risk.jpg" alt="リスク画像（標識なし）：青は進む、赤は避ける" loading="lazy"><img class="top" src="../static/img/glance/nosign-cam.jpg" alt="ロボットの前方カメラ（標識なし）" loading="lazy"><span class="tagl">標識なし</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="カメラ画像とリスク画像を切り替えるスライダー（標識なし）"></div>
       <div class="cmp" style="--x:50%"><img src="../static/img/glance/mine-risk.jpg" alt="リスク画像（地雷の標識）：青は進む、赤は避ける" loading="lazy"><img class="top" src="../static/img/glance/mine-cam.jpg" alt="ロボットの前方カメラ（地雷の標識）" loading="lazy"><span class="tagl">地雷の標識</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="カメラ画像とリスク画像を切り替えるスライダー（地雷の標識）"></div>
@@ -148,16 +147,16 @@
 <section id="why">
   <div class="wrap">
     <div class="kicker rv"><span class="num">01</span> 足りなかったもの</div>
-    <h2 class="rv">歩くことはもうできる。難しいのは<em>どこを</em>歩くか。</h2>
-    <p class="lead rv d1" style="max-width:760px">人がリモコンで操作すれば、このロボットはほとんどどんな地形でも歩けます。ロボットに足りないのは<b style="color:var(--red);font-weight:600">常識</b>です。砂利道は大丈夫、湖はだめ、標識ひとつで道が通行止めになることもある。視覚言語モデル（VLM）はその常識を持っています。<b style="font-weight:600">ROAM</b>（Robust Open-world Autonomous Mobility）は、その常識をロボットの地図と脚に届けるシステムです。</p>
+    <h2 class="rv">歩くことはもうできる。難しいのは、<em>どこを歩くか</em>の判断。</h2>
+    <p class="lead rv d1" style="max-width:760px">人が操縦すれば、このロボットはたいていの悪路を歩けます。自律移動に足りなかったのは、砂利道は通れるが湖には入れない、標識ひとつで道が通行止めになるといった<b style="color:var(--red);font-weight:600">常識</b>です。視覚言語モデル（VLM）はその常識を備えています。<b style="font-weight:600">ROAM</b>（Robust Open-world Autonomous Mobility）は、VLM の常識をロボットの地図と脚の制御へつなぐシステムです。</p>
 
     <div class="core rv d2" id="core">
-      <div class="core-head"><b>VLM に見えているもの、ロボットが受け取るもの</b><span>実際のフレームと、記録された回答です。場面を選んで、線をドラッグしてみてください。</span></div>
+      <div class="core-head"><b>VLM の認識と、ロボットが受け取るマップ</b><span>実機で取得したフレームと VLM の出力例です。場面を選び、スライダーをドラッグして見比べてみてください。</span></div>
       <div class="core-chips" role="tablist" aria-label="場面"></div>
       <div class="core-panel">
         <div class="core-vis"></div>
         <div class="core-txt">
-          <div class="core-row vlm"><div class="k">VLM の回答（和訳）</div><p class="core-resp"></p><div class="core-labels"></div></div>
+          <div class="core-row vlm"><div class="k">VLM の出力（和訳）</div><p class="core-resp"></p><div class="core-labels"></div></div>
         </div>
       </div>
     </div>
@@ -170,7 +169,7 @@
   <div class="wrap">
     <div class="kicker rv"><span class="num">02</span> 処理の流れ</div>
     <h2 class="rv"><em>ROAM</em> のしくみ</h2>
-    <p class="lead dim rv d1" style="max-width:720px">VLM は座標も速度も出力しません。見えているものに名前をつけ、それぞれがどれだけ危ないかを言うだけです。速さと正確さが求められる処理は、すべてその後段で行います。</p>
+    <p class="lead dim rv d1" style="max-width:720px">VLM は座標も速度も出力しません。見えているものにラベルを付け、それぞれの危険度を評価するだけです。高速・高精度が求められる処理は、すべて後段のモジュールが担います。</p>
 
     <div class="fx rv d2" id="fx">
       <div class="pipe" aria-label="カメラから脚までの処理全体"></div>
@@ -185,20 +184,20 @@
         </div>
       </div>
       <div class="tempo" aria-label="各部の更新頻度（1秒間）">
-        <div class="tempo-h"><b>実時間の1秒</b><span>線は1秒で横切ります。目盛り1つが1回の更新です。</span></div>
-        <div class="lane think"><span class="n">VLM</span><div class="trk one"><i></i><em>1回の回答に10秒</em></div><span class="c">0.1 Hz</span></div>
+        <div class="tempo-h"><b>実時間1秒あたりの更新頻度</b><span>ラインが1秒かけて横切ります。目盛り1つが1回の更新を表します。</span></div>
+        <div class="lane think"><span class="n">VLM</span><div class="trk one"><i></i><em>1回の推論に約10秒</em></div><span class="c">0.1 Hz</span></div>
         <div class="lane ground"><span class="n">セグメンテーション</span><div class="trk" style="--n:6"></div><span class="c">6 Hz</span></div>
         <div class="lane ground"><span class="n">標高マップ</span><div class="trk" style="--n:20"></div><span class="c">20 Hz</span></div>
         <div class="lane walk"><span class="n">ナビゲーション</span><div class="trk" style="--n:10"></div><span class="c">10 Hz</span></div>
         <div class="lane walk"><span class="n">歩行</span><div class="trk" style="--n:50"></div><span class="c">50 Hz</span></div>
       </div>
-      <p class="cap">どの画像もツェルマットのハイキング（2024年8月15日）の同じ瞬間のもので、値はロボット上で記録したものです。</p>
+      <p class="cap">いずれの画像もツェルマットのハイキング（2024年8月15日）の同一フレームで、値はすべてロボット上で記録したものです。</p>
     </div>
 
     <details class="expand rv">
       <summary>処理全体の図を表示（図1）</summary>
       <figure class="fig" data-lb><img src="../static/img/fig1-overview.jpg" alt="ROAM の処理の流れ：カメラ画像から VLM、セグメンテーション、標高マップを経て強化学習ポリシーへ" loading="lazy"></figure>
-      <figcaption>図1. ROAM の処理の流れ。VLM の高レベルな推論が、密な意味マップと2つの強化学習ポリシーを通じてモーターまで届きます。</figcaption>
+      <figcaption>図1. ROAM のシステム概要。VLM の高レベルな推論を、密な意味マップと2つの強化学習ポリシーを介してモーター制御へとつなぎます。</figcaption>
     </details>
   </div>
 </section>
@@ -207,8 +206,8 @@
 <section class="dark" id="hikes">
   <div class="wrap">
     <div class="kicker rv"><span class="num">03</span> アルプス遠征</div>
-    <h2 class="rv">メートルではなく、<em>キロメートル</em></h2>
-    <p class="lead dim rv d1" style="max-width:720px">スイスアルプスでの2つの長いハイキングで、システムがどこまで行けるかを試しました。</p>
+    <h2 class="rv">数メートルではなく、<em>キロメートル規模</em>へ</h2>
+    <p class="lead dim rv d1" style="max-width:720px">スイスアルプスでの2つの長距離ハイキングで、システムの限界を試しました。</p>
     <div class="hls rv d1">
       <article class="hl" data-hl="zermatt">
         <video muted loop playsinline preload="none" poster="../static/video/zermatt-descent-poster.jpg" src="../static/video/zermatt-descent.mp4" aria-label="ツェルマットの上で線路沿いを下り、道が森に入るまでを歩くロボットのタイムラプス"></video>
@@ -224,7 +223,7 @@
         <div class="hl-body">
           <div class="date">2024年6月25日 · アッペンツェル</div>
           <h3>ゼーアルプ湖</h3>
-          <dl><div><dd>2.38<small>km</small></dd><dt>周回</dt></div><div><dd>20<small>m</small></dd><dt>高低差</dt></div><div><dd>🐄<small></small></dd><dt>道の上に</dt></div></dl>
+          <dl><div><dd>2.38<small>km</small></dd><dt>周回</dt></div><div><dd>20<small>m</small></dd><dt>高低差</dt></div><div><dd>🐄<small></small></dd><dt>登山道に牛</dt></div></dl>
           <button class="hl-go" data-hike-go="seealpsee">ルートを見る ↓</button>
         </div>
       </article>
@@ -235,20 +234,20 @@
         <div class="hike-meta">
           <div class="date">2024年8月14–15日 · ヴァレー州</div>
           <h3>ツェルマット</h3>
-          <p class="dim">氷河を望む場所から、ふもとの村まで。砂利、岩、草地、湖畔、線路ぎわを通るルートで、いちばん急な所は勾配およそ30%でした。</p>
+          <p class="dim">氷河を望む高地からふもとの村まで、砂利道・岩場・草地・湖畔・線路沿いをつなぐルートです。最大勾配はおよそ30%に達します。</p>
         </div>
         <div class="hike-media">
           <div class="seg hike-view" role="group" aria-label="ツェルマットの表示">
             <button data-hv="map" aria-pressed="true">ルート探索</button>
-            <button data-hv="fly" aria-pressed="false">空から</button>
-            <button data-hv="fig" aria-pressed="false">ルート写真</button>
+            <button data-hv="fly" aria-pressed="false">俯瞰映像</button>
+            <button data-hv="fig" aria-pressed="false">ルート全体図</button>
           </div>
-          <div class="explorer" data-hv-panel="map" data-route="../static/data/zermatt-route.json" data-vlm="../static/data/zermatt-vlm.json" data-photos="../static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "後ろから撮影", "src": "../static/video/zermatt-behind.mp4", "poster": "../static/video/zermatt-behind-poster.jpg", "timemap": "../static/data/zermatt-behind-timemap.json", "start": 2.6, "yt": "zermattBehind"}, {"key": "onboard", "label": "ロボットのカメラ", "src": "../static/video/zermatt-onboard.mp4", "poster": "../static/video/zermatt-onboard-poster.jpg", "timemap": "../static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
+          <div class="explorer" data-hv-panel="map" data-route="../static/data/zermatt-route.json" data-vlm="../static/data/zermatt-vlm.json" data-photos="../static/data/zermatt-photos.json" data-videos='[{"key": "behind", "label": "後方カメラ", "src": "../static/video/zermatt-behind.mp4", "poster": "../static/video/zermatt-behind-poster.jpg", "timemap": "../static/data/zermatt-behind-timemap.json", "start": 2.6, "yt": "zermattBehind"}, {"key": "onboard", "label": "ロボット搭載カメラ", "src": "../static/video/zermatt-onboard.mp4", "poster": "../static/video/zermatt-onboard-poster.jpg", "timemap": "../static/data/zermatt-onboard-timemap.json", "yt": "zermattOnboard"}]'>
             <div class="rx-stage"><div class="rx-map" role="img" aria-label="swisstopo の航空写真上に示したロボットのツェルマットのルート"></div>
               <div class="rx-side"><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span><button class="rx-comp" hidden title="2つのカメラを入れ替える"><video muted playsinline preload="none"></video><span></span></button></div>
-                <p class="rx-pip-cap">動画を再生すると、ロボットが地図の上を進みます。もう一方のカメラは隅に小さく流れます（クリックで入れ替え）。ルート、点、標高グラフをクリックするとその地点に飛びます。右ドラッグ（または2本指）で傾けられます。</p>
+                <p class="rx-pip-cap">動画を再生すると、連動してロボットが地図上を進みます。もう一方のカメラ映像は隅に小さく表示されます（クリックで切り替え）。ルートやマーカー、標高グラフをクリックするとその地点へ移動でき、右ドラッグ（または2本指）で地図を傾けられます。</p>
                 <div class="rx-vlm" hidden>
-                  <div class="rx-vlm-h"><b>ロボットが見たもの</b><span class="rx-vlm-km"></span></div>
+                  <div class="rx-vlm-h"><b>この地点での認識</b><span class="rx-vlm-km"></span></div>
                   <div class="rx-vlm-imgs"><div class="rx-vlm-cam" data-alt="この地点でのロボットの前方カメラ"><img alt=""><img alt=""><small>カメラ</small></div><div class="rx-vlm-risk" data-alt="リスク画像：青は進む、赤は避ける"><img alt=""><img alt=""><small>リスク <i></i></small></div></div>
                   <div class="rx-vlm-body"><p class="rx-vlm-head"></p><p class="rx-vlm-txt"></p><div class="rx-vlm-labels"></div></div>
                   <span class="rx-vlm-n"></span>
@@ -258,7 +257,7 @@
                 <button data-color="progress" aria-pressed="true">進み具合</button>
                 <button data-color="grade" aria-pressed="false">勾配</button>
               </div>
-              <div class="rx-legend" hidden><span>平ら</span><i></i><span>40%+</span></div>
+              <div class="rx-legend" hidden><span>平坦</span><i></i><span>40%+</span></div>
               <span class="rx-vids" role="group" aria-label="地図と同期する動画"></span>
               <button class="rx-icon rx-full" title="全画面表示" aria-label="全画面表示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
             </div>
@@ -268,13 +267,13 @@
             </div>
             <svg class="rx-prof" role="img" aria-label="ルートに沿った標高グラフ。カーソルを合わせるかドラッグすると、地図上のロボットが動きます"></svg>
             <div class="rx-sel" hidden></div>
-            <span class="rx-src">標高グラフを横にドラッグすると、区間の距離や高低差を測れます。ロボットの GNSS 軌跡 · 標高：swisstopo swissALTI3D · 地図 © swisstopo</span>
+            <span class="rx-src">標高グラフを横にドラッグすると、選択区間の距離や高低差を測れます。ロボットの GNSS 軌跡 · 標高：swisstopo swissALTI3D · 地図 © swisstopo</span>
           </div>
           <div class="flyover" data-hv-panel="fly" hidden>
             <video muted loop playsinline preload="none" poster="../static/video/zermatt-flyover-poster.jpg" aria-label="10.1 km のツェルマットのルートを Google Earth で空から">
               <source src="../static/video/zermatt-flyover.mp4" type="video/mp4">
             </video>
-            <span class="fly-cap">ルート全体を Google Earth で描画</span>
+            <span class="fly-cap">ルート全体を Google Earth で可視化</span>
           </div>
           <figure class="hike-fig" data-hv-panel="fig" hidden data-lb data-cap="図3A. ツェルマットのルートと各地点の写真。地図画像：Google Earth">
             <img src="../static/img/fig3-zermatt.jpg" alt="10.1 km のツェルマットのルートの衛星地図と、各地点でのロボットの写真" loading="lazy">
@@ -288,19 +287,19 @@
         <div class="hike-meta">
           <div class="date">2024年6月25日 · アッペンツェル</div>
           <h3>ゼーアルプ湖</h3>
-          <p class="dim">山の湖をぐるりと一周。牛やハイカー、大きな岩と同じ道を歩きます。</p>
+          <p class="dim">山の湖をぐるりと一周するルートで、牛やハイカー、大きな岩が点在する道を自律的に歩きます。</p>
         </div>
         <div class="hike-media">
           <div class="seg hike-view" role="group" aria-label="ゼーアルプ湖の表示">
             <button data-hv="map" aria-pressed="true">ルート探索</button>
-            <button data-hv="fig" aria-pressed="false">ルート写真</button>
+            <button data-hv="fig" aria-pressed="false">ルート全体図</button>
           </div>
-          <div class="explorer" data-hv-panel="map" data-route="../static/data/seealpsee-route.json" data-vlm="../static/data/seealpsee-vlm.json" data-photos="../static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "後ろから撮影", "src": "../static/video/seealpsee-behind.mp4", "poster": "../static/video/seealpsee-behind-poster.jpg", "timemap": "../static/data/seealpsee-behind-timemap.json", "start": 3, "yt": "seealpseeBehind"}, {"key": "onboard", "label": "ロボットのカメラ", "src": "../static/video/seealpsee-onboard.mp4", "poster": "../static/video/seealpsee-onboard-poster.jpg", "timemap": "../static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
+          <div class="explorer" data-hv-panel="map" data-route="../static/data/seealpsee-route.json" data-vlm="../static/data/seealpsee-vlm.json" data-photos="../static/data/seealpsee-photos.json" data-videos='[{"key": "behind", "label": "後方カメラ", "src": "../static/video/seealpsee-behind.mp4", "poster": "../static/video/seealpsee-behind-poster.jpg", "timemap": "../static/data/seealpsee-behind-timemap.json", "start": 3, "yt": "seealpseeBehind"}, {"key": "onboard", "label": "ロボット搭載カメラ", "src": "../static/video/seealpsee-onboard.mp4", "poster": "../static/video/seealpsee-onboard-poster.jpg", "timemap": "../static/data/seealpsee-onboard-timemap.json", "yt": "seealpseeOnboard"}]'>
             <div class="rx-stage"><div class="rx-map" role="img" aria-label="swisstopo の航空写真上に示したロボットのゼーアルプ湖のルート"></div>
               <div class="rx-side"><div class="rx-pip"><video muted playsinline preload="none"></video><span class="rx-pip-note"></span><button class="rx-comp" hidden title="2つのカメラを入れ替える"><video muted playsinline preload="none"></video><span></span></button></div>
-                <p class="rx-pip-cap">動画を再生すると、ロボットが地図の上を進みます。もう一方のカメラは隅に小さく流れます（クリックで入れ替え）。ルート、点、標高グラフをクリックするとその地点に飛びます。右ドラッグ（または2本指）で傾けられます。</p>
+                <p class="rx-pip-cap">動画を再生すると、連動してロボットが地図上を進みます。もう一方のカメラ映像は隅に小さく表示されます（クリックで切り替え）。ルートやマーカー、標高グラフをクリックするとその地点へ移動でき、右ドラッグ（または2本指）で地図を傾けられます。</p>
                 <div class="rx-vlm" hidden>
-                  <div class="rx-vlm-h"><b>ロボットが見たもの</b><span class="rx-vlm-km"></span></div>
+                  <div class="rx-vlm-h"><b>この地点での認識</b><span class="rx-vlm-km"></span></div>
                   <div class="rx-vlm-imgs"><div class="rx-vlm-cam" data-alt="この地点でのロボットの前方カメラ"><img alt=""><img alt=""><small>カメラ</small></div><div class="rx-vlm-risk" data-alt="リスク画像：青は進む、赤は避ける"><img alt=""><img alt=""><small>リスク <i></i></small></div></div>
                   <div class="rx-vlm-body"><p class="rx-vlm-head"></p><p class="rx-vlm-txt"></p><div class="rx-vlm-labels"></div></div>
                   <span class="rx-vlm-n"></span>
@@ -310,7 +309,7 @@
                 <button data-color="progress" aria-pressed="true">進み具合</button>
                 <button data-color="grade" aria-pressed="false">勾配</button>
               </div>
-              <div class="rx-legend" hidden><span>平ら</span><i></i><span>40%+</span></div>
+              <div class="rx-legend" hidden><span>平坦</span><i></i><span>40%+</span></div>
               <span class="rx-vids" role="group" aria-label="地図と同期する動画"></span>
               <button class="rx-icon rx-full" title="全画面表示" aria-label="全画面表示"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
             </div>
@@ -320,7 +319,7 @@
             </div>
             <svg class="rx-prof" role="img" aria-label="ルートに沿った標高グラフ。カーソルを合わせるかドラッグすると、地図上のロボットが動きます"></svg>
             <div class="rx-sel" hidden></div>
-            <span class="rx-src">標高グラフを横にドラッグすると、区間の距離や高低差を測れます。ロボットの GNSS 軌跡 · 標高：swisstopo swissALTI3D · 地図 © swisstopo</span>
+            <span class="rx-src">標高グラフを横にドラッグすると、選択区間の距離や高低差を測れます。ロボットの GNSS 軌跡 · 標高：swisstopo swissALTI3D · 地図 © swisstopo</span>
           </div>
           <figure class="hike-fig" data-hv-panel="fig" hidden data-lb data-cap="図3B. ゼーアルプ湖のルートと各地点の写真。地図画像：Google Earth">
             <img src="../static/img/fig3-seealpsee.jpg" alt="2.38 km のゼーアルプ湖周回ルートの衛星地図と、各地点でのロボットの写真" loading="lazy">
@@ -337,7 +336,7 @@
       <div class="xp-copy">
         <span class="xp-tag">インタラクティブ · 3D エクスペディション</span>
         <h3>3D エクスペディション</h3>
-        <p>実際の地形の上を、2つのハイキングに沿って飛んでみましょう。ロボットは GPS の軌跡どおりに歩き、スクロールに合わせてロボット自身のカメラ映像が流れ、記録された各地点でロボットが見たものが表示されます。スクロールするか、Play ボタンを押してください。</p>
+        <p>実際の3D地形の上を飛びながら、2つのハイキングルートをたどれます。ロボットは GPS の軌跡に沿って歩き、スクロールに合わせて搭載カメラ映像と各地点での認識結果が切り替わります。スクロール、または Play ボタンで体験できます。</p>
         <span class="xp-go">エクスペディションへ（英語版） →</span>
       </div>
     </a>
@@ -348,7 +347,7 @@
       <div>
         <span class="date-pill">2024年6月25日</span>
         <h3>ゼーアルプ湖の一日</h3>
-        <p class="dim">舞台裏の記録です。準備の様子、2.38 km の湖畔ルート、道にいる牛、そしてロボットが何をしているかをチームが解説します。5分、音声あり（英語）。</p>
+        <p class="dim">フィールド実験の舞台裏を収めた記録映像です。準備の様子から、2.38 km の湖畔ルート、道に現れた牛、そしてロボットが何をしているかまでチームが解説します（約5分・英語音声）。</p>
       </div>
     </div>
 
@@ -358,9 +357,9 @@
 <!-- ============ Signs ============ -->
 <section id="signs">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">04</span> 世界知識を使う</div>
+    <div class="kicker rv"><span class="num">04</span> 世界知識の活用</div>
     <h2 class="rv"><em>標識</em>を読む</h2>
-    <p class="lead dim rv d1" style="max-width:720px">形状だけでは、通れる道と通行止めの道を区別できません。文字や記号なら区別できます。ROAM はそれを読み取ります。</p>
+    <p class="lead dim rv d1" style="max-width:720px">地形の形状だけでは、通れる道と通行止めの道を区別できません。ROAM は標識に書かれた文字や記号を読み取り、状況に応じた判断に活かします。</p>
     <div class="glance-sub rv">同じ場所でも、標識が違えばリスク画像が変わる</div>
     <div class="glance sign-glance">
       <div class="cmp" style="--x:50%"><img src="../static/img/glance/nosign-risk.jpg" alt="リスク画像（標識なし）：青は進む、赤は避ける" loading="lazy"><img class="top" src="../static/img/glance/nosign-cam.jpg" alt="ロボットの前方カメラ（標識なし）" loading="lazy"><span class="tagl">標識なし</span><div class="bar"><div class="knob">&lsaquo;&rsaquo;</div></div><input type="range" min="0" max="100" value="50" aria-label="カメラ画像とリスク画像を切り替えるスライダー（標識なし）"></div>
@@ -373,16 +372,16 @@
       <div class="lab-head">
         <div>
           <div class="lab-tag">実験1 · 図4</div>
-          <h3>意味と文脈が試されるコースで、ROAM を比較手法と比べる</h3>
-          <p>チューリッヒ、ETH ヘンガーベルク。罠を選んで、どの手法で歩くかを選んでください。</p>
+          <h3>意味理解と文脈が試されるコースでの比較実験</h3>
+          <p>ETH チューリッヒ・ヘンガーベルクキャンパスでの実験です。シナリオを選んで、各手法の挙動を比べてみてください。</p>
         </div>
         <div class="seg" role="group" aria-label="表示モード">
-          <button data-view="one" aria-pressed="true">ひとつずつ</button>
+          <button data-view="one" aria-pressed="true">個別表示</button>
           <button data-view="all" aria-pressed="false">並べて比較</button>
         </div>
       </div>
       <div class="lab-body">
-        <ol class="traps" role="tablist" aria-label="罠"></ol>
+        <ol class="traps" role="tablist" aria-label="シナリオ"></ol>
         <div class="stage">
           <div class="methods" role="group" aria-label="手法"></div>
           <div class="screens"></div>
@@ -401,26 +400,26 @@
       <div class="lab-head">
         <div>
           <div class="lab-tag">実験2 · 図5A(ii)</div>
-          <h3>同じ地形、違う標識</h3>
-          <p>Arche 試験場。ロボット自身のカメラ映像と、VLM のラベルから ROAM が作るマップです。</p>
+          <h3>同じ地形でも、標識によって変わる判断</h3>
+          <p>Arche 試験場での実験です。ロボット搭載カメラの映像と、VLM のラベルから ROAM が生成したマップを並べています。</p>
         </div>
       </div>
       <div class="conds" role="tablist" aria-label="条件"></div>
       <div class="lab-body two-col">
         <div>
           <div class="layers" role="group" aria-label="マップのレイヤー">
-            <button data-layer="all" aria-pressed="true">4つすべて</button>
+            <button data-layer="all" aria-pressed="true">4画面表示</button>
             <button data-layer="cam" aria-pressed="false">カメラ</button>
             <button data-layer="risk" aria-pressed="false">リスク</button>
             <button data-layer="step" aria-pressed="false">踏める場所</button>
-            <button data-layer="pref" aria-pressed="false">優先する場所</button>
+            <button data-layer="pref" aria-pressed="false">優先領域</button>
           </div>
           <div class="mosaic" data-layer="all"><video muted loop playsinline preload="none"></video><div class="q-lbl"></div><div class="quad"><span>カメラ</span><span>リスク</span><span>踏める</span><span>優先</span></div></div>
           <div class="scale"><span>進む</span><i></i><span>避ける</span></div>
           <p class="cap cond-note"></p>
         </div>
         <div class="vlm-panel">
-          <div class="vp-title">VLM の答え</div>
+          <div class="vp-title">VLM の出力</div>
           <div class="vp-legend"><span>リスク</span><span>踏める</span><span>優先</span></div>
           <div class="vp-rows"></div>
           <div class="vp-take"></div>
@@ -438,15 +437,15 @@
 <!-- ============ Locomotion (Fig. 5A) ============ -->
 <section id="locomotion">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">05</span> 歩行</div>
-    <h2 class="rv">意味の情報で<em>足の置き場所</em>が変わる</h2>
-    <p class="lead dim rv d1" style="max-width:720px">歩行ポリシーは、地形の高さに加えて「踏める場所」のレイヤーを読みます。このレイヤーの意味はシミュレーションで学び、実機では VLM がその中身を埋めます。</p>
+    <div class="kicker rv"><span class="num">05</span> 歩行制御</div>
+    <h2 class="rv">意味理解で<em>足の置き場</em>が変わる</h2>
+    <p class="lead dim rv d1" style="max-width:720px">歩行ポリシーは、地形の高さに加えて「踏める場所」のレイヤーを参照します。このレイヤーの扱い方はシミュレーションで学習し、実機では VLM がその内容を生成します。</p>
     <div class="lab rv" id="loco-train">
       <div class="lab-head">
         <div>
           <div class="lab-tag">シミュレーションでの学習 · RaiSim</div>
           <h3>踏める場所と踏めない場所</h3>
-          <p>踏めない領域（赤）はパーリンノイズで作ります。ポリシーは足元の高さスキャンでそれを見て、踏むとペナルティを受けます。</p>
+          <p>踏めない領域（赤）はパーリンノイズでランダムに生成します。ポリシーは足元の高さスキャンからこれを認識し、踏むとペナルティを受ける形で学習します。</p>
         </div>
       </div>
       <div class="screen loco-train"><video src="../static/video/exp/loco-training.mp4" poster="../static/video/exp/poster/loco-training.jpg" muted loop playsinline preload="none" controls aria-label="でこぼこ地形や階段の上で、赤い「踏めない」サンプル点に足を置かないよう学習するロボットのシミュレーション"></video></div>
@@ -457,7 +456,7 @@
         <div>
           <div class="lab-tag">実験3 · 図5A(i)</div>
           <h3>爆発する缶</h3>
-          <p>Arche 試験場。壁の標識には「警告：缶が爆発します」と書いてあります。</p>
+          <p>Arche 試験場での実験です。壁の標識には「警告：缶が爆発します」と書かれています。</p>
         </div>
       </div>
       <div class="lab-body two-col">
@@ -466,10 +465,10 @@
           <p class="cap">三人称視点の映像に、「踏める場所」のマップ（左上）と標高マップ（左下）を重ねています。</p>
         </div>
         <div class="vlm-panel">
-          <div class="vp-title">VLM の答え</div>
+          <div class="vp-title">VLM の出力</div>
           <div class="vp-legend"><span>リスク</span><span>踏める</span><span>優先</span></div>
           <div class="vp-rows cans-rows"></div>
-          <div class="vp-take">標識ひとつで、ただの缶が<b>踏んではいけない場所</b>に変わります。ロボットは缶の間に足を置いていきます。</div>
+          <div class="vp-take">標識ひとつで、ただの缶が<b>踏んではいけない領域</b>に変わります。ロボットは缶と缶のすき間を選んで足を運びます。</div>
         </div>
       </div>
     </div>
@@ -477,9 +476,9 @@
     <div class="lab rv" id="banana">
       <div class="lab-head">
         <div>
-          <div class="lab-tag">追加実験 · 論文には未掲載</div>
+          <div class="lab-tag">追加実験 · 論文未掲載</div>
           <h3>地面にバナナの皮</h3>
-          <p>VLM はバナナの皮を「危なくて踏めない」とラベル付けするので、ロボットは皮をよけて足を置きます。意味情報のない比較手法は踏んでしまいます。ETHチューリッヒの屋上にて。</p>
+          <p>VLM がバナナの皮を「危険・歩行不可」と判断するため、ロボットは皮をよけて足を運びます。一方、意味情報を使わない比較手法はそのまま踏んでしまいます（ETHチューリッヒ屋上にて）。</p>
         </div>
       </div>
       <div class="screen loco-train"><video src="../static/video/exp/banana.mp4" poster="../static/video/exp/poster/banana.jpg" muted loop playsinline preload="none" controls aria-label="「踏める場所」のマップを使ってバナナの皮をよけるロボット。意味情報のない比較手法は上を歩いてしまう"></video></div>
@@ -492,14 +491,14 @@
   <div class="wrap">
     <div class="kicker rv"><span class="num">06</span> 局所ナビゲーション</div>
     <h2 class="rv"><em>自分で道を</em>見つける</h2>
-    <p class="lead dim rv d1" style="max-width:720px">ゴールだけを与えられたとき、ロボットはどこを歩くのか。形状だけなら「平らならどこでも」。ROAM は人と同じものを選びます。道、除雪された地面、線路から離れた側。</p>
+    <p class="lead dim rv d1" style="max-width:720px">ゴール地点だけを与えられたとき、ロボットはどこを歩くでしょうか。形状しか見なければ「平らならどこでも」通ってしまいます。ROAM は人間と同じように、舗装された道や除雪された通路、線路から離れた安全な側を選びます。</p>
 
     <div class="lab rv" id="nav-train">
       <div class="lab-head">
         <div>
           <div class="lab-tag">シミュレーションでの学習 · Isaac</div>
           <h3>ランダムなリスクスキャン</h3>
-          <p>ナビゲーションポリシーは、シミュレーションの中で、障害物とランダムに割り当てた危険な領域（青は安全、赤は危険）を避けながらゴールに向かうよう学習しました。高リスクの領域を横切る経路にはペナルティを与えるので、写実的なシーンがなくても、リスクの低い地面を選んで進むことを覚えます。</p>
+          <p>ナビゲーションポリシーはシミュレーション内で、障害物とランダムに配置された危険領域（青は安全、赤は危険）を避けながらゴールへ向かうよう学習しました。高リスク領域を通過する経路にペナルティを与えることで、写実的なシーンがなくても安全な地面を選んで進む振る舞いを獲得します。</p>
         </div>
       </div>
       <div class="screen loco-train"><video src="../static/video/exp/nav-training-montage.mp4" poster="../static/video/exp/poster/nav-training-montage.jpg" muted loop playsinline preload="none" controls aria-label="シミュレーション：周囲にリスクのサンプル点を並べたロボットが、ランダムなブロックや階段の上を歩く"></video></div>
@@ -509,8 +508,8 @@
       <div class="lab-head">
         <div>
           <div class="lab-tag">実験4 · 図5B</div>
-          <h3>同じゴール、違うルート</h3>
-          <p>Arche 試験場と、雪の積もった街なかの通路。どの走行でも、局所ナビゲーションポリシーに与えるのは<b>ゴール地点ひとつだけ</b>です。経由点もグローバルパスもありません。ポリシーはリスクと優先度のマップから自分でルートを選び、ジオメトリのみの比較手法にも同じゴールを与えます。</p>
+          <h3>同じゴールでも、選ぶルートが変わる</h3>
+          <p>Arche 試験場と雪の積もった街なかの通路での実験です。いずれの走行でも、局所ナビゲーションポリシーに与えるのは<b>ゴール地点ひとつだけ</b>で、経由点やグローバルパスは使いません。ポリシーはリスクと優先度のマップから自律的にルートを選びます（ジオメトリのみの比較手法にも同じゴールを与えています）。</p>
         </div>
       </div>
       <div class="conds nav-tabs" role="tablist" aria-label="ルート"></div>
@@ -522,11 +521,11 @@
           <p class="cap nav-note"></p>
         </div>
         <div class="vlm-panel">
-          <figure class="nav-map" data-lb data-cap="図5B. いろいろな路面のルートを真上から。ROAM（赤）は道路をたどり、ジオメトリのみ（青）は草地をまっすぐ横切る">
+          <figure class="nav-map" data-lb data-cap="図5B. 複合路面ルートの上空ビュー。ROAM（赤）は道路をたどり、ジオメトリのみ（青）は草地をまっすぐ横切る">
             <img src="../static/img/arche-route-map.jpg" alt="Arche 試験場の航空写真とスタートからゴールまでの2つのルート：赤の ROAM は道路をたどり、青のジオメトリのみは芝生を横切る" loading="lazy">
-            <figcaption>真上から見たところ。<b style="color:#ff6b5e">ROAM</b> は道路をたどり、<b style="color:#6aa9ff">ジオメトリのみ</b>は草地を横切ります。</figcaption>
+            <figcaption>上空から見た軌跡。<b style="color:#ff6b5e">ROAM</b> は道路をたどり、<b style="color:#6aa9ff">ジオメトリのみ</b>は草地を横切ります。</figcaption>
           </figure>
-          <div class="vp-title">VLM の答え</div>
+          <div class="vp-title">VLM の出力</div>
           <div class="vp-legend nav-legend"><span>リスク</span><span>踏める</span><span>優先</span></div>
           <div class="vp-rows nav-rows"></div>
           <div class="vp-take nav-take"></div>
@@ -537,9 +536,9 @@
     <div class="lab rv" id="in-out">
       <div class="lab-head">
         <div>
-          <div class="lab-tag">屋内 → 市街地 → 自然 · 1回の走行</div>
-          <h3>何も変えずに、ホールから畑まで</h3>
-          <p>ETH ヘンガーベルク。建物の中から出発し、キャンパスを横切り、畑や森の小道、農道へと出て、隣の村で終わる、ひと続きの走行です。システムは最初から最後まで同じで、変わるのは VLM に見えているものだけです。</p>
+          <div class="lab-tag">屋内 → 市街地 → 自然 · 1回の連続走行</div>
+          <h3>設定を一切変えず、屋内から畑まで</h3>
+          <p>ETH ヘンガーベルクでの連続走行実験です。建物の中から出発し、キャンパスを横切って畑や森の小道、農道へと抜け、隣の村まで歩き切ります。最初から最後までシステムの設定は一切変えておらず、変化するのは VLM の目に映る風景だけです。</p>
         </div>
       </div>
       <div class="screen loco-train io-sbs"><video src="../static/video/exp/indoor-urban-nature-run.mp4" poster="../static/video/exp/poster/indoor-urban-nature.jpg" muted loop playsinline preload="none" controls aria-label="ロボットの前方カメラとリスク画像を並べた映像。屋内ホールからキャンパス、畑や森の小道を経て、農道と村まで"></video>
@@ -547,15 +546,15 @@
       <div class="io-now" aria-live="polite"><span class="io-when"></span><span class="io-chips"></span></div>
       <div class="io-tl" data-src="../static/data/in-out-labels.json" role="img" aria-label="走行中に VLM が使ったラベルと、それぞれに付けたリスク"></div>
       <div class="cw-legend">リスク：0 進む <i></i> 1 避ける</div>
-      <p class="cap">ロボットの前方カメラ（左）と、そこから ROAM が作るリスク画像（右）、8倍速。下のグラフは、この走行で VLM が返したすべての回答（1列が1回答）と、使ったラベル、それぞれに付けたリスクです。床や柱のラベルが石畳や建物に、そして砂利や草、木に移り変わっていきます。グラフをクリックすると、動画のその時点に飛びます。</p>
+      <p class="cap">ロボットの前方カメラ（左）と、そこから ROAM が生成するリスク画像（右）、8倍速。下のグラフは、この走行中に VLM が出力した全推論結果（1列が1回分）と各ラベルのリスク値を示しています。床や柱から石畳・建物へ、さらに砂利・草・木へと認識が移り変わっていきます。グラフをクリックすると、動画の該当時点へ移動します。</p>
     </div>
 
     <div class="lab rv" id="explorer">
       <div class="lab-head">
         <div>
           <div class="lab-tag">実験5 · 図5C</div>
-          <h3>道がふさがれたら？</h3>
-          <p>台車と規制テープが道をふさいでいます。ロボットがどうしたかを見てみましょう（4倍速）。各ステップに飛ぶこともできます。ヘンガーベルクにて。</p>
+          <h3>道がふさがれていたら？</h3>
+          <p>台車と規制テープでふさがれた道に直面したとき、ロボットはどう行動するのか（4倍速）。各ステップをクリックすると該当場面へ移動できます（ヘンガーベルクにて）。</p>
         </div>
         
       </div>
@@ -576,9 +575,9 @@
 <!-- ============ Places ============ -->
 <section class="tint" id="places">
   <div class="wrap">
-    <div class="kicker rv"><span class="num">07</span> ひとつのシステムで、いろいろな場所へ</div>
+    <div class="kicker rv"><span class="num">07</span> ひとつのシステムで、あらゆる環境へ</div>
     <h2 class="rv">山道から<em>階段まで</em></h2>
-    <p class="lead dim rv d1" style="max-width:700px">どこでも同じシステムを使いました。特定の場所のためにデータを集めたことは一度もありません。</p>
+    <p class="lead dim rv d1" style="max-width:700px">どの環境でもまったく同じシステムを動かしています。特定の場所に向けた追加データの収集や再学習は一切行っていません。</p>
     <div class="filters rv d1" role="group" aria-label="環境で絞り込む">
       <button class="chip" data-f="all" aria-pressed="true">すべて <span class="c">15</span></button>
       <button class="chip" data-f="nature" aria-pressed="false">自然 <span class="c">7</span></button>
@@ -599,23 +598,23 @@
     <div class="movies rv d1">
       <figure class="mv">
         <div class="movie yt" data-youtube="1TAuPEN80WE" data-title="ROAM Movie S1：ゼーアルプ湖のハイキング全編" data-poster="../static/img/movies/s1.jpg" data-label="Movie S1 · 2:38"></div>
-        <figcaption><b>ゼーアルプ湖のハイキング全編</b><span class="dim">湖を一周する 2.4 km を、ロボットの後ろから撮影。</span></figcaption>
+        <figcaption><b>ゼーアルプ湖のハイキング全編</b><span class="dim">湖を一周する 2.4 km を、ロボットの後方から撮影。</span></figcaption>
       </figure>
       <figure class="mv">
         <div class="movie yt" data-youtube="LiX3yLj3ffE" data-title="ROAM Movie S2：工事標識を読む" data-poster="../static/img/movies/s2.jpg" data-label="Movie S2 · 5:02"></div>
-        <figcaption><b>工事標識を読む</b><span class="dim">標識の指示で道を外れ、指示があれば戻る。ジオメトリのみの比較手法と並べて。</span></figcaption>
+        <figcaption><b>工事標識を読む</b><span class="dim">標識の指示に従って迂回し、解除の標識で道に戻る様子を、ジオメトリのみの比較手法と並べて紹介。</span></figcaption>
       </figure>
       <figure class="mv">
         <div class="movie yt" data-youtube="0iFn34GOyfY" data-title="ROAM Movie S3：システムの構成要素" data-poster="../static/img/movies/s3.jpg" data-label="Movie S3 · 4:30"></div>
-        <figcaption><b>システムの構成要素</b><span class="dim">リスク画像、ナビゲーションポリシー、歩行ポリシーを、それぞれ単体でテスト。</span></figcaption>
+        <figcaption><b>システムの構成要素</b><span class="dim">リスク画像、ナビゲーションポリシー、歩行ポリシーをそれぞれ単体で検証。</span></figcaption>
       </figure>
       <figure class="mv">
         <div class="movie yt" data-youtube="wR5apHDt7WM" data-title="ROAM Movie S4：屋内・市街地・屋外" data-poster="../static/img/movies/s4.jpg" data-label="Movie S4 · 2:48"></div>
-        <figcaption><b>屋内・市街地・屋外</b><span class="dim">調整し直さずに同じシステムで、階段も街なかも山道も。</span></figcaption>
+        <figcaption><b>屋内・市街地・屋外</b><span class="dim">設定を一切変えず、同じシステムひとつで階段から市街地、山道まで走破。</span></figcaption>
       </figure>
       <figure class="mv">
         <div class="movie yt" data-youtube="qaKoBthsapA" data-title="ROAM Movie S5：ツェルマットのハイキング全編" data-poster="../static/img/movies/s5.jpg" data-label="Movie S5 · 11:40"></div>
-        <figcaption><b>ツェルマットのハイキング全編</b><span class="dim">ゴルナーグラートからフーリのロープウェイ乗り場までの 10.1 km を、ロボットの後ろから撮影。</span></figcaption>
+        <figcaption><b>ツェルマットのハイキング全編</b><span class="dim">ゴルナーグラートからフーリのロープウェイ乗り場までの 10.1 km を、ロボットの後方から撮影。</span></figcaption>
       </figure>
     </div>
   </div>
